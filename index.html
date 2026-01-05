@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAHS Football Dashboard</title>
+    <style>
+        /* CSS to make it full screen and pretty */
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; }
+        
+        /* The Navigation Bar */
+        #navbar {
+            height: 60px;
+            background-color: #333; /* Change to team color */
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+        }
+
+        #navbar button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        #navbar button:hover { background-color: #555; border-radius: 4px; }
+
+        /* The Main Display Area */
+        #app-container {
+            height: calc(100% - 60px); /* Fill rest of screen */
+            width: 100%;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar">
+        <h3>PAHS Football</h3>
+        <button onclick="loadPage('HOME_URL')">Dashboard</button>
+        <button onclick="loadPage('ROSTER_URL')">Roster</button>
+        <button onclick="loadPage('STATS_URL')">Stats</button>
+    </div>
+
+    <div id="app-container">
+        <iframe id="main-frame" src=""></iframe>
+    </div>
+
+    <script>
+        // 1. Define your Google Script URLs here
+        const pages = {
+            'HOME_URL': 'https://script.google.com/macros/s/.../exec', // Your Main Script
+            'ROSTER_URL': 'https://script.google.com/macros/s/.../exec', // Your 2nd Script
+            'STATS_URL': 'https://script.google.com/macros/s/.../exec'   // Your 3rd Script
+        };
+
+        // 2. Function to switch the view
+        function loadPage(pageKey) {
+            const iframe = document.getElementById('main-frame');
+            iframe.src = pages[pageKey];
+        }
+
+        // 3. Load the default page on startup
+        window.onload = function() {
+            loadPage('HOME_URL');
+        };
+    </script>
+
+</body>
+</html>
