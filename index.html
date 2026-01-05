@@ -1,80 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAHS Football Dashboard</title>
-    <style>
-        /* CSS to make it full screen and pretty */
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; }
-        
-        /* The Navigation Bar */
-        #navbar {
-            height: 60px;
-            background-color: #333; /* Change to team color */
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            color: white;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAHS Football Dashboard</title>
+<style>
+  /* --- LAYOUT SETUP --- */
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background-color: #000000; /* Main background */
+    overflow: hidden; /* Prevents double scrollbars */
+  }
 
-        #navbar button {
-            background: none;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
+  /* The main container acts as a split screen */
+  #dashboard-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
 
-        #navbar button:hover { background-color: #555; border-radius: 4px; }
+  /* --- SIDEBAR (Left Side) --- */
+  #sidebar {
+    width: 300px; /* Fixed width for navigation */
+    background-color: #111; /* Slightly lighter black for contrast */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 2px solid #333;
+    overflow-y: auto; /* Allow scrolling if buttons get too long */
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
 
-        /* The Main Display Area */
-        #app-container {
-            height: calc(100% - 60px); /* Fill rest of screen */
-            width: 100%;
-        }
+  /* Logo Styling */
+  #sidebar img {
+    width: 100%;
+    max-width: 200px; /* Limit logo size */
+    height: auto;
+    margin-bottom: 30px;
+    display: block;
+  }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+  /* --- MAIN CONTENT (Right Side) --- */
+  #main-view {
+    flex-grow: 1; /* Takes up remaining space */
+    background-color: #000;
+    position: relative;
+  }
+
+  /* The window that displays your apps */
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  /* --- YOUR BUTTON STYLING (Preserved) --- */
+  .gold-button {
+    display: block;
+    width: 100%;
+    max-width: 100%; /* Fill the sidebar */
+    margin-bottom: 15px;
+    
+    /* --- COLOR SETTINGS --- */
+    background-color: #ffb200; 
+    color: #000000;
+    /* ---------------------- */
+    
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px; /* Slightly smaller for sidebar fit */
+    padding: 15px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    
+    /* Adjusted shadow and border */
+    box-shadow: 0 2px 5px rgba(255, 178, 0, 0.2);
+    border: 2px solid #cc8f00; 
+    
+    transition: all 0.2s ease;
+    box-sizing: border-box; 
+    cursor: pointer;
+  }
+
+  .gold-button:hover {
+    background-color: #ffc233;
+    transform: translateY(-2px);
+  }
+  
+  /* Active state to show which tab is open */
+  .gold-button.active {
+    background-color: #fff;
+    border-color: #fff;
+  }
+
+  /* --- MOBILE RESPONSIVENESS --- */
+  /* If screen is small (phone), move sidebar to top */
+  @media (max-width: 768px) {
+    #dashboard-container {
+      flex-direction: column;
+    }
+    #sidebar {
+      width: 100%;
+      height: auto; /* Auto height based on content */
+      max-height: 25vh; /* Limit height */
+      flex-direction: row; /* Horizontal scroll for buttons */
+      padding: 10px;
+      overflow-x: auto;
+      border-right: none;
+      border-bottom: 2px solid #333;
+      white-space: nowrap;
+    }
+    #sidebar img {
+      max-height: 50px;
+      width: auto;
+      margin-bottom: 0;
+      margin-right: 15px;
+    }
+    .gold-button {
+      width: auto;
+      display: inline-block;
+      margin-bottom: 0;
+      margin-right: 10px;
+      padding: 10px 15px;
+      font-size: 12px;
+    }
+  }
+</style>
 </head>
 <body>
 
-    <div id="navbar">
-        <h3>PAHS Football</h3>
-        <button onclick="loadPage('HOME_URL')">Dashboard</button>
-        <button onclick="loadPage('ROSTER_URL')">Roster</button>
-        <button onclick="loadPage('STATS_URL')">Stats</button>
+<div id="dashboard-container">
+  
+  <div id="sidebar">
+    <img src="pahsfootballlogo.png" alt="PAHS Football Logo">
+
+    <div onclick="loadApp(this, 'https://scoreboards.pahsfootball.com/ss.html')" class="gold-button">
+      Current Live Scores
     </div>
 
-    <div id="app-container">
-        <iframe id="main-frame" src=""></iframe>
+    <div onclick="loadApp(this, 'https://www.pahsfootball.com/live-scoreboards')" class="gold-button">
+      Available Live Scoreboards
     </div>
 
-    <script>
-        // 1. Define your Google Script URLs here
-        const pages = {
-            'HOME_URL': 'https://script.google.com/macros/s/.../exec', // Your Main Script
-            'ROSTER_URL': 'https://script.google.com/macros/s/.../exec', // Your 2nd Script
-            'STATS_URL': 'https://script.google.com/macros/s/.../exec'   // Your 3rd Script
-        };
+    <div onclick="loadApp(this, 'https://teams.pahsfootball.com/padir.html')" class="gold-button">
+      PA Team Directory
+    </div>
 
-        // 2. Function to switch the view
-        function loadPage(pageKey) {
-            const iframe = document.getElementById('main-frame');
-            iframe.src = pages[pageKey];
-        }
+    <div onclick="loadApp(this, 'https://teams.pahsfootball.com/pasc.html')" class="gold-button">
+      State Championships
+    </div>
 
-        // 3. Load the default page on startup
-        window.onload = function() {
-            loadPage('HOME_URL');
-        };
-    </script>
+    <div onclick="loadApp(this, 'https://www.pahsfootball.com/radio-streaming-links')" class="gold-button">
+      Radio Streaming Links
+    </div>
+  </div>
+
+  <div id="main-view">
+    <iframe id="app-frame" src="https://scoreboards.pahsfootball.com/ss.html"></iframe>
+  </div>
+
+</div>
+
+<script>
+  function loadApp(button, url) {
+    // 1. Point the iframe to the new URL
+    document.getElementById('app-frame').src = url;
+
+    // 2. Update visual styling (highlight the active button)
+    // Remove 'active' class from all buttons
+    var buttons = document.getElementsByClassName('gold-button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.remove('active');
+    }
+    // Add 'active' class to the clicked button
+    button.classList.add('active');
+  }
+</script>
 
 </body>
 </html>
