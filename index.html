@@ -215,6 +215,15 @@
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Button Reset specific for the contact button using nav-card style */
+        button.nav-card {
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
         }
 
         .nav-card::before {
@@ -267,16 +276,6 @@
         .download-card:hover {
             box-shadow: 0 0 25px rgba(255, 178, 0, 0.3);
         }
-
-        .contact-btn {
-            background: transparent;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .contact-btn::before { display: none; }
-        .contact-btn:hover { border-color: #FFB200; background: rgba(255, 178, 0, 0.05); }
 
         /* --- POPUP MODAL --- */
         .modal-overlay {
@@ -394,14 +393,13 @@
 </div>
 
 <div class="content-area">
-
     
     <a href="livescoreboards.html" class="nav-card featured-card">
         <div class="nav-text">
             <span class="nav-title">Live Scoreboard</span>
             <span class="nav-sub">Real-time games & stats</span>
         </div>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>
     </a>
 
     <a href="padir.html" class="nav-card">
@@ -436,13 +434,15 @@
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
     </a>
 
+    <button class="nav-card" onclick="openModal()">
+        <div class="nav-text">
+            <span class="nav-title">Contact Us</span>
+            <span class="nav-sub">Send us a message or report issues</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+    </button>
+
 </div>
-
-<button class="nav-card contact-btn" onclick="openModal()">
-    <svg style="width:20px; height:20px; color:#aaa;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-    <span class="nav-title" style="font-size: 18px; color: #ccc;">Contact Us</span>
-</button>
-
 
 
 <div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
