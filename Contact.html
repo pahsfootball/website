@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* --- PAHS Styling Variables --- */
+        :root {
+          --pahs-primary: #002147;
+          --pahs-accent: #ffb200;
+          --pahs-white: #ffffff;
+          --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+          margin: 0;
+          padding: 10px;
+          font-family: var(--font-family);
+          background-color: transparent;
+        }
+
+        /* --- Button Styling --- */
+        .contact-trigger-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+
+          background-color: var(--pahs-accent);
+          color: #000000;
+          border: 2px solid #000000;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+          padding: 12px 24px;
+          font-family: var(--font-family);
+          font-size: 16px;
+          font-weight: bold;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          border-radius: 4px;
+          letter-spacing: 1px;
+          text-decoration: none;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .contact-trigger-btn svg {
+          width: 20px;
+          height: 20px;
+          fill: currentColor;
+        }
+
+        .contact-trigger-btn:hover {
+          background-color: var(--pahs-white);
+          color: #000000;
+          border-color: #000000;
+          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+          transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<button class="contact-trigger-btn" onclick="openPopup()">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
+    </svg>
+    Contact Us
+</button>
+
+<script>
+    function openPopup() {
+      const width = 500;
+      const height = 700;
+      const left = (screen.width - width) / 2;
+      const top = (screen.height - height) / 2;
+
+      const popupContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Contact PAHS Football</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+
+          /* Black and Gold Border */
+          .container { background: #fff; padding: 30px; border-radius: 8px; border-top: 6px solid #000000; border-bottom: 6px solid #ffb200; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+          h2 { color: #000000; text-align: center; margin-top: 0; text-transform: uppercase; border-bottom: 2px solid #ffb200; padding-bottom: 10px; display: inline-block; width: 100%; }
+          .form-group { margin-bottom: 15px; }
+          label { display: block; margin-bottom: 5px; color: #000; font-weight: 600; font-size: 14px; }
+
+          input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+            background-color: #fafafa;
+          }
+
+          textarea { resize: vertical; min-height: 100px; }
+          input:focus, select:focus, textarea:focus { border-color: #ffb200; outline: none; box-shadow: 0 0 5px rgba(255, 178, 0, 0.5); }
+
+          /* --- UPDATED SUBMIT BUTTON STYLES --- */
+          .submit-btn {
+            width: 100%;
+            background-color: #ffb200; /* Gold Background */
+            color: #000000;            /* Black Text */
+            border: 2px solid #000000; /* Black Border */
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: all 0.3s ease; /* Smooth transition for hover effect */
+            font-size: 16px;
+            letter-spacing: 1px;
+          }
+
+          .submit-btn:hover {
+            background-color: #000000; /* Black Background */
+            color: #ffb200;            /* Gold Text */
+            border-color: #ffb200;     /* Gold Border */
+          }
+          /* ------------------------------------ */
+
+          .status-message { text-align: center; margin-top: 15px; font-weight: bold; display: none; }
+          .loading { opacity: 0.7; pointer-events: none; }
+        </style>
+        </head>
+        <body>
+          <div class="container">
+            <h2>Get in Touch</h2>
+            <form id="pahsForm">
+
+              <div class="form-group">
+                <label>Reason for Contact / Message <span style="color:red">*</span></label>
+                <textarea name="entry.1967997366" rows="5" placeholder="Please type your message here..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>First Name <span style="color:red">*</span></label>
+                <input type="text" name="entry.1990515734" required>
+              </div>
+
+              <div class="form-group">
+                <label>Last Name <span style="color:red">*</span></label>
+                <input type="text" name="entry.1429224270" required>
+              </div>
+
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx" maxlength="12">
+                <small style="color:#666; font-size:12px;">Format: xxx-xxx-xxxx</small>
+              </div>
+
+              <div class="form-group">
+                <label>Contact Email</label>
+                <input type="email" id="emailInput" name="entry.1778241553" placeholder="Enter email or phone above">
+              </div>
+
+              <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+              <div id="statusMessage" class="status-message"></div>
+            </form>
+          </div>
+          <script>
+            const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
+            const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
+
+            // --- Auto-Format Phone Logic ---
+            const phoneInput = document.getElementById('phoneInput');
+
+            phoneInput.addEventListener('input', function (e) {
+              // 1. Remove non-numeric characters
+              let value = e.target.value.replace(/\\D/g, '');
+
+              // 2. Limit to 10 digits
+              if (value.length > 10) value = value.slice(0, 10);
+
+              // 3. Add Dashes automatically
+              if (value.length > 6) {
+                value = value.slice(0,3) + '-' + value.slice(3,6) + '-' + value.slice(6);
+              } else if (value.length > 3) {
+                value = value.slice(0,3) + '-' + value.slice(3);
+              }
+
+              e.target.value = value;
+            });
+
+            // --- Submission & Validation Logic ---
+            document.getElementById('pahsForm').addEventListener('submit', function(e) {
+              e.preventDefault();
+              const btn = document.getElementById('submitBtn');
+              const msg = document.getElementById('statusMessage');
+
+              const phoneVal = document.getElementById('phoneInput').value.trim();
+              const emailVal = document.getElementById('emailInput').value.trim();
+
+              // Check if Phone OR Email is present
+              if (!phoneVal && !emailVal) {
+                 msg.style.display = 'block';
+                 msg.style.color = 'red';
+                 msg.innerText = 'Please enter either a Phone Number OR an Email Address.';
+                 return;
+              }
+
+              // Check if Phone is entered but incomplete (less than 12 chars: xxx-xxx-xxxx)
+              if (phoneVal !== "" && phoneVal.length < 12) {
+                 msg.style.display = 'block';
+                 msg.style.color = 'red';
+                 msg.innerText = 'Please enter a complete 10-digit phone number.';
+                 return;
+              }
+
+              btn.innerText = 'Sending...';
+              btn.classList.add('loading');
+              msg.style.display = 'none';
+
+              const formData = new FormData(this);
+              const params = new URLSearchParams();
+              for (const pair of formData.entries()) { params.append(pair[0], pair[1]); }
+
+              fetch(SUBMIT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+              }).then(() => {
+                 btn.style.display = 'none';
+                 msg.style.display = 'block';
+                 msg.style.color = 'green';
+                 msg.innerText = 'Thank you! Message Sent.';
+                 setTimeout(() => { window.close(); }, 2000);
+              }).catch((err) => {
+                 btn.innerText = 'Try Again';
+                 btn.classList.remove('loading');
+                 msg.style.display = 'block';
+                 msg.style.color = 'red';
+                 msg.innerText = 'Error sending message.';
+              });
+            });
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      const win = window.open("", "ContactPAHS", `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`);
+
+      if (win) {
+        win.document.write(popupContent);
+        win.document.close();
+      } else {
+        alert("Pop-up was blocked! Please allow pop-ups for this site.");
+      }
+    }
+</script>
+
+</body>
+</html>

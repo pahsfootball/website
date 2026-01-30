@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCA Season Scoreboards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #000000; color: #fff; }
+        .grid-card { background: #171717; border: 1px solid #262626; transition: transform 0.2s; }
+        .grid-card:hover { transform: translateY(-4px); }
+
+        /* --- FIXED MARQUEE CSS --- */
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+            padding-left: 10%;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const firebaseConfig = { databaseURL: "https://pahsfootball-d35c2-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+    const SharedIcon = ({ name, className }) => {
+        const elementRef = useRef(null);
+        useEffect(() => {
+            if (window.lucide && elementRef.current) {
+                const pascalName = name.replace(/(^\w|-\w)/g, (m) => m.replace("-", "").toUpperCase());
+                const iconDef = window.lucide.icons[pascalName];
+                if (iconDef) {
+                    const svg = window.lucide.createElement(iconDef);
+                    if (className) svg.setAttribute('class', className);
+                    elementRef.current.innerHTML = '';
+                    elementRef.current.appendChild(svg);
+                }
+            }
+        }, [name, className]);
+        return <span ref={elementRef} style={{ display: 'inline-flex', verticalAlign: 'middle' }}></span>;
+    };
+
+    const SeasonScoreboard = () => {
+        const [games, setGames] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            const db = firebase.database();
+            const rootRef = db.ref('games');
+            rootRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const gamesArray = Array.isArray(data) ? data : Object.values(data);
+
+                    const findScore = (obj, type) => {
+                        const keys = Object.keys(obj);
+                        for (const key of keys) {
+                            const lowerKey = key.toLowerCase();
+                            if (type === 'home' && lowerKey.includes('home') && lowerKey.includes('score')) return obj[key];
+                            if (type === 'away' && lowerKey.includes('away') && lowerKey.includes('score')) return obj[key];
+                        }
+                        return 0;
+                    };
+
+                    const processed = gamesArray.map((entry, index) => ({
+                        ...entry,
+                        id: entry.id || index,
+                        home: entry.home || entry.Home || "Home",
+                        away: entry.away || entry.Away || "Away",
+                        homeScore: parseInt(findScore(entry, 'home')) || 0,
+                        awayScore: parseInt(findScore(entry, 'away')) || 0,
+                        status: (entry.status || entry.Status || "UPCOMING").toUpperCase(),
+                        week: entry.week || entry.Week || "",
+                        homeLogo: entry.homeLogo || entry.HomeLogo || entry.homelogo || entry["Home Logo"] || entry.Home_Logo || null,
+                        awayLogo: entry.awayLogo || entry.AwayLogo || entry.awaylogo || entry["Away Logo"] || entry.Away_Logo || null,
+                        ticker: entry.message || entry.Message || entry.ticker || entry.Ticker || entry.broadcast || entry.Broadcast || ""
+                    }));
+
+                    const finalGames = processed.filter(g => g.status === 'FINAL');
+                    setGames(finalGames);
+                } else {
+                    setGames([]);
+                }
+                setLoading(false);
+            });
+        }, []);
+
+        return (
+            <div className="min-h-screen bg-black">
+                {/* --- ADDED NAV BAR --- */}
+                <nav className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-center">
+                    <a href="index.html" className="text-white/60 hover:text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                        <SharedIcon name="home" className="w-4 h-4" /> <span>Home</span>
+                    </a>
+                </nav>
+
+                <header className="py-10 border-b border-yellow-900/30 text-center relative overflow-hidden">
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-600 to-transparent opacity-50"></div>
+                    <div className="relative z-10 pt-6">
+                        <img src="https://cmsv2-assets.apptegy.net/uploads/8850/logo/10174/SCASD_logo.png" className="w-20 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                        <h1 className="text-4xl font-black uppercase tracking-tighter text-white">SCA <span className="text-yellow-500">Season Scoreboards</span></h1>
+                        <div className="mt-6 flex justify-center">
+                            <a href="live_scoreboard.html" className="bg-red-600 px-6 py-2 rounded-full font-bold text-xs flex items-center gap-2 hover:bg-red-500 transition-all shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_40px_rgba(220,38,38,0.8)] uppercase">
+                                 <span className="w-2 h-2 bg-white rounded-full animate-ping"></span> CLICK TO CHECK FOR Live ScoreboardS
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="max-w-6xl mx-auto p-6">
+                    {loading ? (
+                        <div className="text-center text-neutral-500 py-20">Loading Season Data...</div>
+                    ) : games.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-neutral-800 rounded-xl bg-neutral-900/50 max-w-2xl mx-auto">
+                            <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-6 border border-neutral-700">
+                                <SharedIcon name="calendar-off" className="w-8 h-8 text-neutral-500" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2 uppercase">No Completed Games</h2>
+                            <p className="text-neutral-400 mb-8 max-w-md uppercase">Currently no completed games so far. Check the live scoreboard to see if there is any action happening right now.</p>
+                            <a href="live_scoreboard.html" className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-500 text-black font-black uppercase tracking-widest px-8 py-4 rounded-full text-xs transition-all shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:shadow-[0_0_30px_rgba(234,179,8,0.6)] transform hover:scale-105">
+                                Check Live Scoreboard <SharedIcon name="arrow-right" className="w-4 h-4" />
+                            </a>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {games.map((game, i) => (
+                                <div key={i} className="grid-card rounded-xl overflow-hidden relative group flex flex-col">
+                                    <div className="p-4 border-b border-neutral-800 flex justify-between items-center text-[10px] font-bold shrink-0">
+                                        <span className="text-yellow-500 uppercase">WEEK {game.week}</span>
+                                        <span className="text-neutral-500 bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 uppercase">FINAL</span>
+                                    </div>
+
+                                    <div className="p-6 space-y-4 flex-1">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                                {game.homeLogo && <img src={game.homeLogo} className="w-8 h-8 object-contain" />}
+                                                <span className="font-bold text-lg uppercase">{game.home}</span>
+                                            </div>
+                                            <span className={`text-3xl font-mono font-bold ${game.homeScore > game.awayScore ? 'text-yellow-500' : 'text-neutral-400'}`}>{game.homeScore}</span>
+                                        </div>
+                                        <div className="h-px bg-neutral-800"></div>
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                                {game.awayLogo && <img src={game.awayLogo} className="w-8 h-8 object-contain" />}
+                                                <span className="font-bold text-lg uppercase">{game.away}</span>
+                                            </div>
+                                            <span className={`text-3xl font-mono font-bold ${game.awayScore > game.homeScore ? 'text-yellow-500' : 'text-neutral-400'}`}>{game.awayScore}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* --- FIXED TICKER SECTION --- */}
+                                    {game.ticker && (
+                                        <div className="relative h-8 bg-neutral-900 border-t border-neutral-800 shrink-0">
+                                            <div className="overflow-hidden w-full h-full relative flex items-center">
+                                                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-neutral-900 to-transparent z-10"></div>
+                                                <div className="animate-marquee text-[10px] font-mono font-bold text-yellow-500/80 uppercase">
+                                                    {game.ticker}
+                                                </div>
+                                                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-neutral-900 to-transparent z-10"></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </main>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SeasonScoreboard />);
+</script>
+</body>
+</html>

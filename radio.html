@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Links</title>
+    <style>
+        /* Reusing the same styles for consistency */
+        body { margin: 0; padding: 0; background-color: #000; font-family: Arial, sans-serif; color: white; display: flex; flex-direction: column; min-height: 100vh; }
+
+        .header-section { background-color: #000; text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; width: 100%; }
+        .header-banner { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+
+        .home-btn-container { padding-top: 10px; }
+        .home-btn { display: inline-block; text-decoration: none; background-color: #FFb200; color: #000; padding: 8px 20px; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; border: 1px solid #b89a00; }
+
+        .menu-container { padding: 30px 20px; max-width: 500px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+        h2 { color: #ffb200; text-align: center; text-transform: uppercase; margin-bottom: 20px; }
+        p { text-align: center; color: #aaa; margin-bottom: 30px; font-size: 14px; }
+
+        .radio-link {
+            display: block;
+            width: 100%;
+            background-color: #222; /* Darker for list items */
+            color: #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-decoration: none;
+            border-left: 5px solid #ffb200; /* Gold accent on left */
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .radio-link:active { background-color: #333; }
+        .station-name { display: block; font-size: 16px; margin-bottom: 4px; }
+        .station-location { display: inline-block; font-size: 11px; color: #888; text-transform: uppercase; background-color: #111; padding: 2px 6px; border-radius: 3px; margin-bottom: 4px; }
+        .station-desc { display: block; font-size: 12px; color: #bbb; margin-top: 4px; font-weight: normal; line-height: 1.4; }
+
+        @media (orientation: landscape) and (max-height: 600px) { .header-banner { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="header-section">
+    <img src="pahsfootballbanner.png" alt="Banner" class="header-banner">
+    <div class="home-btn-container">
+        <a href="index.html" class="home-btn">&larr; Main Menu</a>
+    </div>
+</div>
+
+<div class="menu-container">
+    <h2>Radio & Streaming</h2>
+    <p>Select a station below. Streams will open in your browser to ensure background playback.</p>
+
+    <a href="https://tunein.com/radio/WEEU-830-s28461/" target="_blank" class="radio-link">
+        <span class="station-name">WEEU 830 AM</span>
+        <span class="station-location">Reading, PA</span>
+        <span class="station-desc">Broadcasts high school football games with pregame shows starting at 6:30 PM on Fridays and 1 PM on Saturdays.</span>
+    </a>
+
+    <a href="http://www.blackdiamondsports.net/" target="_blank" class="radio-link">
+        <span class="station-name">Black Diamond Sports Network (BDSN)</span>
+        <span class="station-location">Coal Region, PA</span>
+        <span class="station-desc">Provides free live internet broadcasts of high school football games in Central Pennsylvania.</span>
+    </a>
+
+    <a href="https://centralpasports.com/live-streaming/" target="_blank" class="radio-link">
+        <span class="station-name">Central PA Sports</span>
+        <span class="station-location">Lock Haven, PA</span>
+        <span class="station-desc">Covers high school athletics in Central Pennsylvania, including teams like Central Mountain and Jersey Shore.</span>
+    </a>
+
+    <a href="https://wpse.psu.edu/" target="_blank" class="radio-link">
+        <span class="station-name">WPSE 1450 AM / 107.1 FM</span>
+        <span class="station-location">Erie, PA</span>
+        <span class="station-desc">Streams high school football and basketball games live, starting 10 minutes before the pregame show.</span>
+    </a>
+
+    <a href="https://www.fridaynightpa.com/" target="_blank" class="radio-link">
+        <span class="station-name">Friday Night PA</span>
+        <span class="station-location">PA</span>
+        <span class="station-desc">Offers live streams of high school football games across Pennsylvania via their website and app.</span>
+    </a>
+
+    <a href="https://psucommradio.mixlr.com/" target="_blank" class="radio-link">
+        <span class="station-name">Penn Sports Radio</span>
+        <span class="station-location">PA</span>
+        <span class="station-desc">Provides live and archived broadcasts of high school sports events through Mixlr channels.</span>
+    </a>
+
+    <a href="https://www.audacy.com/kdkaradio" target="_blank" class="radio-link">
+        <span class="station-name">KDKA Radio</span>
+        <span class="station-location">Pittsburgh, PA</span>
+        <span class="station-desc">Broadcasts PIAA State Football Championship games live from Chapman Field.</span>
+    </a>
+
+    <a href="https://www.radio.net/s/wmbs" target="_blank" class="radio-link">
+        <span class="station-name">WMBS 590 AM / 101.1 FM</span>
+        <span class="station-location">Uniontown, PA</span>
+        <span class="station-desc">Covers local high school football and basketball games in the Uniontown area.</span>
+    </a>
+
+    <a href="https://tunein.com/radio/WBUT-1050-s27656/" target="_blank" class="radio-link">
+        <span class="station-name">WBUT 1050 AM / 97.3 FM</span>
+        <span class="station-location">Butler, PA</span>
+        <span class="station-desc">Broadcasts Butler Area Senior High School football and basketball games.</span>
+    </a>
+
+    <a href="https://www.iheart.com/live/newsradio-1070-wkok-10114/" target="_blank" class="radio-link">
+        <span class="station-name">WKOK 1070 AM</span>
+        <span class="station-location">Sunbury, PA</span>
+        <span class="station-desc">Covers Shikellamy High School football, wrestling, and basketball games.</span>
+    </a>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCA Live Football Scoreboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <style>
+        body { background-color: #000000; color: #f5f5f5; }
+        .w1-gold-glow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); }
+        @keyframes w1-colorPulse {
+            0% { text-shadow: none; transform: scale(1); }
+            50% { color: var(--pulse-color, #facc15); text-shadow: 0 0 25px var(--pulse-color, rgba(234, 179, 8, 0.8)); transform: scale(1.05); }
+            100% { text-shadow: none; transform: scale(1); }
+        }
+        .w1-score-pulse { animation: w1-colorPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; display: inline-block; }
+        @keyframes w1-fadeInOut { 0% { opacity: 0; transform: scale(0.95); } 15% { opacity: 1; transform: scale(1); } 85% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.05); } }
+        .w1-animate-overlay-sequence { animation: w1-fadeInOut 3s ease-in-out forwards; }
+        @keyframes w1-rotate-beam { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes w1-middle-out-horizontal { 0% { clip-path: inset(0 50% 0 50%); opacity: 0; } 15% { opacity: 1; } 70% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
+        @keyframes w1-endOverEnd { 0% { opacity: 0; transform: translateY(-30px) rotateX(720deg) scale(0.5); } 70% { transform: translateY(0) rotateX(0deg) scale(1.2); } 100% { opacity: 1; transform: translateY(0) rotateX(0deg) scale(1); } }
+        .w1-flip-in { animation: w1-endOverEnd 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; display: inline-block; }
+        @keyframes w1-marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .w1-animate-marquee { display: inline-block; white-space: nowrap; animation: w1-marquee 15s linear infinite; padding-left: 10%; }
+        .w1-scoring-active { position: relative; overflow: hidden; z-index: 20; border-radius: 0.5rem; box-shadow: 0 0 40px var(--team-accent-dim, rgba(255,255,255,0.1)); }
+        .w1-scoring-active::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, var(--team-accent) 0%, transparent 50%, var(--team-accent) 100%); animation: w1-middle-out-horizontal 1.5s ease-out infinite; z-index: -2; }
+        .w1-scoring-active::after { content: ''; position: absolute; inset: 4px; background: var(--team-bg); border-radius: 0.3rem; z-index: -1; }
+        .w1-live-card { position: relative; overflow: hidden; border-radius: 0.75rem; z-index: 0; box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); --card-bg: #171717; }
+        .w1-live-card::before { content: ''; position: absolute; top: 50%; left: 50%; width: 200%; height: 200%; background: conic-gradient(transparent, #dc2626, transparent 30%); transform: translate(-50%, -50%); animation: w1-rotate-beam 4s linear infinite; z-index: -2; }
+        .w1-live-card::after { content: ''; position: absolute; inset: 3px; background: var(--card-bg); border-radius: 0.6rem; z-index: -1; }
+        @keyframes w1-particleExplosion { 0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--r)); opacity: 0; } }
+        .w1-particle { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background-color: #facc15; border-radius: 50%; pointer-events: none; opacity: 0; }
+        .w1-drive-field { background-color: #1a472a; background-image: linear-gradient(0deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%); }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const firebaseConfig = { databaseURL: "https://pahsfootball-d35c2-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+    const SharedIcon = ({ name, className }) => {
+        const elementRef = useRef(null);
+        useEffect(() => {
+            if (window.lucide && elementRef.current) {
+                const pascalName = name.replace(/(^\w|-\w)/g, (m) => m.replace("-", "").toUpperCase());
+                const iconDef = window.lucide.icons[pascalName];
+                if (iconDef) {
+                    const svg = window.lucide.createElement(iconDef);
+                    if (className) svg.setAttribute('class', className);
+                    elementRef.current.innerHTML = '';
+                    elementRef.current.appendChild(svg);
+                }
+            }
+        }, [name, className]);
+        return <span ref={elementRef} style={{ display: 'inline-flex', verticalAlign: 'middle' }}></span>;
+    };
+
+    const W1FootballIcon = ({ className }) => (
+        <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
+            <g transform="rotate(-45 16 16)">
+                <ellipse cx="16" cy="16" rx="15" ry="10" fill="#8B4513" stroke="#FFFFFF" strokeWidth="1.5" />
+                <path d="M6 16H26" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M11 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M16 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M21 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+            </g>
+        </svg>
+    );
+
+    const W1TeamLogo = ({ name, logoUrl, colorClass }) => {
+        const [imgError, setImgError] = useState(false);
+        useEffect(() => { setImgError(false); }, [logoUrl]);
+
+        if (logoUrl && !imgError) {
+            return (
+                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center overflow-hidden border-2 border-yellow-600/50 shadow-md relative z-10 shrink-0">
+                    <img src={logoUrl} alt={name} className="w-full h-full object-contain p-0.5" onError={() => setImgError(true)} />
+                </div>
+            );
+        }
+        return <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 shadow-md relative z-10 shrink-0 uppercase ${colorClass}`}>{name ? name.substring(0, 2).toUpperCase() : "??"}</div>;
+    };
+
+    const W1LiveDrive = ({ game }) => {
+        if (!game.ballOn || ['PREGAME', 'FINAL', 'HALF', 'UPCOMING'].includes(game.status)) return null;
+
+        const yardInt = parseInt(game.ballOn) || 0;
+        const isOpp = (game.ownOpp || "").toUpperCase() === "OPP";
+        let percentage = 0;
+        if (yardInt === 50) { percentage = 50; }
+        else if (isOpp) { percentage = 100 - yardInt; }
+        else { percentage = yardInt; }
+        percentage = Math.max(0, Math.min(100, percentage));
+
+        const isHomePossession = game.possession === 'home';
+        const teamColor = isHomePossession ? (game.color2 || '#facc15') : (game.awayc2 || '#facc15');
+        const homeColorBg = game.color1 || '#000000';
+        const awayColorBg = game.awayc1 || '#000000';
+        const yardMarkers = [10, 20, 30, 40, 50, 40, 30, 20, 10];
+
+        return (
+            <div className="mt-6 mb-2">
+                 <div className="flex justify-between items-end mb-1 px-1">
+                    <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest">Live Drive Tracker</span>
+                    <div className="flex items-center gap-2">
+                         <div className={`w-2 h-2 rounded-full ${isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.color2 || '#facc15'}}></div>
+                         <span className="text-[9px] font-mono text-neutral-400 uppercase">POSSESSION</span>
+                         <div className={`w-2 h-2 rounded-full ${!isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.awayc2 || '#facc15'}}></div>
+                    </div>
+                 </div>
+                <div className="relative w-full h-20 w1-drive-field rounded-md border-2 border-white/10 shadow-inner overflow-hidden flex">
+                    <div className="relative h-full w-[10%] border-r border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden" style={{ backgroundColor: homeColorBg }}>
+                        {game.homeLogo ?
+                            <img src={game.homeLogo} className="w-6 h-6 object-contain opacity-90" onError={(e) => e.target.style.display='none'} /> :
+                            <span className="text-[8px] font-black text-white/70 uppercase">{game.home ? game.home.substring(0,3).toUpperCase() : 'HOM'}</span>
+                        }
+                    </div>
+
+                    <div className="relative h-full flex-1">
+                        {yardMarkers.map((yard, i) => {
+                            const leftPos = (i + 1) * 10;
+                            return (
+                                <div key={i} className="absolute top-0 bottom-0 w-px flex flex-col items-center justify-center z-0" style={{ left: `${leftPos}%`, transform: 'translateX(-50%)' }}>
+                                    <div className="absolute top-0 bottom-0 w-px bg-white/30"></div>
+                                    <span className="relative bg-[#1a472a] px-0.5 text-[8px] font-mono font-bold text-white/60 z-10">{yard}</span>
+                                </div>
+                            );
+                        })}
+                        <div className="absolute top-0 bottom-0 z-10 transition-all duration-700 ease-out flex items-center"
+                             style={{ left: isHomePossession ? '0' : 'auto', right: isHomePossession ? 'auto' : '0', width: `${percentage}%`, background: `linear-gradient(${isHomePossession ? '90deg' : '-90deg'}, ${teamColor}44, ${teamColor})`, borderRight: isHomePossession ? `2px solid #fff` : 'none', borderLeft: !isHomePossession ? `2px solid #fff` : 'none' }}>
+                            <div className={`absolute top-1/2 -translate-y-1/2 flex items-center ${isHomePossession ? 'flex-row' : 'flex-row-reverse'}`} style={{ [isHomePossession ? 'right' : 'left']: '-28px' }}>
+                                <W1FootballIcon className="w-5 h-5 drop-shadow-md relative z-10" />
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white drop-shadow-md -ml-1" style={{ transform: isHomePossession ? 'none' : 'rotate(180deg)' }}><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" /></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative h-full w-[10%] border-l border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden" style={{ backgroundColor: awayColorBg }}>
+                         {game.awayLogo ?
+                            <img src={game.awayLogo} className="w-6 h-6 object-contain opacity-90" onError={(e) => e.target.style.display='none'} /> :
+                            <span className="text-[8px] font-black text-white/70 uppercase">{game.away ? game.away.substring(0,3).toUpperCase() : 'AWY'}</span>
+                         }
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const W1StatusBadge = ({ status, clock, quarter }) => {
+        if (status === "FINAL") return <span className="px-3 py-1 bg-neutral-800 text-neutral-400 text-xs font-bold rounded border border-neutral-700 uppercase">FINAL</span>;
+        if (status === "UPCOMING") return <span className="px-3 py-1 bg-neutral-800 text-yellow-500 text-xs font-bold rounded border border-yellow-900/30 uppercase">{clock}</span>;
+        if (status === "PREGAME") return (<div className="flex flex-col items-end animate-pulse"><span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded mb-1 shadow-lg shadow-green-900/50 whitespace-nowrap uppercase">Game Starting Soon ...</span></div>);
+        const isHalf = status === "HALF";
+        return (
+            <div className="flex flex-col items-center justify-center">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded shadow-lg animate-pulse uppercase ${isHalf ? "bg-yellow-600 text-black shadow-yellow-900/50" : "bg-red-600 text-white shadow-red-900/50"}`}>{isHalf ? "HALF" : "LIVE"}</span>
+                    {!isHalf && <span className="text-xs text-white font-black tracking-tight uppercase">Q{quarter}</span>}
+                </div>
+                {isHalf ? (<span className="text-[10px] text-yellow-400 font-mono font-bold tracking-widest drop-shadow-[0_0_5px_rgba(234,179,8,0.8)] uppercase">INTERMISSION</span>) : (<span className="text-sm text-white font-mono font-bold tracking-widest leading-none uppercase">{clock}</span>)}
+            </div>
+        );
+    };
+
+    const W1ParticleExplosion = ({ color }) => {
+        const particles = Array.from({ length: 20 });
+        return (
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+                {particles.map((_, i) => (
+                    <div key={i} className="w1-particle" style={{ '--tx': (Math.random()*100-50)+'px', '--ty': (Math.random()*100-50)+'px', '--r': '360deg', animation: `w1-particleExplosion 1s ease-out infinite`, backgroundColor: color || '#facc15' }} />
+                ))}
+            </div>
+        );
+    };
+
+    const W1GameCard = ({ game }) => {
+        const [homeUpdating, setHomeUpdating] = useState(false);
+        const [awayUpdating, setAwayUpdating] = useState(false);
+        const [showUpdateOverlay, setShowUpdateOverlay] = useState(false);
+        const [scoringTeam, setScoringTeam] = useState(null);
+        const [showHomeSparks, setShowHomeSparks] = useState(false);
+        const [showAwaySparks, setShowAwaySparks] = useState(false);
+
+        const prevHomeScore = useRef(game.homeScore);
+        const prevAwayScore = useRef(game.awayScore);
+        const overlayTimer = useRef(null);
+
+        useEffect(() => {
+            if (game.homeScore !== prevHomeScore.current) {
+                prevHomeScore.current = game.homeScore;
+                if (game.homeScore > 0) {
+                    setScoringTeam('home');
+                    setHomeUpdating(true);
+                    setShowHomeSparks(true);
+                    setShowUpdateOverlay(true);
+
+                    setTimeout(() => { setHomeUpdating(false); setShowHomeSparks(false); }, 15000);
+                    if (overlayTimer.current) clearTimeout(overlayTimer.current);
+                    overlayTimer.current = setTimeout(() => { setShowUpdateOverlay(false); }, 3000);
+                }
+            }
+        }, [game.homeScore]);
+
+        useEffect(() => {
+            if (game.awayScore !== prevAwayScore.current) {
+                prevAwayScore.current = game.awayScore;
+                if (game.awayScore > 0) {
+                    setScoringTeam('away');
+                    setAwayUpdating(true);
+                    setShowAwaySparks(true);
+                    setShowUpdateOverlay(true);
+
+                    setTimeout(() => { setAwayUpdating(false); setShowAwaySparks(false); }, 15000);
+                    if (overlayTimer.current) clearTimeout(overlayTimer.current);
+                    overlayTimer.current = setTimeout(() => { setShowUpdateOverlay(false); }, 3000);
+                }
+            }
+        }, [game.awayScore]);
+
+        const isPregame = game.status === 'PREGAME';
+
+        const homeBg = game.color1 || '#171717';
+        const homeAccent = game.color2 || '#facc15';
+        const awayBg = game.awayc1 || '#171717';
+        const awayAccent = game.awayc2 || '#facc15';
+
+        const isHomePossession = game.possession === 'home';
+        const isAwayPossession = game.possession === 'away';
+        const homeOpacity = isAwayPossession ? 0.5 : 1;
+        const awayOpacity = isHomePossession ? 0.5 : 1;
+
+        const homeSectionStyle = homeUpdating ?
+            { '--team-bg': homeBg, '--team-accent': homeAccent, '--team-accent-dim': `${homeAccent}66`, '--pulse-color': homeAccent, opacity: 1 } :
+            { backgroundColor: homeBg, opacity: homeOpacity, border: isHomePossession ? `2px solid ${homeAccent}` : `2px solid transparent`, boxShadow: isHomePossession ? `0 0 25px ${homeAccent}66, inset 0 0 20px rgba(0,0,0,0.5)` : 'inset 0 0 20px rgba(0,0,0,0.5)' };
+
+        const awaySectionStyle = awayUpdating ?
+            { '--team-bg': awayBg, '--team-accent': awayAccent, '--team-accent-dim': `${awayAccent}66`, '--pulse-color': awayAccent, opacity: 1 } :
+            { backgroundColor: awayBg, opacity: awayOpacity, border: isAwayPossession ? `2px solid ${awayAccent}` : `2px solid transparent`, boxShadow: isAwayPossession ? `0 0 25px ${awayAccent}66, inset 0 0 20px rgba(0,0,0,0.5)` : 'inset 0 0 20px rgba(0,0,0,0.5)' };
+
+        let overlayStyle = { backgroundColor: '#facc15', color: '#171717', borderColor: '#ffffff' };
+        if (scoringTeam === 'home') overlayStyle = { backgroundColor: homeBg, color: homeAccent, borderColor: homeAccent };
+        else if (scoringTeam === 'away') overlayStyle = { backgroundColor: awayBg, color: awayAccent, borderColor: awayAccent };
+
+        return (
+            <div className="w1-live-card transition-all duration-300 relative">
+                {showUpdateOverlay && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm w1-animate-overlay-sequence rounded-xl">
+                        <div className="text-2xl font-black italic tracking-tighter px-6 py-4 rounded-lg shadow-lg border-4 transform uppercase" style={overlayStyle}>
+                            SCORE UPDATE!
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-black/40 px-4 py-3 flex justify-between items-center border-b border-neutral-800 rounded-t-xl gap-2">
+                    <div className="bg-yellow-500 text-black text-[10px] font-black uppercase px-2 py-1 rounded-sm shadow-sm tracking-tighter shrink-0">WEEK {game.week}</div>
+
+                    {!isPregame && (
+                        <div className="flex items-center space-x-3 px-2 border-x border-white/5 bg-white/5 rounded py-1">
+                            <div className="text-center flex flex-col"><span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest leading-none mb-1">DOWN</span><span className="text-white font-mono font-bold text-sm leading-none uppercase">{game.down || "-"}</span></div>
+                            <div className="text-center flex flex-col"><span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest leading-none mb-1">TO GO</span><span className="text-white font-mono font-bold text-sm leading-none uppercase">{game.togo || "-"}</span></div>
+                            <div className="text-center flex flex-col"><span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest leading-none mb-1">BALL</span><span className="text-white font-mono font-bold text-sm leading-none uppercase">{game.ownOpp ? `${game.ownOpp} ${game.ballOn}` : (game.ballOn || "-")}</span></div>
+                        </div>
+                    )}
+
+                    <div className="shrink-0"><W1StatusBadge status={game.status} clock={game.clock} quarter={game.quarter} /></div>
+                </div>
+                <div className="p-6 flex flex-col justify-center min-h-[20rem]">
+                    {game.ticker && (
+                        <div className="mb-4 overflow-hidden relative bg-yellow-900/20 border border-yellow-400/80 rounded px-2 py-1.5 flex items-center shadow-inner">
+                            <div className="overflow-hidden w-full relative h-5"><div className="w1-animate-marquee text-xs font-mono font-bold text-yellow-200 uppercase">{game.ticker}</div></div>
+                        </div>
+                    )}
+
+                    <div className={`flex items-center justify-between mb-5 p-3 rounded-lg transition-all duration-300 ${homeUpdating ? 'w1-scoring-active' : ''}`} style={homeSectionStyle}>
+                        <div className="flex items-center space-x-4 relative">
+                            {showHomeSparks && <W1ParticleExplosion color={homeAccent} />}
+                            <W1TeamLogo name={game.home} logoUrl={game.homeLogo} colorClass="bg-neutral-800 text-yellow-500" />
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xl font-bold text-white uppercase ${homeUpdating ? 'w1-score-pulse' : ''}`}>{game.home}</span>
+                                    {!isPregame && isHomePossession && <div className="w1-flip-in"><W1FootballIcon className="w-5 h-5 animate-pulse drop-shadow-md" /></div>}
+                                </div>
+                                <span className="text-[9px] text-white font-bold opacity-70 uppercase">HOME • {game.homeClass}</span>
+                            </div>
+                        </div>
+                        <span className={`text-4xl font-mono font-bold text-white ${homeUpdating ? 'w1-score-pulse' : ''}`}>{game.homeScore}</span>
+                    </div>
+
+                    <div className={`flex items-center justify-between mt-5 p-3 rounded-lg transition-all duration-300 ${awayUpdating ? 'w1-scoring-active' : ''}`} style={awaySectionStyle}>
+                        <div className="flex items-center space-x-4 relative">
+                            {showAwaySparks && <W1ParticleExplosion color={awayAccent} />}
+                            <W1TeamLogo name={game.away} logoUrl={game.awayLogo} colorClass="bg-neutral-800 text-yellow-500" />
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xl font-bold text-white uppercase ${awayUpdating ? 'w1-score-pulse' : ''}`}>{game.away}</span>
+                                    {!isPregame && isAwayPossession && <div className="w1-flip-in"><W1FootballIcon className="w-5 h-5 animate-pulse drop-shadow-md" /></div>}
+                                </div>
+                                <span className="text-[9px] text-white font-bold opacity-70 uppercase">AWAY • {game.awayClass}</span>
+                            </div>
+                        </div>
+                        <span className={`text-4xl font-mono font-bold text-white ${awayUpdating ? 'w1-score-pulse' : ''}`}>{game.awayScore}</span>
+                    </div>
+
+                    <W1LiveDrive game={game} />
+                </div>
+            </div>
+        );
+    };
+
+    const LiveScoreboard = () => {
+        const [games, setGames] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            const db = firebase.database();
+            const rootRef = db.ref('games');
+            rootRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                let gamesArray = [];
+                if (data) {
+                    const rawGames = Array.isArray(data) ? data : Object.values(data);
+
+                    const findScore = (obj, type) => {
+                        const keys = Object.keys(obj);
+                        for (const key of keys) {
+                            const lowerKey = key.toLowerCase();
+                            if (type === 'home' && lowerKey.includes('home') && lowerKey.includes('score')) return obj[key];
+                            if (type === 'away' && lowerKey.includes('away') && lowerKey.includes('score')) return obj[key];
+                        }
+                        return 0;
+                    };
+
+                    gamesArray = rawGames.map((entry, index) => ({
+                        ...entry,
+                        id: entry.id || index,
+                        home: entry.home || entry.Home || "Home",
+                        away: entry.away || entry.Away || "Away",
+
+                        homeScore: parseInt(findScore(entry, 'home')) || 0,
+                        awayScore: parseInt(findScore(entry, 'away')) || 0,
+
+                        quarter: entry.quarter || entry.Quarter || 1,
+                        status: (entry.status || entry.Status || "UPCOMING").toUpperCase(),
+                        clock: entry.clock || entry.time || entry.Time || "00:00",
+                        possession: (entry.possession || entry.Possession || "").toLowerCase(),
+
+                        down: entry.down || entry.Down || entry.DOWN || "",
+                        togo: entry.togo || entry.toGo || entry.TOGO || entry.To_Go || "",
+                        ballOn: entry.ballon || entry.ballOn || entry.BALLON || entry.Ball_On || "",
+                        ownOpp: (entry.ownopp || entry.OwnOpp || entry.OWNOPP || entry.Own_Opp || "").toUpperCase(),
+
+                        homeClass: entry.homeClass || entry.HomeClass || entry["Home Class"] || "",
+                        awayClass: entry.awayClass || entry.AwayClass || entry["Away Class"] || "",
+
+                        homeLogo: entry.homeLogo || entry.HomeLogo || entry.homelogo || entry["Home Logo"] || entry.Home_Logo || entry.home_logo || null,
+                        awayLogo: entry.awayLogo || entry.AwayLogo || entry.awaylogo || entry["Away Logo"] || entry.Away_Logo || entry.away_logo || null,
+
+                        color1: entry.color1 || entry.Color1 || entry["Color 1"] || null,
+                        color2: entry.color2 || entry.Color2 || entry["Color 2"] || null,
+                        awayc1: entry.awayc1 || entry.AwayC1 || entry["Away C1"] || null,
+                        awayc2: entry.awayc2 || entry.AwayC2 || entry["Away C2"] || null,
+
+                        week: entry.week || entry.Week || "",
+                        ticker: entry.message || entry.Message || entry.ticker || entry.Ticker || ""
+                    }));
+
+                    const activeGames = gamesArray.filter(g => {
+                        const s = (g.status || "").toUpperCase();
+                        return s !== 'FINAL' && s !== 'UPCOMING';
+                    });
+                    setGames(activeGames);
+                }
+                setLoading(false);
+            });
+        }, []);
+
+        if (loading) return <div className="min-h-screen flex items-center justify-center text-white">Loading...</div>;
+
+        return (
+            <div className="min-h-screen p-4 md:p-12">
+                <nav className="mb-8 flex items-center justify-between">
+                    <div className="flex gap-4">
+                        <a href="index.html" className="text-neutral-500 hover:text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <SharedIcon name="home" className="w-4 h-4" /> <span>Home</span>
+                        </a>
+                        <a href="season_scoreboards.html" className="text-neutral-500 hover:text-yellow-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <SharedIcon name="layout-grid" className="w-4 h-4" /> <span>Full Season</span>
+                        </a>
+                    </div>
+                    <h1 className="text-yellow-500 font-black tracking-tighter uppercase text-xl">Live Action</h1>
+                </nav>
+                <div className="max-w-4xl mx-auto space-y-8">
+                    {games.length > 0 ? (
+                        games.map((game) => <W1GameCard key={game.id} game={game} />)
+                    ) : (
+                        <div className="text-center py-20 border border-neutral-800 rounded-xl bg-neutral-900/50">
+                            <h2 className="text-2xl font-black text-neutral-600 uppercase mb-2">No Live Games</h2>
+                            <p className="text-neutral-500 text-sm uppercase">There are no games currently in progress.</p>
+                            <a href="season_scoreboards.html" className="inline-block mt-4 bg-yellow-600 text-black font-bold px-6 py-2 rounded-full text-xs hover:bg-yellow-500 transition uppercase">Check Season Schedule</a>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<LiveScoreboard />);
+</script>
+</body>
+</html>
