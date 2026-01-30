@@ -1,187 +1,595 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PAHS Football Dashboard</title>
-<style>
-  /* --- LAYOUT SETUP --- */
-  body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: Arial, sans-serif;
-    background-color: #000000; /* Main background */
-    overflow: hidden; /* Prevents double scrollbars */
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAHS Football</title>
 
-  /* The main container acts as a split screen */
-  #dashboard-container {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-  }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Teko:wght@500;700&display=swap" rel="stylesheet">
 
-  /* --- SIDEBAR (Left Side) --- */
-  #sidebar {
-    width: 300px; /* Fixed width for navigation */
-    background-color: #111; /* Slightly lighter black for contrast */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-right: 2px solid #333;
-    overflow-y: auto; /* Allow scrolling if buttons get too long */
-    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-    z-index: 10;
-  }
+    <style>
+        /* --- MODERN VARIABLES --- */
+        :root {
+            --bg-dark: #050505;          /* Almost black */
+            --card-bg: rgba(255, 255, 255, 0.05); /* Glass effect */
+            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFB200 100%);
+            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.3);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --font-head: 'Teko', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
 
-  /* Logo Styling */
-  #sidebar img {
-    width: 100%;
-    max-width: 200px; /* Limit logo size */
-    height: auto;
-    margin-bottom: 30px;
-    display: block;
-  }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at top center, #1a1a1a 0%, #000000 70%);
+            font-family: var(--font-body);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-  /* --- MAIN CONTENT (Right Side) --- */
-  #main-view {
-    flex-grow: 1; /* Takes up remaining space */
-    background-color: #000;
-    position: relative;
-  }
+        /* --- MODERN HEADER --- */
+        .app-header {
+            position: relative;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-  /* The window that displays your apps */
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-  }
+        .header-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('PAHSFOOTBALLblkgld.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            filter: grayscale(100%) opacity(0.4);
+        }
 
-  /* --- YOUR BUTTON STYLING (Preserved) --- */
-  .gold-button {
-    display: block;
-    width: 100%;
-    max-width: 100%; /* Fill the sidebar */
-    margin-bottom: 15px;
-    
-    /* --- COLOR SETTINGS --- */
-    background-color: #ffb200; 
-    color: #000000;
-    /* ---------------------- */
-    
-    text-align: center;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 14px; /* Slightly smaller for sidebar fit */
-    padding: 15px 10px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    
-    /* Adjusted shadow and border */
-    box-shadow: 0 2px 5px rgba(255, 178, 0, 0.2);
-    border: 2px solid #cc8f00; 
-    
-    transition: all 0.2s ease;
-    box-sizing: border-box; 
-    cursor: pointer;
-  }
+        .header-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, #050505 100%);
+            z-index: 1;
+        }
 
-  .gold-button:hover {
-    background-color: #ffc233;
-    transform: translateY(-2px);
-  }
-  
-  /* Active state to show which tab is open */
-  .gold-button.active {
-    background-color: #fff;
-    border-color: #fff;
-  }
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            margin-top: 20px;
+        }
 
-  /* --- MOBILE RESPONSIVENESS --- */
-  /* If screen is small (phone), move sidebar to top */
-  @media (max-width: 768px) {
-    #dashboard-container {
-      flex-direction: column;
-    }
-    #sidebar {
-      width: 100%;
-      height: auto; /* Auto height based on content */
-      max-height: 25vh; /* Limit height */
-      flex-direction: row; /* Horizontal scroll for buttons */
-      padding: 10px;
-      overflow-x: auto;
-      border-right: none;
-      border-bottom: 2px solid #333;
-      white-space: nowrap;
-    }
-    #sidebar img {
-      max-height: 50px;
-      width: auto;
-      margin-bottom: 0;
-      margin-right: 15px;
-    }
-    .gold-button {
-      width: auto;
-      display: inline-block;
-      margin-bottom: 0;
-      margin-right: 10px;
-      padding: 10px 15px;
-      font-size: 12px;
-    }
-  }
-</style>
+        .header-logo {
+            height: 100px;
+            width: auto;
+            filter: drop-shadow(0 0 15px rgba(255, 178, 0, 0.3));
+            margin-bottom: 10px;
+        }
+
+        .header-title {
+            font-family: var(--font-head);
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #FFB200;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        /* --- UPDATED TICKER STYLES --- */
+        .ticker-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 12px 0;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+
+        .ticker-wrapper {
+            display: inline-block;
+            animation: ticker 45s linear infinite; /* Slower for readability */
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .matchup-card {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 6px 14px;
+            margin: 0 8px;
+            transition: 0.2s;
+        }
+
+        .ticker-container:hover .ticker-wrapper {
+            animation-play-state: paused;
+        }
+
+        .matchup-card:hover {
+            border-color: #FFB200;
+            background: rgba(255, 178, 0, 0.1);
+        }
+
+        /* Logo Placeholder Style */
+        .team-logo {
+            width: 24px;
+            height: 24px;
+            background: #333; /* Dark circle placeholder */
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+            border: 1px solid #555;
+        }
+
+        .team-name {
+            font-family: var(--font-head);
+            font-size: 20px;
+            letter-spacing: 0.5px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .vs {
+            font-family: var(--font-head);
+            color: #FFB200;
+            margin: 0 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 12px;
+            border-left: 1px solid #444;
+            padding-left: 12px;
+            line-height: 1.1;
+        }
+
+        .game-date {
+            font-family: var(--font-body);
+            font-size: 10px;
+            color: #ccc;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .game-time {
+            font-family: var(--font-body);
+            font-size: 10px;
+            color: #888;
+            font-weight: 400;
+        }
+
+        /* --- CONTENT AREA --- */
+        .content-area {
+            padding: 40px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            display: grid;
+            gap: 15px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .nav-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--gold-gradient);
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: var(--gold-glow);
+            border-color: rgba(255, 178, 0, 0.3);
+        }
+
+        .nav-card:hover::before { opacity: 1; width: 6px; }
+
+        .nav-text { display: flex; flex-direction: column; }
+
+        .nav-title {
+            color: white;
+            font-family: var(--font-head);
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .nav-sub { color: #888; font-size: 12px; margin-top: 4px; font-weight: 500; }
+
+        .nav-icon { color: #FFB200; opacity: 0.8; transition: 0.3s; }
+        .nav-card:hover .nav-icon { transform: scale(1.1) rotate(-5deg); opacity: 1; color: #FFD700; }
+
+        .featured-card {
+            background: linear-gradient(45deg, rgba(255, 178, 0, 0.15), rgba(0,0,0,0));
+            border: 1px solid rgba(255, 178, 0, 0.3);
+        }
+        .featured-card .nav-title { color: #FFB200; }
+
+        .contact-btn {
+            background: transparent;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .contact-btn::before { display: none; }
+        .contact-btn:hover { border-color: #FFB200; background: rgba(255, 178, 0, 0.05); }
+
+        /* --- POPUP MODAL --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #121212;
+            border: 1px solid #333;
+            width: 100%; max-width: 450px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        .modal-content::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: var(--gold-gradient);
+        }
+
+        .modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 28px; color: white; text-transform: uppercase; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #666; transition: 0.2s; }
+        .close-btn:hover { color: #FFB200; }
+        .modal-body { padding: 0 20px 25px 20px; }
+
+        label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; display: block; }
+        input, textarea { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 15px; }
+        input:focus, textarea:focus { border-color: #FFB200; outline: none; background: #222; }
+
+        .submit-btn {
+            width: 100%; background: var(--gold-gradient); color: black; font-family: var(--font-head); font-size: 20px; padding: 14px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: var(--gold-glow);
+        }
+        .submit-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        svg { width: 24px; height: 24px; fill: currentColor; }
+
+    </style>
 </head>
 <body>
 
-<div id="dashboard-container">
-  
-  <div id="sidebar">
-    <img src="pahsfootballlogo.png" alt="PAHS Football Logo">
+<header class="app-header">
+    <div class="header-bg"></div>
+    <div class="header-gradient"></div>
 
-    <div onclick="loadApp(this, 'https://scoreboards.pahsfootball.com/ss.html')" class="gold-button">
-      Current Live Scores
+    <div class="header-content">
+        <img src="pahsfootballlogo.png" alt="PAHS Logo" class="header-logo">
+        <h1 class="header-title">PAHS Football</h1>
+        <div class="header-subtitle">Official Mobile App</div>
     </div>
+</header>
 
-    <div onclick="loadApp(this, 'https://www.pahsfootball.com/live-scoreboards')" class="gold-button">
-      Available Live Scoreboards
+<div class="ticker-container">
+    <div class="ticker-wrapper" id="matchupTicker">
+        <div class="matchup-card">
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">Pine-Richland</span>
+            <span class="vs">VS</span>
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">N. Allegheny</span>
+            <div class="game-info">
+                <span class="game-date">OCT 14</span>
+                <span class="game-time">7:00 PM</span>
+            </div>
+        </div>
+
+        <div class="matchup-card">
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">Imhotep</span>
+            <span class="vs">VS</span>
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">St. Joe's Prep</span>
+            <div class="game-info">
+                <span class="game-date">OCT 15</span>
+                <span class="game-time">1:00 PM</span>
+            </div>
+        </div>
+
+        <div class="matchup-card">
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">Central Catholic</span>
+            <span class="vs">VS</span>
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">Canon-Mac</span>
+            <div class="game-info">
+                <span class="game-date">OCT 14</span>
+                <span class="game-time">7:00 PM</span>
+            </div>
+        </div>
+
+        <div class="matchup-card">
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">Harrisburg</span>
+            <span class="vs">VS</span>
+            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+            <span class="team-name">State College</span>
+            <div class="game-info">
+                <span class="game-date">OCT 21</span>
+                <span class="game-time">7:00 PM</span>
+            </div>
+        </div>
+
     </div>
+</div>
+<div class="content-area">
 
-    <div onclick="loadApp(this, 'https://teams.pahsfootball.com/padir.html')" class="gold-button">
-      PA Team Directory
-    </div>
+    <a href="livescoreboards.html" class="nav-card featured-card">
+        <div class="nav-text">
+            <span class="nav-title">Live Scoreboard</span>
+            <span class="nav-sub">Real-time games & stats</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>
+    </a>
 
-    <div onclick="loadApp(this, 'https://teams.pahsfootball.com/pasc.html')" class="gold-button">
-      State Championships
-    </div>
+    <a href="padir.html" class="nav-card">
+        <div class="nav-text">
+            <span class="nav-title">PA Team Directory</span>
+            <span class="nav-sub">Find teams across the state</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15 11V5l-5-3-5 3v6c0 5 5 8.5 5 8.5s5-3.5 5-8.5zM7 6.5l3-1.8 3 1.8v5.2c0 3.6-3 6.1-3 6.1s-3-2.5-3-6.1V6.5z"/></svg>
+    </a>
 
-    <div onclick="loadApp(this, 'https://www.pahsfootball.com/radio-streaming-links')" class="gold-button">
-      Radio Streaming Links
-    </div>
-  </div>
+    <a href="pasc.html" class="nav-card">
+        <div class="nav-text">
+            <span class="nav-title">State Championships</span>
+            <span class="nav-sub">History & Brackets</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+    </a>
 
-  <div id="main-view">
-    <iframe id="app-frame" src="https://scoreboards.pahsfootball.com/ss.html"></iframe>
-  </div>
+    <a href="radio.html" class="nav-card">
+        <div class="nav-text">
+            <span class="nav-title">Radio Streaming</span>
+            <span class="nav-sub">Listen to live broadcasts</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5l6-4.5-6-4.5v9z"/></svg>
+    </a>
+
+    <button class="nav-card contact-btn" onclick="openModal()">
+        <svg style="width:20px; height:20px; color:#aaa;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        <span class="nav-title" style="font-size: 18px; color: #ccc;">Contact Us</span>
+    </button>
 
 </div>
 
-<script>
-  function loadApp(button, url) {
-    // 1. Point the iframe to the new URL
-    document.getElementById('app-frame').src = url;
+<div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Get in Touch</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="pahsForm">
+                <label>Reason / Message <span style="color:red">*</span></label>
+                <textarea name="entry.1967997366" rows="4" required placeholder="Type your message..."></textarea>
 
-    // 2. Update visual styling (highlight the active button)
-    // Remove 'active' class from all buttons
-    var buttons = document.getElementsByClassName('gold-button');
-    for (var i = 0; i < buttons.length; i++) {
-      buttons[i].classList.remove('active');
+                <label>First Name <span style="color:red">*</span></label>
+                <input type="text" name="entry.1990515734" required>
+
+                <label>Last Name <span style="color:red">*</span></label>
+                <input type="text" name="entry.1429224270" required>
+
+                <label>Phone (Optional)</label>
+                <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
+
+                <label>Email (Optional)</label>
+                <input type="email" id="emailInput" name="entry.1778241553">
+
+                <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center;"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- TICKER LOGIC ---
+    function setupInfiniteTicker() {
+        const ticker = document.getElementById('matchupTicker');
+        if(!ticker) return;
+
+        // Clone the content to ensure seamless loop
+        const content = ticker.innerHTML;
+        ticker.innerHTML = content + content;
     }
-    // Add 'active' class to the clicked button
-    button.classList.add('active');
-  }
+
+    // --- MODAL LOGIC ---
+    function openModal() {
+        const modal = document.getElementById('contactModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('contactModal').style.display = 'none';
+    }
+
+    function closeModalOutside(e) {
+        if (e.target.id === 'contactModal') {
+            closeModal();
+        }
+    }
+
+    // --- FORM LOGIC ---
+    const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
+    const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
+
+    const phoneInput = document.getElementById('phoneInput');
+    if(phoneInput) {
+        phoneInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) value = value.slice(0, 10);
+            if (value.length > 6) {
+                value = value.slice(0,3) + '-' + value.slice(3,6) + '-' + value.slice(6);
+            } else if (value.length > 3) {
+                value = value.slice(0,3) + '-' + value.slice(3);
+            }
+            e.target.value = value;
+        });
+    }
+
+    document.getElementById('pahsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const msg = document.getElementById('statusMessage');
+
+        const phoneVal = document.getElementById('phoneInput').value.trim();
+        const emailVal = document.getElementById('emailInput').value.trim();
+
+        if (!phoneVal && !emailVal) {
+             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
+        }
+        if (phoneVal !== "" && phoneVal.length < 12) {
+             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Incomplete phone number.'; return;
+        }
+
+        btn.innerText = 'Sending...';
+        btn.style.opacity = '0.7';
+        msg.style.display = 'none';
+
+        const formData = new FormData(this);
+        const params = new URLSearchParams();
+        for (const pair of formData.entries()) { params.append(pair[0], pair[1]); }
+
+        fetch(SUBMIT_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        }).then(() => {
+             btn.style.display = 'none';
+             msg.style.display = 'block'; msg.style.color = '#00ff00'; msg.innerText = 'Message Sent Successfully!';
+             setTimeout(() => {
+                 closeModal();
+                 document.getElementById('pahsForm').reset();
+                 btn.style.display = 'block'; btn.innerText = 'SEND MESSAGE'; btn.style.opacity = '1'; msg.style.display = 'none';
+             }, 2000);
+        }).catch((err) => {
+             btn.innerText = 'Try Again'; btn.style.opacity = '1';
+             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Error sending message.';
+        });
+    });
+
+    // --- UPDATE CHECKER ---
+    const CURRENT_APP_VERSION = "5.1.30.26.1";
+    const VERSION_CHECK_URL = "https://raw.githubusercontent.com/pahsfootball/website/main/version.json";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        checkForUpdate();
+        setupInfiniteTicker(); // Initialize ticker logic
+    });
+
+    async function checkForUpdate() {
+        try {
+            const response = await fetch(VERSION_CHECK_URL + '?t=' + new Date().getTime());
+            const data = await response.json();
+            if (isNewerVersion(data.version, CURRENT_APP_VERSION)) { showUpdateModal(data); }
+        } catch (error) { console.error("Failed to check for updates:", error); }
+    }
+
+    function isNewerVersion(latest, current) {
+        const l = latest.split('.').map(Number);
+        const c = current.split('.').map(Number);
+        for (let i = 0; i < Math.max(l.length, c.length); i++) {
+            if ((l[i] || 0) > (c[i] || 0)) return true;
+            if ((l[i] || 0) < (c[i] || 0)) return false;
+        }
+        return false;
+    }
+
+    function showUpdateModal(data) {
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                <div style="background: #121212; border: 1px solid #333; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); position:relative; overflow:hidden;">
+                    <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(90deg, #FFD700, #FFB200);"></div>
+                    <div style="width: 60px; height: 60px; background: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 178, 0, 0.2);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFB200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    </div>
+                    <h2 style="color: #fff; font-family: 'Teko', sans-serif; font-size: 2rem; font-weight: 500; text-transform: uppercase; margin-bottom: 0.5rem;">Update Available</h2>
+                    <p style="color: #888; font-family: 'Inter', sans-serif; font-size: 0.875rem; margin-bottom: 2rem;">Version <span style="color: #FFB200;">${data.version}</span> is ready to install.</p>
+
+                    <a href="${data.downloadUrl}" target="_blank" style="display: block; width: 100%; background: linear-gradient(135deg, #FFD700, #FFB200); color: #000; font-family: 'Teko', sans-serif; font-size: 1.25rem; text-transform: uppercase; padding: 1rem; border-radius: 0.5rem; text-decoration: none; margin-bottom: 1rem; font-weight: bold; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        Download Update
+                    </a>
+
+                    <button onclick="this.closest('div').parentElement.remove()" style="background: transparent; border: none; color: #555; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 1px;">Dismiss</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
 </script>
 
 </body>
