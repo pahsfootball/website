@@ -96,7 +96,7 @@
             opacity: 0.9;
         }
 
-        /* --- UPDATED TICKER STYLES --- */
+        /* --- TICKER STYLES --- */
         .ticker-container {
             width: 100%;
             background: rgba(0, 0, 0, 0.6);
@@ -111,7 +111,7 @@
 
         .ticker-wrapper {
             display: inline-block;
-            animation: ticker 45s linear infinite; /* Slower for readability */
+            animation: ticker 45s linear infinite;
         }
 
         @keyframes ticker {
@@ -139,11 +139,10 @@
             background: rgba(255, 178, 0, 0.1);
         }
 
-        /* Logo Placeholder Style */
         .team-logo {
             width: 24px;
             height: 24px;
-            background: #333; /* Dark circle placeholder */
+            background: #333;
             border-radius: 50%;
             margin-right: 8px;
             object-fit: cover;
@@ -253,11 +252,21 @@
         .nav-icon { color: #FFB200; opacity: 0.8; transition: 0.3s; }
         .nav-card:hover .nav-icon { transform: scale(1.1) rotate(-5deg); opacity: 1; color: #FFD700; }
 
+        /* Featured & Download Card Styles */
         .featured-card {
             background: linear-gradient(45deg, rgba(255, 178, 0, 0.15), rgba(0,0,0,0));
             border: 1px solid rgba(255, 178, 0, 0.3);
         }
         .featured-card .nav-title { color: #FFB200; }
+
+        .download-card {
+            border: 1px solid #FFB200;
+            background: rgba(255, 178, 0, 0.08);
+            box-shadow: 0 0 15px rgba(255, 178, 0, 0.1);
+        }
+        .download-card:hover {
+            box-shadow: 0 0 25px rgba(255, 178, 0, 0.3);
+        }
 
         .contact-btn {
             background: transparent;
@@ -381,10 +390,18 @@
                 <span class="game-time">7:00 PM</span>
             </div>
         </div>
-
     </div>
 </div>
+
 <div class="content-area">
+
+    <a href="https://github.com/pahsfootball/website/releases/latest/download/pahsfootball.apk" class="nav-card download-card" target="_blank">
+        <div class="nav-text">
+            <span class="nav-title">Download Official App</span>
+            <span class="nav-sub">Get the full experience on Android</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    </a>
 
     <a href="livescoreboards.html" class="nav-card featured-card">
         <div class="nav-text">
@@ -541,55 +558,10 @@
         });
     });
 
-    // --- UPDATE CHECKER ---
-    const CURRENT_APP_VERSION = "5.1.30.26.1";
-    const VERSION_CHECK_URL = "https://raw.githubusercontent.com/pahsfootball/website/main/version.json";
-
+    // Initialize Ticker
     document.addEventListener("DOMContentLoaded", () => {
-        checkForUpdate();
-        setupInfiniteTicker(); // Initialize ticker logic
+        setupInfiniteTicker();
     });
-
-    async function checkForUpdate() {
-        try {
-            const response = await fetch(VERSION_CHECK_URL + '?t=' + new Date().getTime());
-            const data = await response.json();
-            if (isNewerVersion(data.version, CURRENT_APP_VERSION)) { showUpdateModal(data); }
-        } catch (error) { console.error("Failed to check for updates:", error); }
-    }
-
-    function isNewerVersion(latest, current) {
-        const l = latest.split('.').map(Number);
-        const c = current.split('.').map(Number);
-        for (let i = 0; i < Math.max(l.length, c.length); i++) {
-            if ((l[i] || 0) > (c[i] || 0)) return true;
-            if ((l[i] || 0) < (c[i] || 0)) return false;
-        }
-        return false;
-    }
-
-    function showUpdateModal(data) {
-        const modal = document.createElement('div');
-        modal.innerHTML = `
-            <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
-                <div style="background: #121212; border: 1px solid #333; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8); position:relative; overflow:hidden;">
-                    <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(90deg, #FFD700, #FFB200);"></div>
-                    <div style="width: 60px; height: 60px; background: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 1px solid #333; box-shadow: 0 0 20px rgba(255, 178, 0, 0.2);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFB200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    </div>
-                    <h2 style="color: #fff; font-family: 'Teko', sans-serif; font-size: 2rem; font-weight: 500; text-transform: uppercase; margin-bottom: 0.5rem;">Update Available</h2>
-                    <p style="color: #888; font-family: 'Inter', sans-serif; font-size: 0.875rem; margin-bottom: 2rem;">Version <span style="color: #FFB200;">${data.version}</span> is ready to install.</p>
-
-                    <a href="${data.downloadUrl}" target="_blank" style="display: block; width: 100%; background: linear-gradient(135deg, #FFD700, #FFB200); color: #000; font-family: 'Teko', sans-serif; font-size: 1.25rem; text-transform: uppercase; padding: 1rem; border-radius: 0.5rem; text-decoration: none; margin-bottom: 1rem; font-weight: bold; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        Download Update
-                    </a>
-
-                    <button onclick="this.closest('div').parentElement.remove()" style="background: transparent; border: none; color: #555; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 1px;">Dismiss</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
 </script>
 
 </body>
