@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+      /* Hide Scrollbar but keep functionality */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .loader { border-top-color: #10b981; -webkit-animation: spinner 1s linear infinite; animation: spinner 1s linear infinite; }
+      @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      
+      .label-text { display: block; font-size: 0.7rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 0.25rem; }
+      
+      .input-field { 
+        width: 100%; 
+        background: #1f2937; 
+        border: 1px solid #374151; 
+        border-radius: 0.5rem; 
+        padding: 0.75rem; 
+        color: #f3f4f6; 
+        transition: all 0.2s; 
+      }
+      .input-field:focus { border-color: #10b981; ring: 2px solid #10b981; outline: none; }
+      
+      .score-input { 
+        width: 100%; 
+        font-size: 2.5rem; 
+        font-weight: 800; 
+        text-align: center; 
+        background: #1f2937; 
+        border: 1px solid #374151; 
+        border-radius: 0.75rem; 
+        padding: 0.5rem; 
+        color: #f3f4f6; 
+      }
+      .score-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+      
+      .team-input {
+        background: transparent;
+        border: 1px solid transparent; 
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+        width: 100%;
+        font-size: 0.875rem;
+        border-radius: 0.25rem;
+        cursor: text;
+      }
+      .team-input:focus { background: #374151; border-color: #4b5563; outline: none; }
+      .team-input:hover { background: #1f2937; }
+
+      ::placeholder { color: #6b7280; }
+    </style>
+  </head>
+  <body class="bg-black h-screen overflow-hidden text-gray-100 font-sans">
+
+    <!-- App Shell Container -->
+    <div class="max-w-md mx-auto h-full flex flex-col border-x border-gray-800 bg-black relative shadow-2xl">
+      
+      <!-- Header (Fixed at Top) -->
+      <div class="bg-gray-900 text-white p-4 shrink-0 shadow-md border-b border-gray-800 z-20">
+        <div class="flex justify-between items-center mb-3">
+          <h1 class="text-lg font-bold uppercase tracking-wider flex items-center">
+            <i class="fas fa-wifi mr-2 text-green-400"></i>
+            <span>Field Command</span>
+          </h1>
+          <button onclick="fetchData()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition text-white flex items-center">
+            <i class="fas fa-sync-alt mr-1"></i> Refresh
+          </button>
+        </div>
+        
+        <select id="gameSelector" onchange="loadGame()" class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded p-2 focus:ring-2 focus:ring-green-500 focus:outline-none cursor-pointer">
+          <option value="" disabled selected>Loading Schedule...</option>
+        </select>
+      </div>
+
+      <!-- Scrollable Content Area -->
+      <div class="flex-1 overflow-y-auto no-scrollbar relative z-10">
+        <form id="gameForm" onsubmit="submitForm(event)" class="p-4 space-y-6">
+          <input type="hidden" name="id" id="gameId">
+
+          <!-- Banner: Teams -->
+          <div class="text-center pb-4 border-b border-gray-800">
+            <div class="text-xl font-bold text-white mb-1" id="matchupLabel">Select a Game</div>
+            <div class="text-xs text-gray-400 uppercase tracking-widest" id="weekLabel">WAITING FOR DATA</div>
+          </div>
+
+          <!-- Section: Game State -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-1">
+               <label class="label-text">QTR</label>
+               <input type="text" name="quarter" id="quarter" class="input-field font-bold text-center" placeholder="1">
+            </div>
+            <div class="col-span-2">
+               <label class="label-text">Clock</label>
+               <input type="text" name="clock" id="clock" class="input-field font-mono text-center tracking-wider" placeholder="12:00">
+            </div>
+          </div>
+
+          <!-- Section: Scoreboard -->
+          <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-800">
+            <datalist id="teamOptions"></datalist>
+            <div class="grid grid-cols-2 gap-8 relative">
+              <!-- VS Divider -->
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                <span class="text-2xl font-black text-gray-600 italic">VS</span>
+              </div>
+
+              <div class="text-center z-10">
+                <div class="text-[10px] text-gray-400 font-bold tracking-widest mb-1">HOME</div>
+                <input list="teamOptions" name="home" id="homeName" class="team-input mb-2 text-center w-full" placeholder="Home Team">
+                <input type="number" name="homescore" id="homescore" class="score-input">
+              </div>
+              <div class="text-center z-10">
+                <div class="text-[10px] text-gray-400 font-bold tracking-widest mb-1">AWAY</div>
+                <input list="teamOptions" name="away" id="awayName" class="team-input mb-2 text-center w-full" placeholder="Away Team">
+                <input type="number" name="awayscore" id="awayscore" class="score-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Field Position -->
+          <div class="bg-gray-900/30 p-4 rounded-xl border border-gray-800 space-y-3">
+            <div>
+              <label class="label-text">Possession</label>
+              <div class="relative">
+                <select name="possession" id="possession" class="input-field appearance-none">
+                  <option value="">- None -</option>
+                  <option value="HOME">HOME</option>
+                  <option value="AWAY">AWAY</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                  <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="label-text">Down</label>
+                <select name="down" id="down" class="input-field text-sm">
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                  <option value="3rd">3rd</option>
+                  <option value="4th">4th</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="label-text">To Go</label>
+                <input type="text" name="togo" id="togo" class="input-field" placeholder="10">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="label-text">Side</label>
+                <select name="ownopp" id="ownopp" class="input-field text-xs">
+                  <option value="OWN">OWN</option>
+                  <option value="OPP">OPP</option>
+                  <option value="MID">MID</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="label-text">Ball On</label>
+                <input type="text" name="ballon" id="ballon" class="input-field" placeholder="25">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Section: Broadcast Message -->
+          <div class="bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">
+             <label class="label-text text-green-400"><i class="fas fa-comment-alt mr-1"></i> Broadcast Message</label>
+             <textarea name="message" id="message" rows="3" oninput="this.value = this.value.toUpperCase()" class="input-field font-mono text-sm leading-tight resize-none uppercase" placeholder="Type message for the ticker..."></textarea>
+          </div>
+
+          <!-- Section: Status -->
+          <div class="pb-4">
+             <label class="label-text">Game Status</label>
+             <div class="relative">
+               <select name="status" id="status" class="input-field font-semibold text-gray-300 appearance-none">
+                 <option value="UPCOMING">UPCOMING</option>
+                 <option value="PREGAME">PREGAME</option>
+                 <option value="LIVE">LIVE</option>
+                 <option value="HALF">HALF</option>
+                 <option value="FINAL">FINAL</option>
+               </select>
+               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                 <i class="fas fa-chevron-down text-xs"></i>
+               </div>
+             </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Footer (Fixed at Bottom) -->
+      <div class="bg-black border-t border-gray-800 p-4 shrink-0 z-20">
+        <button id="submitBtn" onclick="submitForm(event)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-4 rounded-lg shadow-lg flex justify-center items-center transition-all active:scale-95 text-sm tracking-wide">
+          <span>UPDATE BOARD</span>
+          <i class="fas fa-paper-plane ml-2"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loader" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+      <div class="bg-gray-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-700 animate-pulse">
+        <div class="loader ease-linear rounded-full border-4 border-gray-600 h-10 w-10 mb-3"></div>
+        <div class="text-sm font-semibold text-gray-300 tracking-wider">SYNCING DATA...</div>
+      </div>
+    </div>
+
+    <script>
+      // --------------------------------------------------------------------
+      // MOCK BACKEND FOR LOCAL TESTING
+      // This allows the UI to function without the actual Google Apps Script environment.
+      if (typeof google === 'undefined') {
+        window.google = {
+          script: {
+            run: {
+              withSuccessHandler: function(func) {
+                this.successHandler = func;
+                return this;
+              },
+              withFailureHandler: function(func) {
+                this.failureHandler = func;
+                return this;
+              },
+              getDashboardData: function() {
+                console.log("[Mock] Fetching dashboard data...");
+                setTimeout(() => {
+                  const sampleData = [
+                    { id: "101", week: "1", home: "LIONS", away: "CHIEFS", quarter: "4", clock: "01:58", homescore: 21, awayscore: 20, togo: 6, ballon: 45, status: "LIVE", possession: "HOME", down: "3rd", ownopp: "OPP", message: "Crucial 3rd down for Detroit." },
+                    { id: "102", week: "1", home: "BEARS", away: "PACKERS", quarter: "1", clock: "15:00", homescore: 0, awayscore: 0, togo: 10, ballon: 25, status: "UPCOMING", possession: "", down: "1st", ownopp: "OWN", message: "" },
+                    { id: "103", week: "2", home: "COWBOYS", away: "GIANTS", quarter: "2", clock: "08:30", homescore: 14, awayscore: 3, togo: 10, ballon: 20, status: "LIVE", possession: "AWAY", down: "1st", ownopp: "OWN", message: "" }
+                  ];
+                  if (this.successHandler) {
+                    this.successHandler(JSON.stringify(sampleData));
+                  }
+                }, 800);
+              },
+              processGameUpdate: function(data) {
+                console.log("[Mock] Processing update:", data);
+                setTimeout(() => {
+                  if (this.successHandler) {
+                    this.successHandler();
+                  }
+                }, 1000);
+              }
+            }
+          }
+        };
+      }
+      // --------------------------------------------------------------------
+
+      let gamesData = [];
+      let allTeams = [];
+
+      window.onload = fetchData;
+
+      function fetchData() {
+        const sel = document.getElementById('gameSelector');
+        sel.innerHTML = '<option>Loading...</option>';
+        google.script.run.withSuccessHandler(populateDropdown).getDashboardData();
+      }
+
+      function populateDropdown(json) {
+        gamesData = JSON.parse(json);
+        const sel = document.getElementById('gameSelector');
+        
+        // 1. Extract Unique Teams
+        const teamSet = new Set();
+        gamesData.forEach(g => {
+          if(g.home) teamSet.add(g.home);
+          if(g.away) teamSet.add(g.away);
+        });
+        allTeams = Array.from(teamSet).sort();
+
+        // 2. Populate Data List
+        const dataList = document.getElementById('teamOptions');
+        dataList.innerHTML = ''; 
+
+        allTeams.forEach(team => {
+          const opt = document.createElement('option');
+          opt.value = team;
+          dataList.appendChild(opt);
+        });
+
+        // 3. Populate Game Selector
+        sel.innerHTML = '<option value="" disabled selected>Select a Game...</option>';
+        gamesData.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.innerText = `WK ${g.week}: ${g.home} vs ${g.away}`;
+          sel.appendChild(opt);
+        });
+      }
+
+      function loadGame() {
+        const id = document.getElementById('gameSelector').value;
+        const game = gamesData.find(g => String(g.id) === String(id));
+        if(!game) return;
+
+        // Populate Headers
+        document.getElementById('matchupLabel').innerText = `${game.home} vs ${game.away}`;
+        document.getElementById('weekLabel').innerText = `WEEK ${game.week}`;
+        
+        // Populate Team Inputs
+        document.getElementById('homeName').value = game.home;
+        document.getElementById('awayName').value = game.away;
+
+        // Populate Form
+        document.getElementById('gameId').value = game.id;
+        document.getElementById('quarter').value = game.quarter;
+        document.getElementById('clock').value = game.clock;
+        document.getElementById('homescore').value = game.homescore;
+        document.getElementById('awayscore').value = game.awayscore;
+        document.getElementById('togo').value = game.togo;
+        document.getElementById('ballon').value = game.ballon;
+        document.getElementById('status').value = game.status;
+        
+        // Populate Message
+        document.getElementById('message').value = game.message || "";
+        
+        setSelect('down', game.down, '1st');
+        setSelect('ownopp', game.ownopp, 'OWN');
+
+        // Smart Possession Init
+        const currentPos = String(game.possession).trim();
+        const homeName = String(game.home).trim();
+        const awayName = String(game.away).trim();
+        
+        const posSel = document.getElementById('possession');
+        
+        if (currentPos === 'HOME' || currentPos === homeName) {
+           posSel.value = 'HOME';
+        } else if (currentPos === 'AWAY' || currentPos === awayName) {
+           posSel.value = 'AWAY';
+        } else {
+           posSel.value = '';
+        }
+      }
+
+      function setSelect(id, val, def) {
+        const el = document.getElementById(id);
+        el.value = val || def;
+        if(el.value === "") el.value = def;
+      }
+
+      function submitForm(e) {
+        e.preventDefault();
+        const id = document.getElementById('gameId').value;
+        if(!id) return alert("Please select a game first.");
+
+        document.getElementById('loader').classList.remove('hidden');
+        const form = document.getElementById('gameForm');
+        const data = {};
+        
+        Array.from(form.elements).forEach(el => {
+          if(el.name) data[el.name] = el.value;
+        });
+
+        google.script.run
+          .withSuccessHandler(() => {
+             document.getElementById('loader').classList.add('hidden');
+             const btn = document.getElementById('submitBtn');
+             const oldHTML = btn.innerHTML;
+             btn.innerHTML = '<i class="fas fa-check"></i> UPDATED';
+             btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+             btn.classList.add('bg-gray-700');
+             setTimeout(() => {
+                btn.innerHTML = oldHTML;
+                btn.classList.remove('bg-gray-700');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+             }, 1500);
+          })
+          .withFailureHandler((err) => {
+             document.getElementById('loader').classList.add('hidden');
+             alert("Error: " + err);
+          })
+          .processGameUpdate(data);
+      }
+    </script>
+  </body>
+</html>
