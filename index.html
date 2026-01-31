@@ -12,18 +12,11 @@
     <style>
         /* --- MODERN VARIABLES --- */
         :root {
-            /* Changed background from #050505 to #121212 (standard dark mode gray) */
             --bg-dark: #121212;
-            
-            /* Changed card background from very transparent to a solid, lighter charcoal */
             --card-bg: #222222; 
-            
             --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFB200 100%);
-            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.3);
-            
-            /* Made borders brighter (0.25 opacity instead of 0.1) */
+            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.4); /* Increased hover glow slightly */
             --border-color: rgba(255, 255, 255, 0.25);
-            
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
         }
@@ -32,7 +25,6 @@
             margin: 0;
             padding: 0;
             background-color: var(--bg-dark);
-            /* Softened the radial gradient so it isn't pitch black */
             background-image: radial-gradient(circle at top center, #2a2a2a 0%, #121212 70%);
             font-family: var(--font-body);
             color: white;
@@ -67,7 +59,6 @@
         .header-gradient {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Adjusted gradient to match new background color */
             background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--bg-dark) 100%);
             z-index: 1;
         }
@@ -108,7 +99,7 @@
         /* --- TICKER STYLES --- */
         .ticker-container {
             width: 100%;
-            background: rgba(30, 30, 30, 0.8); /* Lighter background for ticker */
+            background: rgba(30, 30, 30, 0.8);
             border-bottom: 1px solid var(--border-color);
             overflow: hidden;
             white-space: nowrap;
@@ -131,7 +122,7 @@
         .matchup-card {
             display: inline-flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.08); /* Lighter card bg */
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 6px;
             padding: 6px 14px;
@@ -212,8 +203,9 @@
         }
 
         .nav-card {
-            background: var(--card-bg); /* Now uses the lighter gray */
-            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            /* UPDATED: Changed default border to subtle gold */
+            border: 1px solid rgba(255, 178, 0, 0.3);
             border-radius: 12px;
             padding: 20px;
             text-decoration: none;
@@ -225,7 +217,8 @@
             overflow: hidden;
             width: 100%;
             box-sizing: border-box;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Added shadow for depth */
+            /* UPDATED: Added subtle gold glow to default state alongside depth shadow */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 0 10px rgba(255, 178, 0, 0.1);
         }
 
         /* Button Reset specific for the contact button using nav-card style */
@@ -247,9 +240,10 @@
 
         .nav-card:hover {
             transform: translateY(-3px);
-            background: #333; /* Even lighter on hover */
-            box-shadow: var(--gold-glow);
-            border-color: rgba(255, 178, 0, 0.5);
+            background: #333;
+            /* Stronger glow on hover */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4), var(--gold-glow);
+            border-color: #FFB200;
         }
 
         .nav-card:hover::before { opacity: 1; width: 6px; }
@@ -266,7 +260,7 @@
         }
 
         .nav-sub { 
-            color: #bbbbbb; /* Made lighter for readability */
+            color: #bbbbbb;
             font-size: 12px; 
             margin-top: 4px; 
             font-weight: 500; 
@@ -275,21 +269,14 @@
         .nav-icon { color: #FFB200; opacity: 0.8; transition: 0.3s; }
         .nav-card:hover .nav-icon { transform: scale(1.1) rotate(-5deg); opacity: 1; color: #FFD700; }
 
-        /* Featured & Download Card Styles */
+        /* Featured Card Styles */
         .featured-card {
-            background: linear-gradient(45deg, rgba(255, 178, 0, 0.2), #222); /* Brighter gradient */
-            border: 1px solid rgba(255, 178, 0, 0.4);
+            background: linear-gradient(45deg, rgba(255, 178, 0, 0.15), #222);
+            border: 1px solid rgba(255, 178, 0, 0.5);
         }
         .featured-card .nav-title { color: #FFB200; }
 
-        .download-card {
-            border: 1px solid #FFB200;
-            background: rgba(255, 178, 0, 0.15); /* Slightly brighter background */
-        }
-        .download-card:hover {
-            box-shadow: 0 0 25px rgba(255, 178, 0, 0.3);
-            background: rgba(255, 178, 0, 0.2);
-        }
+        /* NOTE: .download-card styles removed to make it uniform with others */
 
         /* --- POPUP MODAL --- */
         .modal-overlay {
@@ -305,7 +292,7 @@
         }
 
         .modal-content {
-            background: #1e1e1e; /* Lighter modal background */
+            background: #1e1e1e;
             border: 1px solid #444;
             width: 100%; max-width: 450px;
             border-radius: 16px;
@@ -367,7 +354,6 @@
                 <span class="game-time">7:00 PM</span>
             </div>
         </div>
-
         <div class="matchup-card">
             <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
             <span class="team-name">Imhotep</span>
@@ -379,7 +365,6 @@
                 <span class="game-time">1:00 PM</span>
             </div>
         </div>
-
         <div class="matchup-card">
             <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
             <span class="team-name">Central Catholic</span>
@@ -391,7 +376,6 @@
                 <span class="game-time">7:00 PM</span>
             </div>
         </div>
-
         <div class="matchup-card">
             <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
             <span class="team-name">Harrisburg</span>
@@ -413,7 +397,7 @@
             <span class="nav-title">Live Scoreboard</span>
             <span class="nav-sub">Real-time games & stats</span>
         </div>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </a>
 
     <a href="padir.html" class="nav-card">
@@ -440,7 +424,7 @@
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5l6-4.5-6-4.5v9z"/></svg>
     </a>
 
-    <a href="https://github.com/pahsfootball/website/releases/latest/download/pahsfootball.apk" class="nav-card download-card" target="_blank">
+    <a href="https://github.com/pahsfootball/website/releases/latest/download/pahsfootball.apk" class="nav-card" target="_blank">
         <div class="nav-text">
             <span class="nav-title">Download The Official Android App</span>
             <span class="nav-sub">Get the full experience on Android</span>
@@ -494,8 +478,6 @@
     function setupInfiniteTicker() {
         const ticker = document.getElementById('matchupTicker');
         if(!ticker) return;
-
-        // Clone the content to ensure seamless loop
         const content = ticker.innerHTML;
         ticker.innerHTML = content + content;
     }
