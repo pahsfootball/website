@@ -6,18 +6,30 @@
     <title>PIAA Championship History | PAHSFootball</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.js"></script>
 
     <style>
         body {
-            background-color: #808080; /* Body Gray */
+            background-color: #808080;
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
+        }
+
+        /* Loading / Error States */
+        #loading-message {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-weight: bold; text-align: center;
         }
 
         /* Custom Scrollbar */
@@ -26,57 +38,80 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Sticky Header Logic */
-        .sticky-header th {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background-color: #f8fafc;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
         /* Ticker Animation */
         .ticker-wrap {
-            width: 100%;
-            overflow: hidden;
-            background-color: #fbbf24; /* Amber-400 */
-            height: 40px;
-            display: flex;
-            align-items: center;
+            width: 100%; overflow: hidden; background-color: #fbbf24; height: 40px;
+            display: flex; align-items: center;
         }
-
         .ticker-item {
-            white-space: nowrap;
-            font-weight: 600;
-            color: #0f172a;
-            font-size: 0.9rem;
-            /* Animation: 18s (Twice as fast) | linear | infinite loop */
-            animation: ticker 18s linear infinite;
+            white-space: nowrap; font-weight: 600; color: #0f172a; font-size: 0.9rem;
+            animation: ticker 25s linear infinite;
         }
-
         @keyframes ticker {
-            /* Start completely off-screen to the right (100% of Viewport Width) */
             0% { transform: translate3d(100vw, 0, 0); }
-
-            /* End completely off-screen to the left (-100% of Element Width) */
             100% { transform: translate3d(-100%, 0, 0); }
-        }
-
-        /* Pause on hover so people can read */
-        .ticker-wrap:hover .ticker-item {
-            animation-play-state: paused;
         }
     </style>
 </head>
 <body>
+
+<div id="loading-message">
+    <svg class="animate-spin h-10 w-10 text-white mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Loading Database...
+</div>
+
 <div id="root"></div>
 
-<script type="text/babel" data-type="module">
-    import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
-    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-    import { Search, Trophy, Medal, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart2, Table as TableIcon, AlertCircle, Loader2, X, Home, ArrowLeft } from 'https://esm.sh/lucide-react@0.263.1';
-    import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'https://esm.sh/recharts@2.12.0?deps=react@18.2.0,react-dom@18.2.0';
-    import Papa from 'https://esm.sh/papaparse@5.4.1';
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        const root = document.getElementById('root');
+        document.getElementById('loading-message').style.display = 'none';
+        root.innerHTML = `
+            <div style="padding:20px; text-align:center; color:white;">
+                <h3 style="color:#ff6b6b; font-size:20px; font-weight:bold;">App Error</h3>
+                <p>We couldn't load the database.</p>
+                <code style="display:block; background:#333; padding:10px; margin-top:10px; text-align:left; font-size:12px;">${message}</code>
+            </div>
+        `;
+    };
+</script>
+
+<script type="text/babel">
+    // 2. DESTRUCTURE FROM WINDOW (Global Variables)
+    // This replaces "import { ... } from ..."
+    const { useState, useEffect, useMemo } = React;
+    const { createRoot } = ReactDOM;
+    
+    // Icon Fallbacks - If LucideReact fails to load, we use simple spans
+    const L = window.LucideReact || {};
+    const Search = L.Search || (() => <span>🔍</span>);
+    const Trophy = L.Trophy || (() => <span>🏆</span>);
+    const Medal = L.Medal || (() => <span>🥇</span>);
+    const Filter = L.Filter || (() => <span>Y</span>);
+    const ChevronDown = L.ChevronDown || (() => <span>▼</span>);
+    const ChevronUp = L.ChevronUp || (() => <span>▲</span>);
+    const ChevronLeft = L.ChevronLeft || (() => <span>←</span>);
+    const ChevronRight = L.ChevronRight || (() => <span>→</span>);
+    const BarChart2 = L.BarChart2 || (() => <span>📊</span>);
+    const TableIcon = L.Table || (() => <span>📋</span>);
+    const AlertCircle = L.AlertCircle || (() => <span>!</span>);
+    const Loader2 = L.Loader2 || (() => <span>...</span>);
+    const X = L.X || (() => <span>✕</span>);
+    const ArrowLeft = L.ArrowLeft || (() => <span>←</span>);
+
+    // Recharts Destructuring
+    const R = window.Recharts || {};
+    const BarChart = R.BarChart;
+    const Bar = R.Bar;
+    const XAxis = R.XAxis;
+    const YAxis = R.YAxis;
+    const CartesianGrid = R.CartesianGrid;
+    const Tooltip = R.Tooltip;
+    const ResponsiveContainer = R.ResponsiveContainer;
+    const Cell = R.Cell;
 
     const SHEET_ID = "2PACX-1vQqz822LpxlX7Tr4RrPW43UuZzi8L1CnT87qSTXbBPMbiHOzoApX5X9itEZjR1WqsR_jGq5BNIzKNqJ";
     const SHEET_GID = "477747733";
@@ -103,6 +138,10 @@
         const [yearColumn, setYearColumn] = useState('');
 
         useEffect(() => {
+            // Hide the generic HTML loading message once React mounts
+            const preloader = document.getElementById('loading-message');
+            if(preloader) preloader.style.display = 'none';
+
             const parseCSV = () => {
                 Papa.parse(CSV_URL, {
                     download: true,
@@ -150,7 +189,8 @@
                         setLoading(false);
                     },
                     error: (err) => {
-                        setError("Failed to fetch data.");
+                        console.error(err);
+                        setError("Failed to fetch data. Check internet connection.");
                         setLoading(false);
                     }
                 });
@@ -232,19 +272,14 @@
 
         const CHART_COLORS = ['#1e3a8a', '#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1', '#94a3b8', '#64748b', '#475569'];
 
-        // --- RENDER HELPERS ---
-        if (loading) return (
-            <div className="flex flex-col items-center justify-center h-screen w-full bg-[#808080]">
-                <Loader2 className="w-12 h-12 text-white animate-spin mb-4" />
-                <p className="text-slate-200 font-medium text-lg">Loading Database...</p>
-            </div>
-        );
+        if (loading) return null; // Logic is handled by the pre-loader HTML above
 
         if (error) return (
             <div className="flex flex-col items-center justify-center h-screen w-full bg-red-50 p-6 text-center">
                 <AlertCircle className="w-12 h-12 text-red-600 mb-2" />
                 <h3 className="text-xl font-bold text-red-900">Database Error</h3>
                 <p className="text-red-700">{error}</p>
+                <a href="index.html" className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">Go Back</a>
             </div>
         );
 
@@ -258,18 +293,17 @@
                     </div>
                 </div>
 
-                {/* TOP NAVIGATION BAR - CHANGED to ZINC-900 (Dark Gray) */}
-                <nav className="bg-zinc-900 text-white shadow-lg sticky top-0 z-50 border-b border-zinc-700">
+                {/* TOP NAVIGATION BAR */}
+                <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50 border-b border-slate-700">
                     <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Trophy className="text-yellow-500" size={24} />
-                            <span className="font-bold text-lg tracking-tight">PAHS<span className="text-zinc-400">Football</span> Database</span>
+                            <span className="font-bold text-lg tracking-tight">PAHS<span className="text-slate-400">Football</span> Database</span>
                         </div>
 
-                        {/* UPDATED LINK: Points to local index.html */}
                         <a
                             href="index.html"
-                            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition-colors border border-zinc-600"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors border border-slate-600"
                         >
                             <ArrowLeft size={16} />
                             <span className="hidden sm:inline">Back to </span>Main Menu
@@ -363,15 +397,15 @@
 
                             {/* Table */}
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                                <div className="overflow-x-auto custom-scrollbar flex-grow">
-                                    <table className="w-full text-left border-collapse sticky-header">
-                                        <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-200">
+                                <div className="overflow-x-auto custom-scrollbar flex-grow" style={{ maxHeight: '600px' }}>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                                            <tr className="border-b border-slate-200">
                                                 {columns.map((col) => (
                                                     <th
                                                         key={col}
                                                         onClick={() => requestSort(col)}
-                                                        className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors select-none whitespace-nowrap group"
+                                                        className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors select-none whitespace-nowrap group bg-slate-50"
                                                     >
                                                         <div className="flex items-center gap-1">
                                                             {col}
@@ -476,36 +510,43 @@
                                         <p className="text-sm text-slate-500">Top 10 Schools by Championship Count</p>
                                     </div>
                                 </div>
-                                <div className="h-[500px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={stats.topTeams} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                                            <XAxis type="number" hide />
-                                            <YAxis
-                                                dataKey="name"
-                                                type="category"
-                                                width={150}
-                                                tick={{fontSize: 12, fill: '#64748b', fontWeight: 600}}
-                                                interval={0}
-                                            />
-                                            <RechartsTooltip
-                                                cursor={{fill: '#f8fafc'}}
-                                                contentStyle={{
-                                                    borderRadius: '8px',
-                                                    border: '1px solid #e2e8f0',
-                                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                                    color: '#1e293b',
-                                                    fontWeight: 'bold'
-                                                }}
-                                            />
-                                            <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={28} label={{ position: 'right', fill: '#1e293b', fontSize: 13, fontWeight: '800', offset: 8 }}>
-                                                {stats.topTeams.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
+                                {/* Safe Check for Chart Library */}
+                                {BarChart ? (
+                                    <div className="h-[500px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={stats.topTeams} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                                                <XAxis type="number" hide />
+                                                <YAxis
+                                                    dataKey="name"
+                                                    type="category"
+                                                    width={150}
+                                                    tick={{fontSize: 12, fill: '#64748b', fontWeight: 600}}
+                                                    interval={0}
+                                                />
+                                                <Tooltip
+                                                    cursor={{fill: '#f8fafc'}}
+                                                    contentStyle={{
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #e2e8f0',
+                                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                                        color: '#1e293b',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                />
+                                                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={28} label={{ position: 'right', fill: '#1e293b', fontSize: 13, fontWeight: '800', offset: 8 }}>
+                                                    {stats.topTeams.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-10 text-slate-500 bg-slate-50 rounded-lg">
+                                        Chart library failed to load. Use "Records" view.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -523,5 +564,4 @@
     root.render(<PIAAChampionshipWidget />);
 </script>
 </body>
-
 </html>
