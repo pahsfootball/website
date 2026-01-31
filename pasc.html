@@ -10,13 +10,15 @@
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-    
+
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.js"></script>
+    
+    <script src="https://unpkg.com/recharts@2.12.0/umd/Recharts.js"></script>
 
     <style>
         body {
@@ -68,11 +70,13 @@
 <script>
     window.onerror = function(message, source, lineno, colno, error) {
         const root = document.getElementById('root');
-        document.getElementById('loading-message').style.display = 'none';
+        const loader = document.getElementById('loading-message');
+        if(loader) loader.style.display = 'none';
+        
         root.innerHTML = `
             <div style="padding:20px; text-align:center; color:white;">
                 <h3 style="color:#ff6b6b; font-size:20px; font-weight:bold;">App Error</h3>
-                <p>We couldn't load the database.</p>
+                <p>Something went wrong loading the app.</p>
                 <code style="display:block; background:#333; padding:10px; margin-top:10px; text-align:left; font-size:12px;">${message}</code>
             </div>
         `;
@@ -81,10 +85,9 @@
 
 <script type="text/babel">
     // 2. DESTRUCTURE FROM WINDOW (Global Variables)
-    // This replaces "import { ... } from ..."
     const { useState, useEffect, useMemo } = React;
     const { createRoot } = ReactDOM;
-    
+
     // Icon Fallbacks - If LucideReact fails to load, we use simple spans
     const L = window.LucideReact || {};
     const Search = L.Search || (() => <span>🔍</span>);
@@ -102,8 +105,10 @@
     const X = L.X || (() => <span>✕</span>);
     const ArrowLeft = L.ArrowLeft || (() => <span>←</span>);
 
-    // Recharts Destructuring
-    const R = window.Recharts || {};
+    // Recharts Destructuring - Robust Check
+    // We check window.Recharts.default (sometimes needed) or window.Recharts
+    const R = window.Recharts || (window.Recharts ? window.Recharts.default : {}) || {};
+    
     const BarChart = R.BarChart;
     const Bar = R.Bar;
     const XAxis = R.XAxis;
