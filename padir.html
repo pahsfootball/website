@@ -58,7 +58,7 @@
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
 
-        /* --- UPDATED: Light Gray Team Cards --- */
+        /* Light Gray Team Cards */
         .directory-card {
             background: #f4f4f5; /* Very Light Gray */
             border: 1px solid rgba(0, 0, 0, 0.1);
@@ -75,18 +75,23 @@
             box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
         }
 
-        /* Inputs & Selects */
+        /* --- UPDATED: Light Inputs & Selects with Gold Glow --- */
         .modern-input {
-            background: #18181b;
-            border: 1px solid #3f3f46;
-            color: white;
-            transition: all 0.2s ease;
+            background: #f4f4f5; /* Very Light Gray */
+            border: 2px solid #fbbf24; /* PAHS Gold Border */
+            color: #18181b; /* Dark text for readability */
+            transition: all 0.3s ease;
         }
+        
+        .modern-input::placeholder {
+            color: #71717a; /* Medium gray placeholder */
+        }
+        
         .modern-input:focus {
+            background: #ffffff; /* Brighten on focus */
             border-color: #fbbf24;
-            background: #27272a;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); /* PAHS Gold Glow Effect */
         }
 
         /* Dropdown Arrow */
@@ -125,12 +130,12 @@
             </div>
 
             <div class="relative w-full group">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500 group-focus-within:text-pahs-gold transition-colors">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500 group-focus-within:text-pahs-gold transition-colors z-10">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
                 <input type="text" id="searchInput" placeholder="Search schools, towns, counties..."
-                       class="modern-input w-full pl-11 pr-10 py-3.5 rounded-xl text-base shadow-inner placeholder-gray-500">
-                <button id="clearBtn" class="absolute inset-y-0 right-3 text-gray-500 hover:text-pahs-gold hidden transition-colors">
+                       class="modern-input w-full pl-11 pr-10 py-3.5 rounded-xl text-base shadow-inner">
+                <button id="clearBtn" class="absolute inset-y-0 right-3 text-gray-500 hover:text-pahs-gold hidden transition-colors z-10">
                     <i class="fa-solid fa-circle-xmark"></i>
                 </button>
             </div>
@@ -376,7 +381,6 @@
             const primaryColor = p || '#a1a1aa'; // fallback to gray
 
             const card = document.createElement('div');
-            // UPDATED: Now uses the light gray styling
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
             card.onclick = () => openModal(idx);
             
