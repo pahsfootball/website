@@ -15,7 +15,7 @@
             --bg-dark: #121212;
             --card-bg: #222222; 
             --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFB200 100%);
-            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.4); /* Increased hover glow slightly */
+            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.4); 
             --border-color: rgba(255, 255, 255, 0.25);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
@@ -204,7 +204,6 @@
 
         .nav-card {
             background: var(--card-bg);
-            /* UPDATED: Changed default border to subtle gold */
             border: 1px solid rgba(255, 178, 0, 0.3);
             border-radius: 12px;
             padding: 20px;
@@ -217,11 +216,9 @@
             overflow: hidden;
             width: 100%;
             box-sizing: border-box;
-            /* UPDATED: Added subtle gold glow to default state alongside depth shadow */
             box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 0 10px rgba(255, 178, 0, 0.1);
         }
 
-        /* Button Reset specific for the contact button using nav-card style */
         button.nav-card {
             cursor: pointer;
             text-align: left;
@@ -241,7 +238,6 @@
         .nav-card:hover {
             transform: translateY(-3px);
             background: #333;
-            /* Stronger glow on hover */
             box-shadow: 0 6px 12px rgba(0,0,0,0.4), var(--gold-glow);
             border-color: #FFB200;
         }
@@ -269,14 +265,51 @@
         .nav-icon { color: #FFB200; opacity: 0.8; transition: 0.3s; }
         .nav-card:hover .nav-icon { transform: scale(1.1) rotate(-5deg); opacity: 1; color: #FFD700; }
 
-        /* Featured Card Styles */
         .featured-card {
             background: linear-gradient(45deg, rgba(255, 178, 0, 0.15), #222);
             border: 1px solid rgba(255, 178, 0, 0.5);
         }
         .featured-card .nav-title { color: #FFB200; }
 
-        /* NOTE: .download-card styles removed to make it uniform with others */
+        /* --- FOOTER STYLES --- */
+        .app-footer {
+            margin-top: auto; /* Pushes footer to bottom */
+            background: #0f0f0f;
+            border-top: 1px solid var(--border-color);
+            padding: 30px 20px;
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .app-footer p {
+            margin: 5px 0;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .footer-links {
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: #FFB200;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #FFD700;
+            text-decoration: underline;
+        }
+
+        .footer-links span {
+            color: #555;
+        }
 
         /* --- POPUP MODAL --- */
         .modal-overlay {
@@ -343,8 +376,6 @@
 
 <div class="ticker-container">
     <div class="ticker-wrapper" id="matchupTicker">
-       
-       
         <div class="matchup-card">
             <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
             <span class="team-name">WAITING ON 2026 SCHEDULE</span>
@@ -360,7 +391,6 @@
 </div>
 
 <div class="content-area">
-    
     <a href="livescoreboards.html" class="nav-card featured-card">
         <div class="nav-text">
             <span class="nav-title">Live Scoreboard</span>
@@ -410,9 +440,17 @@
         </div>
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
     </button>
-
 </div>
 
+<footer class="app-footer">
+    <p>&copy; 2026 PAHSFOOTBALL.com. All Rights Reserved.</p>
+    <p><em>PAHSFOOTBALL.com and the PAHS Football app are independently operated. All team names, logos, and brands are property of their respective owners. Use of these names, logos, and brands does not imply endorsement.</em></p>
+    <div class="footer-links">
+        <a href="privacy.html">Privacy Policy</a> <span>|</span> 
+        <a href="terms.html">Terms of Service</a> <span>|</span> 
+        <a href="#" onclick="openModal(); return false;">App Support</a>
+    </div>
+</footer>
 
 <div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
     <div class="modal-content">
