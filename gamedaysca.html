@@ -267,9 +267,65 @@
             } else { document.getElementById('ui-datetime').innerText = "Date/Time TBA"; }
             
             document.getElementById('ui-theme').innerText = game.Theme || "No Theme";
-            document.getElementById('ui-weather').innerText = game.Weather || "Check back game week!";
             document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
             document.getElementById('ui-address').innerText = game.Address || "Address TBA";
+
+            // --- AUTOMATIC WEATHER LOGIC ---
+            const weatherEl = document.getElementById('ui-weather');
+            if (game.Weather && game.Weather.trim() !== "") {
+                // If user manually entered weather in the sheet, use it!
+                weatherEl.innerText = game.Weather;
+            } else if (!isNaN(dateObj)) {
+                const diffDays = (dateObj.getTime() - new Date().getTime()) / (1000 * 3600 * 24);
+                // Only try to fetch weather if the game is within the next 7 days and we have an address
+                if (diffDays >= -1 && diffDays <= 7 && game.Address && game.Address.trim() !== "") {
+                    weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-500"></i> Fetching...';
+                    
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(game.Address)}&limit=1`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data && data.length > 0) {
+                            const lat = data[0].lat;
+                            const lon = data[0].lon;
+                            return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York`);
+                        }
+                        throw new Error("Location not found");
+                    })
+                    .then(res => res.json())
+                    .then(wData => {
+                        const y = dateObj.getFullYear();
+                        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const d = String(dateObj.getDate()).padStart(2, '0');
+                        const targetStr = `${y}-${m}-${d}`;
+                        
+                        const idx = wData.daily.time.indexOf(targetStr);
+                        if(idx !== -1) {
+                            const max = Math.round(wData.daily.temperature_2m_max[idx]);
+                            const min = Math.round(wData.daily.temperature_2m_min[idx]);
+                            const code = wData.daily.weathercode[idx];
+                            
+                            let desc = "Clear";
+                            if(code >= 1 && code <= 3) desc = "Partly Cloudy";
+                            if(code >= 45 && code <= 48) desc = "Foggy";
+                            if(code >= 51 && code <= 67) desc = "Rain";
+                            if(code >= 71 && code <= 86) desc = "Snow";
+                            if(code >= 95) desc = "Storms";
+
+                            weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span> &nbsp;•&nbsp; ${desc}`;
+                        } else {
+                            weatherEl.innerText = "Check back game week!";
+                        }
+                    })
+                    .catch(err => {
+                        weatherEl.innerText = "Check back game week!";
+                    });
+                } else {
+                    weatherEl.innerText = "Check back game week!";
+                }
+            } else {
+                weatherEl.innerText = "TBA";
+            }
+            // -------------------------------
             
             let ticketUrl = game.TicketLink || game['Ticket Link'] || game.Tickets || game.TicketURL || game['Ticket URL'];
             if(ticketUrl && ticketUrl.trim() !== "") { document.getElementById('ui-ticket').href = ticketUrl; document.getElementById('ui-ticket').style.display = 'block'; } 
