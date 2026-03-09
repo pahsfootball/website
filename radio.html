@@ -3,118 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Links</title>
-    <style>
-        /* Reusing the same styles for consistency */
-        body { margin: 0; padding: 0; background-color: #000; font-family: Arial, sans-serif; color: white; display: flex; flex-direction: column; min-height: 100vh; }
+    <title>Radio & Streaming | PAHSFootball</title>
 
-        .header-section { background-color: #000; text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; width: 100%; }
-        .header-banner { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        .home-btn-container { padding-top: 10px; }
-        .home-btn { display: inline-block; text-decoration: none; background-color: #FFb200; color: #000; padding: 8px 20px; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; border: 1px solid #b89a00; }
-
-        .menu-container { padding: 30px 20px; max-width: 500px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-
-        h2 { color: #ffb200; text-align: center; text-transform: uppercase; margin-bottom: 20px; }
-        p { text-align: center; color: #aaa; margin-bottom: 30px; font-size: 14px; }
-
-        .radio-link {
-            display: block;
-            width: 100%;
-            background-color: #222; /* Darker for list items */
-            color: #fff;
-            padding: 15px;
-            margin-bottom: 15px;
-            text-decoration: none;
-            border-left: 5px solid #ffb200; /* Gold accent on left */
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background-color 0.2s;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
         }
+    </script>
 
-        .radio-link:active { background-color: #333; }
-        .station-name { display: block; font-size: 16px; margin-bottom: 4px; }
-        .station-location { display: inline-block; font-size: 11px; color: #888; text-transform: uppercase; background-color: #111; padding: 2px 6px; border-radius: 3px; margin-bottom: 4px; }
-        .station-desc { display: block; font-size: 12px; color: #bbb; margin-top: 4px; font-weight: normal; line-height: 1.4; }
-
-        @media (orientation: landscape) and (max-height: 600px) { .header-banner { display: none; } }
+    <style>
+        body { 
+            background-color: #adadad; 
+            font-family: 'Inter', sans-serif; 
+            color: #18181b; 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh; 
+        }
+        
+        .content-card { 
+            background-color: #f4f4f5; 
+            border: 1px solid rgba(0, 0, 0, 0.1); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); 
+        }
     </style>
 </head>
-<body>
+<body class="antialiased">
 
-<div class="header-section">
-    <img src="pahsfootballbanner.png" alt="Banner" class="header-banner">
-    <div class="home-btn-container">
-        <a href="index.html" class="home-btn">&larr; Main Menu</a>
-    </div>
-</div>
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                </a>
+                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Radio & Streaming</h1>
+            </div>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-football text-pahs-gold"></i>
+                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
+            </div>
+        </div>
+    </nav>
 
-<div class="menu-container">
-    <h2>Radio & Streaming</h2>
-    <p>Select a station below. Streams will open in your browser to ensure background playback.</p>
+    <main class="max-w-3xl mx-auto px-4 py-12">
+        
+        <div class="text-center mb-10">
+            <h2 class="font-head text-4xl md:text-5xl uppercase tracking-wide text-gray-900 drop-shadow-sm flex items-center justify-center gap-3">
+                <i class="fa-solid fa-radio text-pahs-gold"></i> Broadcasts
+            </h2>
+            <p class="text-gray-700 font-medium mt-2 max-w-lg mx-auto">Select a station below. Streams will open in your browser to ensure background playback.</p>
+        </div>
 
-    <a href="https://tunein.com/radio/WEEU-830-s28461/" target="_blank" class="radio-link">
-        <span class="station-name">WEEU 830 AM</span>
-        <span class="station-location">Reading, PA</span>
-        <span class="station-desc">Broadcasts high school football games with pregame shows starting at 6:30 PM on Fridays and 1 PM on Saturdays.</span>
-    </a>
+        <div class="space-y-4">
+            
+            <a href="https://tunein.com/radio/WEEU-830-s28461/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">WEEU 830 AM</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Reading, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Broadcasts high school football games with pregame shows starting at 6:30 PM on Fridays and 1 PM on Saturdays.</p>
+                </div>
+            </a>
 
-    <a href="http://www.blackdiamondsports.net/" target="_blank" class="radio-link">
-        <span class="station-name">Black Diamond Sports Network (BDSN)</span>
-        <span class="station-location">Coal Region, PA</span>
-        <span class="station-desc">Provides free live internet broadcasts of high school football games in Central Pennsylvania.</span>
-    </a>
+            <a href="http://www.blackdiamondsports.net/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">Black Diamond Sports Network</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Coal Region, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Provides free live internet broadcasts of high school football games in Central Pennsylvania.</p>
+                </div>
+            </a>
 
-    <a href="https://centralpasports.com/live-streaming/" target="_blank" class="radio-link">
-        <span class="station-name">Central PA Sports</span>
-        <span class="station-location">Lock Haven, PA</span>
-        <span class="station-desc">Covers high school athletics in Central Pennsylvania, including teams like Central Mountain and Jersey Shore.</span>
-    </a>
+            <a href="https://centralpasports.com/live-streaming/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">Central PA Sports</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Lock Haven, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Covers high school athletics in Central Pennsylvania, including teams like Central Mountain and Jersey Shore.</p>
+                </div>
+            </a>
 
-    <a href="https://wpse.psu.edu/" target="_blank" class="radio-link">
-        <span class="station-name">WPSE 1450 AM / 107.1 FM</span>
-        <span class="station-location">Erie, PA</span>
-        <span class="station-desc">Streams high school football and basketball games live, starting 10 minutes before the pregame show.</span>
-    </a>
+            <a href="https://wpse.psu.edu/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">WPSE 1450 AM / 107.1 FM</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Erie, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Streams high school football and basketball games live, starting 10 minutes before the pregame show.</p>
+                </div>
+            </a>
 
-    <a href="https://www.fridaynightpa.com/" target="_blank" class="radio-link">
-        <span class="station-name">Friday Night PA</span>
-        <span class="station-location">PA</span>
-        <span class="station-desc">Offers live streams of high school football games across Pennsylvania via their website and app.</span>
-    </a>
+            <a href="https://www.fridaynightpa.com/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">Friday Night PA</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Statewide</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Offers live streams of high school football games across Pennsylvania via their website and app.</p>
+                </div>
+            </a>
 
-    <a href="https://psucommradio.mixlr.com/" target="_blank" class="radio-link">
-        <span class="station-name">Penn Sports Radio</span>
-        <span class="station-location">PA</span>
-        <span class="station-desc">Provides live and archived broadcasts of high school sports events through Mixlr channels.</span>
-    </a>
+            <a href="https://psucommradio.mixlr.com/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">Penn Sports Radio</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Statewide</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Provides live and archived broadcasts of high school sports events through Mixlr channels.</p>
+                </div>
+            </a>
 
-    <a href="https://www.audacy.com/kdkaradio" target="_blank" class="radio-link">
-        <span class="station-name">KDKA Radio</span>
-        <span class="station-location">Pittsburgh, PA</span>
-        <span class="station-desc">Broadcasts PIAA State Football Championship games live from Chapman Field.</span>
-    </a>
+            <a href="https://www.audacy.com/kdkaradio" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">KDKA Radio</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Pittsburgh, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Broadcasts PIAA State Football Championship games live from Chapman Field.</p>
+                </div>
+            </a>
 
-    <a href="https://www.radio.net/s/wmbs" target="_blank" class="radio-link">
-        <span class="station-name">WMBS 590 AM / 101.1 FM</span>
-        <span class="station-location">Uniontown, PA</span>
-        <span class="station-desc">Covers local high school football and basketball games in the Uniontown area.</span>
-    </a>
+            <a href="https://www.radio.net/s/wmbs" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">WMBS 590 AM / 101.1 FM</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Uniontown, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Covers local high school football and basketball games in the Uniontown area.</p>
+                </div>
+            </a>
 
-    <a href="https://tunein.com/radio/WBUT-1050-s27656/" target="_blank" class="radio-link">
-        <span class="station-name">WBUT 1050 AM / 97.3 FM</span>
-        <span class="station-location">Butler, PA</span>
-        <span class="station-desc">Broadcasts Butler Area Senior High School football and basketball games.</span>
-    </a>
+            <a href="https://tunein.com/radio/WBUT-1050-s27656/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">WBUT 1050 AM / 97.3 FM</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Butler, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Broadcasts Butler Area Senior High School football and basketball games.</p>
+                </div>
+            </a>
 
-    <a href="https://www.iheart.com/live/newsradio-1070-wkok-10114/" target="_blank" class="radio-link">
-        <span class="station-name">WKOK 1070 AM</span>
-        <span class="station-location">Sunbury, PA</span>
-        <span class="station-desc">Covers Shikellamy High School football, wrestling, and basketball games.</span>
-    </a>
+            <a href="https://www.iheart.com/live/newsradio-1070-wkok-10114/" target="_blank" class="content-card block rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-y-0 left-0 w-1.5 bg-pahs-gold transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                <div class="pl-3">
+                    <div class="flex flex-wrap items-baseline gap-3 mb-1">
+                        <span class="font-head text-2xl uppercase tracking-wide text-gray-900 leading-none">WKOK 1070 AM</span>
+                        <span class="bg-gray-200 text-gray-600 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-gray-300"><i class="fa-solid fa-location-dot mr-1"></i>Sunbury, PA</span>
+                    </div>
+                    <p class="text-sm text-gray-600 font-medium">Covers Shikellamy High School football, wrestling, and basketball games.</p>
+                </div>
+            </a>
 
-</div>
+        </div>
+
+    </main>
 
 </body>
 </html>
