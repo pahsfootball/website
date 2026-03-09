@@ -88,7 +88,7 @@
             width: 100%; background: #fbbf24; color: black; font-family: 'Teko', sans-serif; font-size: 22px; 
             padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
             letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            margin-top: 12px; /* ADDED SPACING HERE */
+            margin-top: 12px; /* Spacing added here previously */
         }
         .submit-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
@@ -191,8 +191,8 @@
                     <label>Phone (Optional)</label>
                     <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
 
-                    <label>Email (Optional)</label>
-                    <input type="email" id="emailInput" name="entry.1778241553" placeholder="email@example.com">
+                    <label>Email <span style="color:red">*</span></label>
+                    <input type="email" id="emailInput" name="entry.1778241553" required placeholder="email@example.com">
 
                     <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
                     <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
@@ -244,8 +244,8 @@
             const phoneVal = document.getElementById('phoneInput').value.trim();
             const emailVal = document.getElementById('emailInput').value.trim();
 
-            if (!phoneVal && !emailVal) {
-                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
+            if (!emailVal) {
+                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter your Email address.'; return;
             }
             if (phoneVal !== "" && phoneVal.length < 12) {
                  msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Incomplete phone number.'; return;
