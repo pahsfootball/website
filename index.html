@@ -71,13 +71,17 @@
             z-index: 2;
             text-align: center;
             margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centers the items perfectly */
         }
 
         .header-logo {
             height: 110px;
             width: auto;
+            display: block; /* Forces it to act as a block element for better centering */
+            margin: 0 auto 5px auto;
             filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-            margin-bottom: 5px;
         }
 
         .header-title {
