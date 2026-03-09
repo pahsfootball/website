@@ -14,7 +14,6 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -203,37 +202,19 @@
             }
         }
 
-        // --- UPDATED HYPE BUTTON LOGIC (OPTIMISTIC UPDATE) ---
-        let currentLikes = 0;
         const likesRef = firebase.database().ref('matchup_likes/count');
-        likesRef.on('value', (snapshot) => { 
-            currentLikes = snapshot.val() || 0; 
-            document.getElementById('like-count').innerText = currentLikes; 
-        });
-
+        likesRef.on('value', (snapshot) => { document.getElementById('like-count').innerText = snapshot.val() || 0; });
         function addLike(event) {
-            // Update immediately on screen for user
-            currentLikes += 1;
-            document.getElementById('like-count').innerText = currentLikes;
-            
-            // Try to save to DB 
-            likesRef.set(currentLikes).catch(e => console.log('DB save skipped.'));
-
-            // Floating +1 Animation
+            likesRef.transaction((current) => (current || 0) + 1);
             const btn = document.getElementById('like-btn');
             const floatEl = document.createElement('div');
             floatEl.className = 'floating-like font-head italic';
             floatEl.innerText = '+1';
-            
             const rect = btn.getBoundingClientRect();
-            floatEl.style.left = `${event.clientX - rect.left}px`; 
-            floatEl.style.top = `${event.clientY - rect.top}px`;
-            
-            btn.appendChild(floatEl); 
-            setTimeout(() => floatEl.remove(), 800);
+            floatEl.style.left = `${event.clientX - rect.left}px`; floatEl.style.top = `${event.clientY - rect.top}px`;
+            btn.appendChild(floatEl); setTimeout(() => floatEl.remove(), 800);
         }
 
-        // --- GOOGLE SHEETS SCHEDULING LOGIC ---
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?output=csv";
         let timerInterval;
 
@@ -242,24 +223,14 @@
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
                     const games = results.data;
-                    
-                    // Save globally so React can read records later!
-                    window.csvGames = games; 
-
                     const now = new Date().getTime();
                     let nextGame = null;
 
                     for(let i = 0; i < games.length; i++) {
                         let gameTime = new Date(`${games[i].Date} ${games[i].Time}`).getTime();
-                        if (gameTime + (1000 * 60 * 60 * 4) > now) {
-                            nextGame = games[i]; break;
-                        }
+                        if (gameTime + (1000 * 60 * 60 * 4) > now) { nextGame = games[i]; break; }
                     }
                     if(!nextGame && games.length > 0) nextGame = games[games.length - 1];
-
-                    // Save the active game globally
-                    window.currentLiveCsvGame = nextGame || {};
-
                     if(nextGame) updateUI(nextGame);
                     else document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2>";
                 }
@@ -273,7 +244,6 @@
             document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
             document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
             document.getElementById('ui-opp-mascot').innerText = game.Mascot || "";
-            
             document.getElementById('ui-home-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
             document.getElementById('ui-opp-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
             
@@ -321,23 +291,14 @@
                 if (distance < 0) {
                     clearInterval(timerInterval);
                     document.getElementById("countdown-label").style.display = 'none';
-                    document.getElementById("countdown-container").innerHTML = `
-                        <div class='flex flex-col items-center justify-center py-2 w-full'>
-                            <div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div>
-                        </div>
-                    `;
+                    document.getElementById("countdown-container").innerHTML = `<div class='flex flex-col items-center justify-center py-2 w-full'><div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div></div>`;
                     return;
                 }
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                document.getElementById("cd-days").innerText = days.toString().padStart(2, '0');
-                document.getElementById("cd-hours").innerText = hours.toString().padStart(2, '0');
-                document.getElementById("cd-mins").innerText = minutes.toString().padStart(2, '0');
-                document.getElementById("cd-secs").innerText = seconds.toString().padStart(2, '0');
+                document.getElementById("cd-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById("cd-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
             }, 1000);
         }
     </script>
@@ -363,8 +324,8 @@
 
             if (logoUrl && !imgError) {
                 return (
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-gray-400 shadow-md relative z-10 shrink-0">
-                        <img src={logoUrl} alt={name} className="w-full h-full object-contain p-1" onError={() => setImgError(true)} />
+                    <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center overflow-hidden border-2 border-yellow-600/50 shadow-md relative z-10 shrink-0">
+                        <img src={logoUrl} alt={name} className="w-full h-full object-contain p-0.5" onError={() => setImgError(true)} />
                     </div>
                 );
             }
@@ -389,16 +350,16 @@
             return (
                 <div className="mt-6 mb-2">
                      <div className="flex justify-between items-end mb-1 px-1">
-                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Live Drive Tracker</span>
+                        <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest">Live Drive Tracker</span>
                         <div className="flex items-center gap-2">
                              <div className={`w-2 h-2 rounded-full ${isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.color2 || '#facc15'}}></div>
-                             <span className="text-[9px] font-mono text-gray-300 uppercase">POSSESSION</span>
+                             <span className="text-[9px] font-mono text-neutral-400 uppercase">POSSESSION</span>
                              <div className={`w-2 h-2 rounded-full ${!isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.awayc2 || '#facc15'}}></div>
                         </div>
                      </div>
                     <div className="relative w-full h-20 w1-drive-field rounded-md border-2 border-white/10 shadow-inner overflow-hidden flex">
-                        <div className="relative h-full w-[10%] border-r border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden bg-black">
-                            {game.homeLogo ? <img src={game.homeLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" onError={(e) => e.target.style.display='none'} /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.home ? game.home.substring(0,3).toUpperCase() : 'HOM'}</span> }
+                        <div className="relative h-full w-[10%] border-r border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden" style={{ backgroundColor: homeColorBg }}>
+                            {game.homeLogo ? <img src={game.homeLogo} className="w-6 h-6 object-contain opacity-90" onError={(e) => e.target.style.display='none'} /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.home ? game.home.substring(0,3).toUpperCase() : 'HOM'}</span> }
                         </div>
 
                         <div className="relative h-full flex-1">
@@ -419,8 +380,8 @@
                             </div>
                         </div>
 
-                        <div className="relative h-full w-[10%] border-l border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden bg-black">
-                             {game.awayLogo ? <img src={game.awayLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" onError={(e) => e.target.style.display='none'} /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.away ? game.away.substring(0,3).toUpperCase() : 'AWY'}</span> }
+                        <div className="relative h-full w-[10%] border-l border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden" style={{ backgroundColor: awayColorBg }}>
+                             {game.awayLogo ? <img src={game.awayLogo} className="w-6 h-6 object-contain opacity-90" onError={(e) => e.target.style.display='none'} /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.away ? game.away.substring(0,3).toUpperCase() : 'AWY'}</span> }
                         </div>
                     </div>
                 </div>
@@ -428,8 +389,8 @@
         };
 
         const W1StatusBadge = ({ status, clock, quarter }) => {
-            if (status === "FINAL") return <span className="px-3 py-1 bg-gray-800 text-gray-400 text-xs font-bold rounded border border-gray-700 uppercase">FINAL</span>;
-            if (status === "UPCOMING") return <span className="px-3 py-1 bg-gray-800 text-yellow-500 text-xs font-bold rounded border border-yellow-900/30 uppercase">{clock}</span>;
+            if (status === "FINAL") return <span className="px-3 py-1 bg-neutral-800 text-neutral-400 text-xs font-bold rounded border border-neutral-700 uppercase">FINAL</span>;
+            if (status === "UPCOMING") return <span className="px-3 py-1 bg-neutral-800 text-yellow-500 text-xs font-bold rounded border border-yellow-900/30 uppercase">{clock}</span>;
             if (status === "PREGAME") return (<div className="flex flex-col items-end animate-pulse"><span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded mb-1 shadow-lg shadow-green-900/50 whitespace-nowrap uppercase">Game Starting Soon ...</span></div>);
             const isHalf = status === "HALF";
             return (
@@ -539,7 +500,7 @@
                         <div className={`flex items-center justify-between mb-5 p-3 rounded-lg transition-all duration-300 ${homeUpdating ? 'w1-scoring-active' : ''}`} style={homeSectionStyle}>
                             <div className="flex items-center space-x-4 relative">
                                 {showHomeSparks && <W1ParticleExplosion color={homeAccent} />}
-                                <W1TeamLogo name={game.home} logoUrl={game.homeLogo} colorClass="bg-gray-800 text-yellow-500" />
+                                <W1TeamLogo name={game.home} logoUrl={game.homeLogo} colorClass="bg-neutral-800 text-yellow-500" />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xl font-bold text-white uppercase ${homeUpdating ? 'w1-score-pulse' : ''}`}>{game.home}</span>
@@ -557,7 +518,7 @@
                         <div className={`flex items-center justify-between mt-5 p-3 rounded-lg transition-all duration-300 ${awayUpdating ? 'w1-scoring-active' : ''}`} style={awaySectionStyle}>
                             <div className="flex items-center space-x-4 relative">
                                 {showAwaySparks && <W1ParticleExplosion color={awayAccent} />}
-                                <W1TeamLogo name={game.away} logoUrl={game.awayLogo} colorClass="bg-gray-800 text-yellow-500" />
+                                <W1TeamLogo name={game.away} logoUrl={game.awayLogo} colorClass="bg-neutral-800 text-yellow-500" />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xl font-bold text-white uppercase ${awayUpdating ? 'w1-score-pulse' : ''}`}>{game.away}</span>
@@ -599,41 +560,36 @@
                             return 0;
                         };
 
-                        gamesArray = rawGames.map((entry, index) => {
-                            // FALLBACK: GRAB RECORDS DIRECTLY FROM THE GOOGLE SHEET IF NOT IN FIREBASE!
-                            const csvFallback = window.currentLiveCsvGame || {};
-                            
-                            return {
-                                ...entry,
-                                id: entry.id || index,
-                                home: entry.home || entry.Home || "Home",
-                                away: entry.away || entry.Away || "Away",
-                                homeScore: parseInt(findScore(entry, 'home')) || 0,
-                                awayScore: parseInt(findScore(entry, 'away')) || 0,
-                                quarter: entry.quarter || entry.Quarter || 1,
-                                status: (entry.status || entry.Status || "UPCOMING").toUpperCase(),
-                                clock: entry.clock || entry.time || entry.Time || "00:00",
-                                possession: (entry.possession || entry.Possession || "").toLowerCase(),
-                                down: entry.down || entry.Down || entry.DOWN || "",
-                                togo: entry.togo || entry.toGo || entry.TOGO || entry.To_Go || "",
-                                ballOn: entry.ballon || entry.ballOn || entry.BALLON || entry.Ball_On || "",
-                                ownOpp: (entry.ownopp || entry.OwnOpp || entry.OWNOPP || entry.Own_Opp || "").toUpperCase(),
-                                homeClass: entry.homeClass || entry.HomeClass || entry["Home Class"] || "",
-                                awayClass: entry.awayClass || entry.AwayClass || entry["Away Class"] || "",
-                                homeLogo: entry.homeLogo || entry.HomeLogo || entry.homelogo || entry.home_logo || null,
-                                awayLogo: entry.awayLogo || entry.AwayLogo || entry.awaylogo || entry.away_logo || null,
-                                color1: entry.color1 || entry.Color1 || entry["Color 1"] || null,
-                                color2: entry.color2 || entry.Color2 || entry["Color 2"] || null,
-                                awayc1: entry.awayc1 || entry.AwayC1 || entry["Away C1"] || null,
-                                awayc2: entry.awayc2 || entry.AwayC2 || entry["Away C2"] || null,
-                                week: entry.week || entry.Week || "",
-                                ticker: entry.message || entry.Message || entry.ticker || entry.Ticker || "",
-                                HomeRecord: entry.HomeRecord || entry.homeRecord || csvFallback.HomeRecord || "",
-                                AwayRecord: entry.AwayRecord || entry.awayRecord || csvFallback.AwayRecord || ""
-                            }
-                        });
+                        gamesArray = rawGames.map((entry, index) => ({
+                            ...entry,
+                            id: entry.id || index,
+                            home: entry.home || entry.Home || "Home",
+                            away: entry.away || entry.Away || "Away",
+                            homeScore: parseInt(findScore(entry, 'home')) || 0,
+                            awayScore: parseInt(findScore(entry, 'away')) || 0,
+                            quarter: entry.quarter || entry.Quarter || 1,
+                            status: (entry.status || entry.Status || "UPCOMING").toUpperCase(),
+                            clock: entry.clock || entry.time || entry.Time || "00:00",
+                            possession: (entry.possession || entry.Possession || "").toLowerCase(),
+                            down: entry.down || entry.Down || entry.DOWN || "",
+                            togo: entry.togo || entry.toGo || entry.TOGO || entry.To_Go || "",
+                            ballOn: entry.ballon || entry.ballOn || entry.BALLON || entry.Ball_On || "",
+                            ownOpp: (entry.ownopp || entry.OwnOpp || entry.OWNOPP || entry.Own_Opp || "").toUpperCase(),
+                            homeClass: entry.homeClass || entry.HomeClass || entry["Home Class"] || "",
+                            awayClass: entry.awayClass || entry.AwayClass || entry["Away Class"] || "",
+                            homeLogo: entry.homeLogo || entry.HomeLogo || entry.homelogo || entry.home_logo || null,
+                            awayLogo: entry.awayLogo || entry.AwayLogo || entry.awaylogo || entry.away_logo || null,
+                            color1: entry.color1 || entry.Color1 || entry["Color 1"] || null,
+                            color2: entry.color2 || entry.Color2 || entry["Color 2"] || null,
+                            awayc1: entry.awayc1 || entry.AwayC1 || entry["Away C1"] || null,
+                            awayc2: entry.awayc2 || entry.AwayC2 || entry["Away C2"] || null,
+                            week: entry.week || entry.Week || "",
+                            ticker: entry.message || entry.Message || entry.ticker || entry.Ticker || "",
+                            HomeRecord: entry.HomeRecord || entry.homerecord || entry["Home Record"] || "",
+                            AwayRecord: entry.AwayRecord || entry.awayrecord || entry["Away Record"] || ""
+                        }));
 
-                        // ONLY SHOW GAMES THAT ARE NOT FINAL AND NOT UPCOMING
+                        // HIDE THE SCOREBOARD IF GAME IS "UPCOMING" OR "FINAL"
                         const activeGames = gamesArray.filter(g => {
                             const s = (g.status || "").toUpperCase();
                             return s !== 'FINAL' && s !== 'UPCOMING';
@@ -645,8 +601,8 @@
 
             if (games.length === 0) return null;
 
-            // IF STATUS IS PREGAME, MAKE IT GOLD. IF LIVE (1Q, HALF, ETC), MAKE IT RED.
-            const isLive = games.some(g => (g.status || "").toUpperCase() !== 'PREGAME');
+            // Determine Glow Color and Titles based on if ANY game is fully "LIVE" (not pregame)
+            const isLive = games.some(g => (g.status || "").toUpperCase() !== 'UPCOMING' && (g.status || "").toUpperCase() !== 'PREGAME');
             
             const cardClass = isLive 
                 ? "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all duration-500" 
