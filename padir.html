@@ -45,17 +45,19 @@
     <style>
         /* --- MODERN AESTHETIC --- */
         body {
-            background-color: #808080;
-            background-image: radial-gradient(circle at top center, #1f1f22 0%, #0f0f0f 70%);
-            color: #e5e5e5;
+            /* UPDATED: Main background color */
+            background-color: #adadad;
+            background-image: none; 
+            /* UPDATED: Dark text for readability on light gray */
+            color: #18181b;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
 
         /* Scrollbars */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f0f0f; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #adadad; }
+        ::-webkit-scrollbar-thumb { background: #71717a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
 
         /* Light Gray Team Cards */
@@ -75,7 +77,7 @@
             box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
         }
 
-        /* --- UPDATED: Light Inputs & Selects with Gold Glow --- */
+        /* Light Inputs & Selects with Gold Glow */
         .modern-input {
             background: #f4f4f5; /* Very Light Gray */
             border: 2px solid #fbbf24; /* PAHS Gold Border */
@@ -153,7 +155,7 @@
                 </div>
 
                 <div id="filterSummary" class="hidden flex items-center gap-2 ml-auto">
-                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider font-head text-lg">Filtered by:</span>
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wider font-head text-lg">Filtered by:</span>
                     <span id="activeFiltersList" class="flex gap-2"></span>
                     <button onclick="resetAllFilters()" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
                 </div>
@@ -165,19 +167,19 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-8 pb-12 mt-6">
     <div id="loading" class="flex flex-col justify-center items-center py-32 opacity-70">
         <i class="fa-solid fa-circle-notch fa-spin text-4xl text-pahs-gold mb-4"></i>
-        <p class="font-head text-2xl text-gray-400">Loading directory...</p>
+        <p class="font-head text-2xl text-gray-800">Loading directory...</p>
     </div>
 
     <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 hidden pt-4">
     </div>
 
     <div id="noResults" class="hidden flex flex-col items-center justify-center py-32 text-center">
-        <div class="w-16 h-16 bg-[#18181b] rounded-full flex items-center justify-center mb-4 border border-[#3f3f46]">
+        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 border border-gray-300">
             <i class="fa-solid fa-filter text-gray-500 text-2xl"></i>
         </div>
-        <h3 class="text-2xl font-head text-white">No teams found</h3>
-        <p class="text-gray-400 max-w-xs mx-auto mt-1 font-body text-sm">Try adjusting your filters or search term.</p>
-        <button onclick="resetAllFilters()" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg shadow-pahs-gold/10">
+        <h3 class="text-2xl font-head text-gray-900">No teams found</h3>
+        <p class="text-gray-700 max-w-xs mx-auto mt-1 font-body text-sm">Try adjusting your filters or search term.</p>
+        <button onclick="resetAllFilters()" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg shadow-pahs-gold/20 border border-yellow-500">
             RESET ALL
         </button>
     </div>
@@ -419,7 +421,7 @@
 
         if(filters.length) {
             els.summary.classList.remove('hidden');
-            els.summaryList.innerHTML = filters.map(f=>`<span class="px-2 py-0.5 bg-[#27272a] text-pahs-gold border border-white/10 rounded text-[10px] font-bold font-head tracking-wide text-sm pt-0.5">${f}</span>`).join('');
+            els.summaryList.innerHTML = filters.map(f=>`<span class="px-2 py-0.5 bg-gray-800 text-pahs-gold border border-gray-700 rounded text-[10px] font-bold font-head tracking-wide text-sm pt-0.5">${f}</span>`).join('');
         } else els.summary.classList.add('hidden');
 
         filteredData = allData.filter(r => {
@@ -505,4 +507,3 @@
 </script>
 </body>
 </html>
-
