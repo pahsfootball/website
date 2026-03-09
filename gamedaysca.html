@@ -144,12 +144,14 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="content-card rounded-2xl p-6">
-                <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
-                    <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
-                    <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Loading...</p></div></div>
+            <div class="content-card rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
+                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
+                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Loading...</p></div></div>
+                    </div>
                 </div>
                 <a id="ui-ticket" href="#" target="_blank" class="block text-center w-full mt-6 bg-pahs-gold text-black font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:bg-yellow-300 transition-colors uppercase border border-yellow-500"><i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online</a>
             </div>
@@ -162,6 +164,15 @@
                 </div>
                 <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 min-h-[200px] bg-gray-200">
                     <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
+                </div>
+                
+                <div class="mt-4 flex items-center justify-between gap-3">
+                    <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden">
+                        <i class="fa-solid fa-location-arrow"></i> Directions
+                    </a>
+                    <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden">
+                        <i class="fa-regular fa-copy"></i> Copy Address
+                    </button>
                 </div>
             </div>
         </div>
@@ -176,11 +187,31 @@
     </script>
 
     <script>
+        // Page Sharing
         function sharePage() {
             if (navigator.share) {
                 navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied to clipboard!"); });
+            }
+        }
+
+        // Copy Address to Clipboard
+        function copyAddress() {
+            const btn = document.getElementById('btn-copy-address');
+            const address = btn.getAttribute('data-address');
+            if (address) {
+                navigator.clipboard.writeText(address).then(() => {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    btn.classList.add('bg-green-500', 'text-white');
+                    btn.classList.remove('bg-gray-200', 'text-gray-800');
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('bg-green-500', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    }, 2000);
+                });
             }
         }
 
@@ -249,9 +280,22 @@
             if(game.OppLogo && game.OppLogo.trim() !== "") { oppLogoEl.src = game.OppLogo; oppLogoEl.style.display = 'block'; oppFallbackEl.style.display = 'none'; } 
             else { oppLogoEl.style.display = 'none'; oppFallbackEl.style.display = 'block'; oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP"; }
 
+            // Map and Navigation Links
             if(game.Address && game.Address.trim() !== "") {
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('ui-map').src = mapUrl;
+                
+                // Show direction buttons
+                const dirBtn = document.getElementById('btn-directions');
+                dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(game.Address)}`;
+                dirBtn.style.display = 'flex';
+                
+                const copyBtn = document.getElementById('btn-copy-address');
+                copyBtn.setAttribute('data-address', game.Address);
+                copyBtn.style.display = 'flex';
+            } else {
+                document.getElementById('btn-directions').style.display = 'none';
+                document.getElementById('btn-copy-address').style.display = 'none';
             }
 
             if (!isNaN(dateObj)) startCountdown(dateObj.getTime());
@@ -480,7 +524,7 @@
                         <div className={`flex items-center justify-between mb-5 p-3 rounded-lg transition-all duration-300 ${homeUpdating ? 'w1-scoring-active' : ''}`} style={homeSectionStyle}>
                             <div className="flex items-center space-x-4 relative">
                                 {showHomeSparks && <W1ParticleExplosion color={homeAccent} />}
-                                <W1TeamLogo name={game.home} logoUrl={game.homeLogo} colorClass="bg-neutral-800 text-yellow-500" />
+                                <W1TeamLogo name={game.home} logoUrl={game.homeLogo} colorClass="bg-gray-800 text-yellow-500" />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xl font-bold text-white uppercase ${homeUpdating ? 'w1-score-pulse' : ''}`}>{game.home}</span>
@@ -498,7 +542,7 @@
                         <div className={`flex items-center justify-between mt-5 p-3 rounded-lg transition-all duration-300 ${awayUpdating ? 'w1-scoring-active' : ''}`} style={awaySectionStyle}>
                             <div className="flex items-center space-x-4 relative">
                                 {showAwaySparks && <W1ParticleExplosion color={awayAccent} />}
-                                <W1TeamLogo name={game.away} logoUrl={game.awayLogo} colorClass="bg-neutral-800 text-yellow-500" />
+                                <W1TeamLogo name={game.away} logoUrl={game.awayLogo} colorClass="bg-gray-800 text-yellow-500" />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xl font-bold text-white uppercase ${awayUpdating ? 'w1-score-pulse' : ''}`}>{game.away}</span>
