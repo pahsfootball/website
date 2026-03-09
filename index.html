@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAHS Football</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Teko:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- MODERN VARIABLES --- */
+        /* --- MODERN VARIABLES (Matched to Game Day Page) --- */
         :root {
-            --bg-dark: #121212;
-            --card-bg: #222222; 
-            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFB200 100%);
-            --gold-glow: 0 0 20px rgba(255, 178, 0, 0.4); 
-            --border-color: rgba(255, 255, 255, 0.25);
+            --bg-main: #adadad;
+            --card-bg: #f4f4f5; 
+            --text-main: #18181b;
+            --text-sub: #52525b; 
+            --gold-base: #fbbf24;
+            --gold-hover: #f59e0b;
+            --dark-header: #0f0f0f;
+            --border-light: rgba(0, 0, 0, 0.1);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
         }
@@ -24,26 +27,25 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-dark);
-            background-image: radial-gradient(circle at top center, #2a2a2a 0%, #121212 70%);
+            background-color: var(--bg-main);
             font-family: var(--font-body);
-            color: white;
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* --- MODERN HEADER --- */
         .app-header {
             position: relative;
-            height: 220px;
+            height: 240px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border-bottom: 1px solid var(--border-color);
         }
 
         .header-bg {
@@ -53,13 +55,14 @@
             background-size: cover;
             background-position: center;
             z-index: 0;
-            filter: grayscale(100%) opacity(0.4);
+            filter: grayscale(80%) opacity(0.6);
         }
 
         .header-gradient {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--bg-dark) 100%);
+            /* Fades into the new light gray body background */
+            background: linear-gradient(to bottom, rgba(173,173,173,0) 0%, var(--bg-main) 100%);
             z-index: 1;
         }
 
@@ -67,46 +70,48 @@
             position: relative;
             z-index: 2;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .header-logo {
-            height: 100px;
+            height: 110px;
             width: auto;
-            filter: drop-shadow(0 0 15px rgba(255, 178, 0, 0.3));
-            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+            margin-bottom: 5px;
         }
 
         .header-title {
             font-family: var(--font-head);
-            font-size: 32px;
+            font-size: 42px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: #fff;
+            color: #18181b;
             margin: 0;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
         }
 
         .header-subtitle {
-            font-size: 12px;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #FFB200;
-            font-weight: bold;
-            opacity: 0.9;
+            letter-spacing: 5px;
+            color: #18181b;
+            font-weight: 800;
+            margin-top: 5px;
         }
 
-        /* --- TICKER STYLES --- */
+        /* --- TICKER STYLES (Dark Contrast Bar) --- */
         .ticker-container {
             width: 100%;
-            background: rgba(30, 30, 30, 0.8);
-            border-bottom: 1px solid var(--border-color);
+            background: var(--dark-header);
+            border-top: 3px solid var(--gold-base);
+            border-bottom: 3px solid var(--gold-base);
             overflow: hidden;
             white-space: nowrap;
             padding: 12px 0;
             position: relative;
             z-index: 10;
-            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .ticker-wrapper {
@@ -122,8 +127,8 @@
         .matchup-card {
             display: inline-flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
             padding: 6px 14px;
             margin: 0 8px;
@@ -135,18 +140,19 @@
         }
 
         .matchup-card:hover {
-            border-color: #FFB200;
-            background: rgba(255, 178, 0, 0.1);
+            border-color: var(--gold-base);
+            background: rgba(251, 191, 36, 0.1);
         }
 
         .team-logo {
             width: 24px;
             height: 24px;
-            background: #333;
+            background: white;
             border-radius: 50%;
             margin-right: 8px;
-            object-fit: cover;
-            border: 1px solid #555;
+            object-fit: contain;
+            border: 1px solid #ccc;
+            padding: 2px;
         }
 
         .team-name {
@@ -159,7 +165,7 @@
 
         .vs {
             font-family: var(--font-head);
-            color: #FFB200;
+            color: var(--gold-base);
             margin: 0 10px;
             font-size: 16px;
             font-weight: bold;
@@ -175,22 +181,10 @@
             line-height: 1.1;
         }
 
-        .game-date {
-            font-family: var(--font-body);
-            font-size: 10px;
-            color: #ddd;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
+        .game-date { font-family: var(--font-body); font-size: 10px; color: #ddd; text-transform: uppercase; font-weight: 700; }
+        .game-time { font-family: var(--font-body); font-size: 10px; color: var(--gold-base); font-weight: bold; }
 
-        .game-time {
-            font-family: var(--font-body);
-            font-size: 10px;
-            color: #aaa;
-            font-weight: 400;
-        }
-
-        /* --- CONTENT AREA --- */
+        /* --- CONTENT AREA (Light Cards) --- */
         .content-area {
             padding: 40px 20px;
             max-width: 600px;
@@ -198,15 +192,15 @@
             width: 100%;
             box-sizing: border-box;
             display: grid;
-            gap: 15px;
+            gap: 16px;
             animation: fadeIn 0.8s ease-out;
         }
 
         .nav-card {
             background: var(--card-bg);
-            border: 1px solid rgba(255, 178, 0, 0.3);
+            border: 1px solid var(--border-light);
             border-radius: 12px;
-            padding: 20px;
+            padding: 20px 24px;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -216,7 +210,7 @@
             overflow: hidden;
             width: 100%;
             box-sizing: border-box;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 0 10px rgba(255, 178, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
         button.nav-card {
@@ -229,104 +223,98 @@
             content: '';
             position: absolute;
             left: 0; top: 0; bottom: 0;
-            width: 4px;
-            background: var(--gold-gradient);
-            opacity: 0.7;
-            transition: 0.3s;
+            width: 5px;
+            background: var(--gold-base);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s ease;
         }
 
         .nav-card:hover {
             transform: translateY(-3px);
-            background: #333;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4), var(--gold-glow);
-            border-color: #FFB200;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            border-color: var(--gold-base);
         }
 
-        .nav-card:hover::before { opacity: 1; width: 6px; }
+        .nav-card:hover::before { transform: scaleY(1); }
 
         .nav-text { display: flex; flex-direction: column; }
 
         .nav-title {
-            color: #ffffff;
+            color: var(--text-main);
             font-family: var(--font-head);
-            font-size: 24px;
+            font-size: 26px;
             text-transform: uppercase;
             letter-spacing: 1px;
             line-height: 1;
         }
 
         .nav-sub { 
-            color: #bbbbbb;
+            color: var(--text-sub);
             font-size: 12px; 
-            margin-top: 4px; 
-            font-weight: 500; 
+            margin-top: 6px; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .nav-icon { color: #FFB200; opacity: 0.8; transition: 0.3s; }
-        .nav-card:hover .nav-icon { transform: scale(1.1) rotate(-5deg); opacity: 1; color: #FFD700; }
+        .nav-icon { 
+            width: 32px; 
+            height: 32px; 
+            fill: #4b5563; /* Medium gray icon by default */
+            transition: all 0.3s ease; 
+        }
 
+        .nav-card:hover .nav-icon { 
+            transform: scale(1.15) rotate(-5deg); 
+            fill: var(--text-main); 
+        }
+
+        /* Featured Card Variation */
         .featured-card {
-            background: linear-gradient(45deg, rgba(255, 178, 0, 0.15), #222);
-            border: 1px solid rgba(255, 178, 0, 0.5);
+            background: linear-gradient(135deg, #ffffff, var(--card-bg));
+            border-left: 5px solid var(--gold-base);
         }
-        .featured-card .nav-title { color: #FFB200; }
+        .featured-card .nav-icon {
+            fill: var(--gold-base);
+            filter: drop-shadow(0 2px 4px rgba(251,191,36,0.4));
+        }
 
-        /* --- FOOTER STYLES --- */
+        /* --- FOOTER STYLES (Dark Contrast) --- */
         .app-footer {
-            margin-top: auto; /* Pushes footer to bottom */
-            background: #0f0f0f;
-            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+            background: var(--dark-header);
+            border-top: 3px solid var(--gold-base);
             padding: 30px 20px;
             text-align: center;
-            color: #888;
+            color: #9ca3af;
             font-size: 12px;
             line-height: 1.5;
         }
 
-        .app-footer p {
-            margin: 5px 0;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        .app-footer p { margin: 5px auto; max-width: 800px; }
 
-        .footer-links {
-            margin-top: 15px;
-        }
+        .footer-links { margin-top: 15px; }
+        .footer-links a { color: var(--gold-base); text-decoration: none; margin: 0 10px; font-weight: 600; transition: color 0.2s; }
+        .footer-links a:hover { color: #fff; text-decoration: underline; }
+        .footer-links span { color: #555; }
 
-        .footer-links a {
-            color: #FFB200;
-            text-decoration: none;
-            margin: 0 10px;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #FFD700;
-            text-decoration: underline;
-        }
-
-        .footer-links span {
-            color: #555;
-        }
-
-        /* --- POPUP MODAL --- */
+        /* --- POPUP MODAL (Light Theme) --- */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 100;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(5px);
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
         .modal-content {
-            background: #1e1e1e;
-            border: 1px solid #444;
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
             width: 100%; max-width: 450px;
             border-radius: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -336,28 +324,35 @@
         }
 
         .modal-content::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: var(--gold-gradient);
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: var(--gold-base);
         }
 
-        .modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 28px; color: white; text-transform: uppercase; }
-        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #888; transition: 0.2s; }
-        .close-btn:hover { color: #FFB200; }
-        .modal-body { padding: 0 20px 25px 20px; }
+        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 32px; color: var(--text-main); text-transform: uppercase; line-height: 1; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
+        .close-btn:hover { color: #ef4444; }
+        
+        .modal-body { padding: 24px; }
 
-        label { color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; display: block; }
-        input, textarea { width: 100%; background: #2a2a2a; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 15px; }
-        input:focus, textarea:focus { border-color: #FFB200; outline: none; background: #333; }
+        label { color: var(--text-main); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
+        input, textarea { 
+            width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: var(--text-main); 
+            padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; 
+            transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        input:focus, textarea:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
 
         .submit-btn {
-            width: 100%; background: var(--gold-gradient); color: black; font-family: var(--font-head); font-size: 20px; padding: 14px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: var(--gold-glow);
+            width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; 
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
+            letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
-        .submit-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .submit-btn:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        svg { width: 24px; height: 24px; fill: currentColor; }
 
     </style>
 </head>
@@ -404,9 +399,7 @@
             <span class="nav-title">PA Team Directory</span>
             <span class="nav-sub">Find teams across the state</span>
         </div>
-        <svg class="nav-icon" viewBox="0 0 24 24">
-  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-</svg>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
     </a>
 
     <a href="pasc.html" class="nav-card">
@@ -425,14 +418,6 @@
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5l6-4.5-6-4.5v9z"/></svg>
     </a>
 
-    <!--<a href="https://github.com/pahsfootball/website/releases/latest/download/pahsfootball.apk" class="nav-card" target="_blank">
-        <div class="nav-text">
-            <span class="nav-title">Download The Official Android App</span>
-            <span class="nav-sub">Get the full experience on Android - Click for Download</span>
-        </div>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-</a -->
-
     <button class="nav-card" onclick="openModal()">
         <div class="nav-text">
             <span class="nav-title">Contact Us</span>
@@ -446,8 +431,8 @@
     <p>&copy; 2026 PAHSFOOTBALL.com. All Rights Reserved.</p>
     <p><em>PAHSFOOTBALL.com and the PAHS Football app are independently operated. All team names, logos, and brands are property of their respective owners. Use of these names, logos, and brands does not imply endorsement.</em></p>
     <div class="footer-links">
-        <a href="privacy.html"></a> <span>|</span> 
-        <a href="terms.html"></a> <span>|</span> 
+        <a href="privacy.html">Privacy</a> <span>|</span> 
+        <a href="terms.html">Terms</a> <span>|</span> 
         <a href="#" onclick="openModal(); return false;">App Support</a>
     </div>
 </footer>
@@ -464,19 +449,19 @@
                 <textarea name="entry.1967997366" rows="4" required placeholder="Type your message..."></textarea>
 
                 <label>First Name <span style="color:red">*</span></label>
-                <input type="text" name="entry.1990515734" required>
+                <input type="text" name="entry.1990515734" required placeholder="John">
 
                 <label>Last Name <span style="color:red">*</span></label>
-                <input type="text" name="entry.1429224270" required>
+                <input type="text" name="entry.1429224270" required placeholder="Doe">
 
                 <label>Phone (Optional)</label>
                 <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
 
                 <label>Email (Optional)</label>
-                <input type="email" id="emailInput" name="entry.1778241553">
+                <input type="email" id="emailInput" name="entry.1778241553" placeholder="email@example.com">
 
                 <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
-                <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center;"></div>
+                <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
             </form>
         </div>
     </div>
@@ -534,10 +519,10 @@
         const emailVal = document.getElementById('emailInput').value.trim();
 
         if (!phoneVal && !emailVal) {
-             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
+             msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
         }
         if (phoneVal !== "" && phoneVal.length < 12) {
-             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Incomplete phone number.'; return;
+             msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Incomplete phone number.'; return;
         }
 
         btn.innerText = 'Sending...';
@@ -554,7 +539,7 @@
             body: params.toString()
         }).then(() => {
              btn.style.display = 'none';
-             msg.style.display = 'block'; msg.style.color = '#00ff00'; msg.innerText = 'Message Sent Successfully!';
+             msg.style.display = 'block'; msg.style.color = '#10b981'; msg.innerText = 'Message Sent Successfully!';
              setTimeout(() => {
                  closeModal();
                  document.getElementById('pahsForm').reset();
@@ -562,7 +547,7 @@
              }, 2000);
         }).catch((err) => {
              btn.innerText = 'Try Again'; btn.style.opacity = '1';
-             msg.style.display = 'block'; msg.style.color = '#ff4444'; msg.innerText = 'Error sending message.';
+             msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Error sending message.';
         });
     });
 
