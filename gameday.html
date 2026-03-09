@@ -83,13 +83,14 @@
                 <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Week...</h2>
                 
                 <div class="flex items-center justify-center gap-4 md:gap-12 relative z-10">
+                    
                     <div class="text-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mx-auto mb-3">
-                            <img src="pahsfootballlogo.png" alt="PAHS" class="w-3/4 h-3/4 object-contain" onerror="this.style.display='none'">
-                            <span class="text-2xl md:text-4xl font-black font-head text-black absolute -z-10">PAHS</span>
+                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mx-auto mb-3 overflow-hidden relative">
+                            <img src="sca_logo.png" alt="SCA" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'">
+                            <span class="text-2xl md:text-4xl font-black font-head text-black absolute">SCA</span>
                         </div>
-                        <h3 class="text-white font-head text-2xl md:text-3xl tracking-wide uppercase">PAHS</h3>
-                        <p class="text-gray-400 text-xs font-bold uppercase">Varsity</p>
+                        <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase">Southern Columbia</h3>
+                        <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
                     </div>
                     
                     <div class="flex flex-col items-center">
@@ -98,11 +99,11 @@
                     </div>
                     
                     <div class="text-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mx-auto mb-3 overflow-hidden">
-                            <img id="ui-opp-logo" src="" alt="Opponent" class="w-full h-full object-contain p-2" onerror="this.style.display='none'">
-                            <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute -z-10">OPP</span>
+                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mx-auto mb-3 overflow-hidden relative">
+                            <img id="ui-opp-logo" src="" alt="Opponent" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='block';">
+                            <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
                         </div>
-                        <h3 id="ui-opp-name" class="text-white font-head text-2xl md:text-3xl tracking-wide uppercase">Loading...</h3>
+                        <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase">Loading...</h3>
                         <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
                     </div>
                 </div>
@@ -184,7 +185,7 @@
     </main>
 
     <script>
-        // === YOUR PUBLISHED CSV URL IS LINKED HERE ===
+        // Your live Google Sheet
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?output=csv";
         
         let timerInterval;
@@ -199,18 +200,17 @@
                     const now = new Date().getTime();
                     let nextGame = null;
 
-                    // Loop through to find the first game that hasn't happened yet
+                    // Find the first game that hasn't finished yet (Kickoff + 4 hours)
                     for(let i = 0; i < games.length; i++) {
                         let gameTime = new Date(`${games[i].Date} ${games[i].Time}`).getTime();
                         
-                        // We keep showing the current game until 4 hours AFTER kickoff
                         if (gameTime + (1000 * 60 * 60 * 4) > now) {
                             nextGame = games[i];
                             break;
                         }
                     }
 
-                    // If season is over, just show the last game
+                    // If season is over, show the final game
                     if(!nextGame && games.length > 0) {
                         nextGame = games[games.length - 1];
                     }
@@ -218,10 +218,8 @@
                     if(nextGame) {
                         updateUI(nextGame);
                     } else {
-                        // In case the sheet is empty or fails
                         document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2>";
                     }
-                    
                 },
                 error: function(err) {
                     console.error("Error loading schedule", err);
@@ -231,7 +229,6 @@
         });
 
         function updateUI(game) {
-            // Remove loading screen
             document.getElementById('loading-overlay').style.display = 'none';
 
             // Text Updates
@@ -240,7 +237,7 @@
             document.getElementById('ui-opp-mascot').innerText = game.Mascot || "";
             document.getElementById('ui-homeaway').innerText = game.HomeAway || "VS";
             
-            // Format Date for display
+            // Format Date
             let dateObj = new Date(`${game.Date} ${game.Time}`);
             if (!isNaN(dateObj)) {
                 let dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -254,22 +251,31 @@
             document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
             document.getElementById('ui-address').innerText = game.Address || "Address TBA";
             
-            // Link Updates
-            document.getElementById('ui-ticket').href = game.TicketLink || "#";
-            if(!game.TicketLink || game.TicketLink.trim() === "") {
+            // Ticket Link
+            if(game.TicketLink && game.TicketLink.trim() !== "") {
+                document.getElementById('ui-ticket').href = game.TicketLink;
+                document.getElementById('ui-ticket').style.display = 'block';
+            } else {
                 document.getElementById('ui-ticket').style.display = 'none';
             }
 
-            // Logo Update
+            // Opponent Logo Logic
+            const oppLogoEl = document.getElementById('ui-opp-logo');
+            const oppFallbackEl = document.getElementById('ui-opp-fallback');
+            
             if(game.OppLogo && game.OppLogo.trim() !== "") {
-                document.getElementById('ui-opp-logo').src = game.OppLogo;
-                document.getElementById('ui-opp-logo').style.display = 'block';
-                document.getElementById('ui-opp-fallback').style.display = 'none';
+                // If there's a link, show image, hide text
+                oppLogoEl.src = game.OppLogo;
+                oppLogoEl.style.display = 'block';
+                oppFallbackEl.style.display = 'none';
             } else {
-                document.getElementById('ui-opp-fallback').innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP";
+                // If blank, hide image, show text
+                oppLogoEl.style.display = 'none';
+                oppFallbackEl.style.display = 'block';
+                oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP";
             }
 
-            // Map Update (Using free Google Maps embed)
+            // Google Map Update
             if(game.Address && game.Address.trim() !== "") {
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('ui-map').src = mapUrl;
