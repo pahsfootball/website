@@ -336,7 +336,7 @@
         .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
         .close-btn:hover { color: #ef4444; }
         
-        .modal-body { padding: 24px; }
+        .modal-body { padding: 24px; text-align: left; }
 
         label { color: var(--text-main); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
         input, textarea { 
@@ -351,6 +351,7 @@
             width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; 
             padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
             letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            margin-top: 12px; /* <-- Added Spacing Here */
         }
         .submit-btn:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
@@ -458,8 +459,8 @@
                 <label>Phone (Optional)</label>
                 <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
 
-                <label>Email (Optional)</label>
-                <input type="email" id="emailInput" name="entry.1778241553" placeholder="email@example.com">
+                <label>Email <span style="color:red">*</span></label>
+                <input type="email" id="emailInput" name="entry.1778241553" required placeholder="email@example.com">
 
                 <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
                 <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
@@ -519,8 +520,8 @@
         const phoneVal = document.getElementById('phoneInput').value.trim();
         const emailVal = document.getElementById('emailInput').value.trim();
 
-        if (!phoneVal && !emailVal) {
-             msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
+        if (!emailVal) {
+             msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter your Email address.'; return;
         }
         if (phoneVal !== "" && phoneVal.length < 12) {
              msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Incomplete phone number.'; return;
