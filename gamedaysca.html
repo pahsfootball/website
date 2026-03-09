@@ -107,10 +107,13 @@
                             <span class="text-2xl md:text-4xl font-black font-head text-black absolute">SCA</span>
                         </div>
                         <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Southern Columbia</h3>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
-                            <span id="ui-home-record" class="text-pahs-gold text-xs font-bold"></span>
-                            <span id="ui-homeaway" class="text-[10px] font-bold bg-white text-black px-2 py-0.5 rounded-sm uppercase tracking-wider">HOME</span>
+                        
+                        <div class="flex flex-col items-center justify-center mt-2 gap-1.5">
+                            <div class="flex items-center gap-2">
+                                <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
+                                <span id="ui-home-record" class="text-pahs-gold text-xs font-bold"></span>
+                            </div>
+                            <span id="ui-homeaway" class="text-[10px] font-bold bg-white text-black px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block">HOME</span>
                         </div>
                     </div>
                     
@@ -124,9 +127,13 @@
                             <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
                         </div>
                         <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
-                            <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                        
+                        <div class="flex flex-col items-center justify-center mt-2 gap-1.5">
+                            <div class="flex items-center gap-2">
+                                <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
+                                <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                            </div>
+                            <span class="text-[10px] px-2 py-0.5 opacity-0 invisible">AWAY</span>
                         </div>
                     </div>
                 </div>
@@ -257,7 +264,7 @@
             let homeAwayBadge = document.getElementById('ui-homeaway');
             let isHome = game.HomeAway && game.HomeAway.toLowerCase().includes('home');
             homeAwayBadge.innerText = game.HomeAway || "TBA";
-            homeAwayBadge.className = isHome ? "text-[10px] font-bold bg-pahs-gold text-black px-2 py-0.5 rounded-sm uppercase tracking-wider" : "text-[10px] font-bold bg-gray-200 text-black px-2 py-0.5 rounded-sm uppercase tracking-wider border border-gray-300";
+            homeAwayBadge.className = isHome ? "text-[10px] font-bold bg-pahs-gold text-black px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block" : "text-[10px] font-bold bg-gray-200 text-black px-2 py-0.5 rounded-sm uppercase tracking-wider border border-gray-300 inline-block";
             
             let dateObj = new Date(`${game.Date} ${game.Time}`);
             if (!isNaN(dateObj)) {
@@ -311,7 +318,7 @@
                             if(code >= 71 && code <= 86) desc = "Snow";
                             if(code >= 95) desc = "Storms";
 
-                            weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span> &nbsp;•&nbsp; ${desc}`;
+                            weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span>  •  ${desc}`;
                         } else {
                             weatherEl.innerText = "Check back game week!";
                         }
