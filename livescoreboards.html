@@ -38,6 +38,60 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
+
+        /* --- POPUP MODAL (Light Theme, matches index.html) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #f4f4f5;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            width: 100%; max-width: 450px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        .modal-content::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: #fbbf24;
+        }
+
+        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .modal-header h2 { margin: 0; font-family: 'Teko', sans-serif; font-size: 32px; color: #18181b; text-transform: uppercase; line-height: 1; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
+        .close-btn:hover { color: #ef4444; }
+        
+        .modal-body { padding: 24px; text-align: left; }
+
+        label { color: #18181b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
+        input, textarea { 
+            width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: #18181b; 
+            padding: 12px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; 
+            transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        input:focus, textarea:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
+
+        .submit-btn {
+            width: 100%; background: #fbbf24; color: black; font-family: 'Teko', sans-serif; font-size: 22px; 
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
+            letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .submit-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+
+        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="antialiased">
@@ -66,23 +120,13 @@
         </div>
 
         <div class="space-y-6">
-            
-            <a href="ss.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                
-                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-700 mx-auto mb-4 group-hover:text-pahs-gold group-hover:bg-gray-800 transition-colors">
-                    <i class="fa-solid fa-list-ol"></i>
-                </div>
-                <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Statewide Scoreboards & Live Scores</h3>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">External ScoreStream Widget</p>
-            </a>
 
-            <div class="bg-[#18181b] text-white rounded-2xl p-6 my-10 text-center shadow-lg border-t-4 border-pahs-gold relative overflow-hidden">
+            <div class="bg-[#18181b] text-white rounded-2xl p-6 text-center shadow-lg border-t-4 border-pahs-gold relative overflow-hidden">
                 <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 <h4 class="font-bold font-head text-2xl text-pahs-gold uppercase tracking-wide mb-2 relative z-10">
                     <i class="fa-solid fa-star mr-2 text-lg"></i> Participating Teams
                 </h4>
-                <p class="text-sm text-gray-300 relative z-10 font-medium">The links below represent the current individual teams participating in our Live Scoreboard Dashboard program.  This is usually updated by the public and not the teams themselves.  If any issues arise please contact us</p>
+                <p class="text-sm text-gray-300 relative z-10 font-medium">The links below represent the current individual teams participating in our Live Scoreboard Dashboard program.  This is usually updated by the public and not the teams themselves.  If any issues arise please contact us.</p>
             </div>
 
             <a href="https://pahsfootball.com/gamedaysca.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
@@ -97,11 +141,141 @@
                 </div>
             </a>
 
+            <button onclick="openModal()" class="w-full content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border-2 border-dashed border-gray-400 hover:border-pahs-gold">
+                <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                
+                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-700 mx-auto mb-4 group-hover:text-pahs-gold group-hover:bg-gray-800 transition-colors shadow-inner">
+                    <i class="fa-solid fa-handshake-angle"></i>
+                </div>
+                <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Don't see your team?</h3>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Get involved now! Volunteer and get your team added.</p>
+            </button>
+
+            <div class="flex items-center justify-center py-6">
+                <div class="border-t border-gray-400 w-full"></div>
+                <span class="px-4 text-sm font-bold text-gray-500 uppercase tracking-widest">OR</span>
+                <div class="border-t border-gray-400 w-full"></div>
+            </div>
+
+            <a href="ss.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                
+                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-700 mx-auto mb-4 group-hover:text-pahs-gold group-hover:bg-gray-800 transition-colors shadow-inner">
+                    <i class="fa-solid fa-list-ol"></i>
+                </div>
+                <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Statewide Scoreboard</h3>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">External ScoreStream Widget</p>
+            </a>
+
         </div>
     </main>
 
+    <div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Get in Touch</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="pahsForm">
+                    <label>Reason / Message <span style="color:red">*</span></label>
+                    <textarea name="entry.1967997366" rows="4" required placeholder="I'd like to volunteer my team..."></textarea>
+
+                    <label>First Name <span style="color:red">*</span></label>
+                    <input type="text" name="entry.1990515734" required placeholder="John">
+
+                    <label>Last Name <span style="color:red">*</span></label>
+                    <input type="text" name="entry.1429224270" required placeholder="Doe">
+
+                    <label>Phone (Optional)</label>
+                    <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
+
+                    <label>Email (Optional)</label>
+                    <input type="email" id="emailInput" name="entry.1778241553" placeholder="email@example.com">
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                    <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Controls
+        function openModal() {
+            const modal = document.getElementById('contactModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('contactModal').style.display = 'none';
+        }
+
+        function closeModalOutside(e) {
+            if (e.target.id === 'contactModal') {
+                closeModal();
+            }
+        }
+
+        // Form Logic
+        const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
+        const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
+
+        const phoneInput = document.getElementById('phoneInput');
+        if(phoneInput) {
+            phoneInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 10) value = value.slice(0, 10);
+                if (value.length > 6) {
+                    value = value.slice(0,3) + '-' + value.slice(3,6) + '-' + value.slice(6);
+                } else if (value.length > 3) {
+                    value = value.slice(0,3) + '-' + value.slice(3);
+                }
+                e.target.value = value;
+            });
+        }
+
+        document.getElementById('pahsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const msg = document.getElementById('statusMessage');
+
+            const phoneVal = document.getElementById('phoneInput').value.trim();
+            const emailVal = document.getElementById('emailInput').value.trim();
+
+            if (!phoneVal && !emailVal) {
+                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter either a Phone or Email.'; return;
+            }
+            if (phoneVal !== "" && phoneVal.length < 12) {
+                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Incomplete phone number.'; return;
+            }
+
+            btn.innerText = 'Sending...';
+            btn.style.opacity = '0.7';
+            msg.style.display = 'none';
+
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            for (const pair of formData.entries()) { params.append(pair[0], pair[1]); }
+
+            fetch(SUBMIT_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            }).then(() => {
+                 btn.style.display = 'none';
+                 msg.style.display = 'block'; msg.style.color = '#10b981'; msg.innerText = 'Message Sent Successfully!';
+                 setTimeout(() => {
+                     closeModal();
+                     document.getElementById('pahsForm').reset();
+                     btn.style.display = 'block'; btn.innerText = 'SEND MESSAGE'; btn.style.opacity = '1'; msg.style.display = 'none';
+                 }, 2000);
+            }).catch((err) => {
+                 btn.innerText = 'Try Again'; btn.style.opacity = '1';
+                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Error sending message.';
+            });
+        });
+    </script>
+
 </body>
 </html>
-
-
-
