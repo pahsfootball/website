@@ -6,7 +6,7 @@
     <title>PIAA Championship History | PAHSFootball</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -20,45 +20,99 @@
 
     <script src="https://unpkg.com/recharts@2.12.0/umd/Recharts.js"></script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: {
+                            dark: '#0f0f0f',
+                            gold: '#fbbf24',
+                        }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         body {
-            background-color: #808080;
+            background-color: #adadad; /* Match Directory Background */
             font-family: 'Inter', sans-serif;
+            color: #18181b;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
         }
 
         /* Loading / Error States */
         #loading-message {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-weight: bold; text-align: center;
+            color: #18181b; font-weight: bold; text-align: center;
         }
 
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e4e4e7; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
 
         /* Ticker Animation */
         .ticker-wrap {
-            width: 100%; overflow: hidden; background-color: #fbbf24; height: 40px;
-            display: flex; align-items: center;
+            width: 100%; overflow: hidden; background-color: #000; height: 35px;
+            display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .ticker-item {
-            white-space: nowrap; font-weight: 600; color: #0f172a; font-size: 0.9rem;
+            white-space: nowrap; font-weight: 700; color: #fbbf24; font-size: 0.75rem; letter-spacing: 0.1em; font-family: 'Teko', sans-serif;
             animation: ticker 25s linear infinite;
         }
         @keyframes ticker {
             0% { transform: translate3d(100vw, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
         }
+
+        /* Card Background Overrides */
+        .content-card {
+            background-color: #f4f4f5; /* Very Light Gray */
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Search Input Matching Directory */
+        .modern-input {
+            background: #f4f4f5; 
+            border: 2px solid #fbbf24;
+            color: #18181b; 
+            transition: all 0.3s ease;
+        }
+        .modern-input::placeholder { color: #71717a; }
+        .modern-input:focus {
+            background: #ffffff; 
+            border-color: #fbbf24;
+            outline: none;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); 
+        }
+        
+        /* Table Header Hover */
+        th.sortable-header:hover {
+            background-color: #e4e4e7 !important;
+            color: #fbbf24 !important;
+        }
+        
+        /* Table Row Hover */
+        tr.table-row:hover {
+            background-color: #ffffff !important;
+        }
     </style>
 </head>
 <body>
 
 <div id="loading-message">
-    <svg class="animate-spin h-10 w-10 text-white mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <svg class="animate-spin h-10 w-10 text-pahs-gold mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
@@ -74,21 +128,19 @@
         if(loader) loader.style.display = 'none';
 
         root.innerHTML = `
-            <div style="padding:20px; text-align:center; color:white;">
-                <h3 style="color:#ff6b6b; font-size:20px; font-weight:bold;">App Error</h3>
+            <div style="padding:20px; text-align:center; color:#18181b;">
+                <h3 style="color:#dc2626; font-size:20px; font-weight:bold;">App Error</h3>
                 <p>Something went wrong loading the app.</p>
-                <code style="display:block; background:#333; padding:10px; margin-top:10px; text-align:left; font-size:12px;">${message}</code>
+                <code style="display:block; background:#f4f4f5; padding:10px; margin-top:10px; text-align:left; font-size:12px; border:1px solid #ccc;">${message}</code>
             </div>
         `;
     };
 </script>
 
 <script type="text/babel">
-    // 2. DESTRUCTURE FROM WINDOW (Global Variables)
     const { useState, useEffect, useMemo } = React;
     const { createRoot } = ReactDOM;
 
-    // Icon Fallbacks - If LucideReact fails to load, we use simple spans
     const L = window.LucideReact || {};
     const Search = L.Search || (() => <span>🔍</span>);
     const Trophy = L.Trophy || (() => <span>🏆</span>);
@@ -105,10 +157,7 @@
     const X = L.X || (() => <span>✕</span>);
     const ArrowLeft = L.ArrowLeft || (() => <span>←</span>);
 
-    // Recharts Destructuring - Robust Check
-    // We check window.Recharts.default (sometimes needed) or window.Recharts
     const R = window.Recharts || (window.Recharts ? window.Recharts.default : {}) || {};
-
     const BarChart = R.BarChart;
     const Bar = R.Bar;
     const XAxis = R.XAxis;
@@ -132,18 +181,15 @@
         const [currentPage, setCurrentPage] = useState(1);
         const [itemsPerPage] = useState(50);
 
-        // Classification State
         const [classColumn, setClassColumn] = useState('');
         const [availableClasses, setAvailableClasses] = useState([]);
         const [currentClassIndex, setCurrentClassIndex] = useState(0);
 
-        // Columns
         const [columns, setColumns] = useState([]);
         const [winnerColumn, setWinnerColumn] = useState('');
         const [yearColumn, setYearColumn] = useState('');
 
         useEffect(() => {
-            // Hide the generic HTML loading message once React mounts
             const preloader = document.getElementById('loading-message');
             if(preloader) preloader.style.display = 'none';
 
@@ -203,7 +249,6 @@
             parseCSV();
         }, []);
 
-        // Logic Hooks
         const filteredData = useMemo(() => {
             return data.filter(row => {
                 return Object.values(row).some(val =>
@@ -275,98 +320,101 @@
             return { topTeams: sortedTeams.slice(0, 10), totalChamps: data.length, uniqueTeams: Object.keys(counts).length };
         }, [data, winnerColumn]);
 
-        const CHART_COLORS = ['#1e3a8a', '#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1', '#94a3b8', '#64748b', '#475569'];
+        // Updated chart colors to fit PAHS theme
+        const CHART_COLORS = ['#0f0f0f', '#18181b', '#27272a', '#3f3f46', '#fbbf24', '#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f'];
 
-        if (loading) return null; // Logic is handled by the pre-loader HTML above
+        if (loading) return null;
 
         if (error) return (
-            <div className="flex flex-col items-center justify-center h-screen w-full bg-red-50 p-6 text-center">
+            <div className="flex flex-col items-center justify-center h-screen w-full p-6 text-center">
                 <AlertCircle className="w-12 h-12 text-red-600 mb-2" />
                 <h3 className="text-xl font-bold text-red-900">Database Error</h3>
                 <p className="text-red-700">{error}</p>
-                <a href="index.html" className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">Go Back</a>
+                <a href="index.html" className="mt-4 px-4 py-2 bg-pahs-dark text-white rounded font-bold font-head text-lg tracking-wide hover:text-pahs-gold">Go Back</a>
             </div>
         );
 
         return (
-            <div className="min-h-screen bg-[#808080] flex flex-col">
+            <div className="min-h-screen flex flex-col font-body">
 
                 {/* SCROLLING DISCLAIMER */}
-                <div className="ticker-wrap border-b border-yellow-500">
+                <div className="ticker-wrap">
                     <div className="ticker-item">
-                        DISCLAIMER: This database pulls publicly available information from the internet to update and may not be 100% accurate. Feel free to contact us with issues you find so we can apply to have them addressed.
+                        • DATA SOURCED FROM PUBLIC RECORDS • INFORMATION MAY VARY • CHECK LOCAL LISTINGS FOR ACCURACY • DISCLAIMER: This database pulls publicly available information from the internet to update and may not be 100% accurate.
                     </div>
                 </div>
 
                 {/* TOP NAVIGATION BAR */}
-                <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50 border-b border-slate-700">
-                    <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Trophy className="text-yellow-500" size={24} />
-                            <span className="font-bold text-lg tracking-tight">PAHS<span className="text-slate-400">Football</span> Database</span>
+                <nav className="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+                        
+                        {/* UPDATED: Left side contains Back Button & Title */}
+                        <div className="flex items-center gap-4">
+                            <a href="index.html" className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                                <ArrowLeft size={16} />
+                                <span className="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                            </a>
+                            <h1 className="text-3xl font-bold font-head tracking-wide hidden sm:block">Championship History</h1>
                         </div>
 
-                        <a
-                            href="index.html"
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors border border-slate-600"
-                        >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">Back to </span>Main Menu
-                        </a>
+                        {/* UPDATED: Right side contains Logo branding */}
+                        <div className="flex items-center gap-2 font-head text-2xl tracking-wide">
+                            <Trophy className="text-pahs-gold" size={24} />
+                            <span className="font-bold">PAHS<span className="text-pahs-gold">Football</span></span>
+                        </div>
+                        
                     </div>
                 </nav>
 
                 <div className="flex-grow w-full max-w-7xl mx-auto p-4 md:p-8">
 
                     {/* HERO SECTION */}
-                    <div className="mb-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div className="mb-8 content-card p-6 rounded-2xl">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div>
-                                <div className="flex items-center gap-2 text-blue-700 font-bold text-sm uppercase tracking-wider mb-2">
+                                <div className="flex items-center gap-2 text-pahs-gold font-bold text-sm uppercase tracking-wider mb-2 drop-shadow-sm">
                                     <Medal size={16} /> Public Records
                                 </div>
-                                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Championship History</h1>
-                                <p className="text-slate-500 mt-2">Searchable archive of Pennsylvania state football titles.</p>
+                                <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 font-head tracking-wide uppercase">State Title Archive</h2>
+                                <p className="text-gray-600 mt-1 font-medium">Searchable archive of Pennsylvania state football titles.</p>
                             </div>
 
                             {/* View Toggles */}
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                            <div className="flex bg-gray-200 p-1 rounded-xl shadow-inner border border-gray-300">
                                 <button
                                     onClick={() => setView('table')}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                                        view === 'table' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'
+                                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all font-head text-lg tracking-wide uppercase ${
+                                        view === 'table' ? 'bg-white text-black shadow-md border border-gray-200' : 'text-gray-500 hover:text-gray-800'
                                     }`}
                                 >
-                                    <TableIcon size={18} />
-                                    Records
+                                    <TableIcon size={16} /> Records
                                 </button>
                                 <button
                                     onClick={() => setView('analytics')}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                                        view === 'analytics' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'
+                                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all font-head text-lg tracking-wide uppercase ${
+                                        view === 'analytics' ? 'bg-white text-black shadow-md border border-gray-200' : 'text-gray-500 hover:text-gray-800'
                                     }`}
                                 >
-                                    <BarChart2 size={18} />
-                                    Analytics
+                                    <BarChart2 size={16} /> Analytics
                                 </button>
                             </div>
                         </div>
 
                         {/* Stats Summary Row */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-100">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-gray-300">
                             <div>
-                                <p className="text-xs text-slate-400 font-bold uppercase">Total Titles</p>
-                                <p className="text-2xl font-black text-slate-900">{stats.totalChamps}</p>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Titles</p>
+                                <p className="text-3xl font-bold font-head text-gray-900">{stats.totalChamps}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-slate-400 font-bold uppercase">Unique Schools</p>
-                                <p className="text-2xl font-black text-slate-900">{stats.uniqueTeams}</p>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Unique Schools</p>
+                                <p className="text-3xl font-bold font-head text-gray-900">{stats.uniqueTeams}</p>
                             </div>
                             <div className="col-span-2 md:col-span-2">
-                                <p className="text-xs text-slate-400 font-bold uppercase">Most Wins</p>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Most Wins</p>
                                 <div className="flex items-baseline gap-2">
-                                    <p className="text-2xl font-black text-blue-700">{stats.topTeams[0]?.count || 0}</p>
-                                    <p className="text-sm font-medium text-slate-600 truncate">{stats.topTeams[0]?.name}</p>
+                                    <p className="text-3xl font-bold font-head text-pahs-gold drop-shadow-sm">{stats.topTeams[0]?.count || 0}</p>
+                                    <p className="text-lg font-medium font-head tracking-wide text-gray-800 truncate uppercase">{stats.topTeams[0]?.name}</p>
                                 </div>
                             </div>
                         </div>
@@ -376,9 +424,9 @@
                     {view === 'table' ? (
                         <div className="space-y-4">
                             {/* Search Bar */}
-                            <div className="relative group">
+                            <div className="relative group z-10">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search className="text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
+                                    <Search className="text-gray-400 group-focus-within:text-pahs-gold transition-colors" size={20} />
                                 </div>
                                 <input
                                     type="text"
@@ -388,12 +436,12 @@
                                         setSearchTerm(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="w-full pl-11 pr-12 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all shadow-sm text-base"
+                                    className="modern-input w-full pl-11 pr-12 py-3.5 rounded-xl font-medium"
                                 />
                                 {searchTerm && (
                                     <button
                                         onClick={() => setSearchTerm('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-200 rounded-full text-gray-400 hover:text-red-500 transition-colors"
                                     >
                                         <X size={16} />
                                     </button>
@@ -401,20 +449,20 @@
                             </div>
 
                             {/* Table */}
-                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                            <div className="content-card rounded-xl overflow-hidden flex flex-col relative z-0">
                                 <div className="overflow-x-auto custom-scrollbar flex-grow" style={{ maxHeight: '600px' }}>
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
-                                            <tr className="border-b border-slate-200">
+                                    <table className="w-full text-left border-collapse bg-white">
+                                        <thead className="bg-[#e4e4e7] sticky top-0 z-10 shadow-sm border-b-2 border-gray-300">
+                                            <tr>
                                                 {columns.map((col) => (
                                                     <th
                                                         key={col}
                                                         onClick={() => requestSort(col)}
-                                                        className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors select-none whitespace-nowrap group bg-slate-50"
+                                                        className="sortable-header px-6 py-4 text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer transition-colors select-none whitespace-nowrap group font-body"
                                                     >
                                                         <div className="flex items-center gap-1">
                                                             {col}
-                                                            <span className="text-slate-300 group-hover:text-blue-600 transition-colors">
+                                                            <span className="text-gray-400 group-hover:text-pahs-gold transition-colors">
                                                                 {sortConfig.key === col ? (
                                                                     sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
                                                                 ) : <Filter size={12} className="opacity-0 group-hover:opacity-100" />}
@@ -424,17 +472,17 @@
                                                 ))}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-gray-200">
                                             {displayItems.length > 0 ? (
                                                 displayItems.map((row, idx) => (
                                                     <tr
                                                         key={idx}
-                                                        className="hover:bg-blue-50/50 transition-colors even:bg-slate-50/30"
+                                                        className="table-row hover:bg-gray-50 transition-colors even:bg-[#f8f8f9]"
                                                     >
                                                         {columns.map((col) => (
-                                                            <td key={`${idx}-${col}`} className="px-6 py-3.5 text-sm text-slate-700 whitespace-nowrap">
+                                                            <td key={`${idx}-${col}`} className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap font-medium">
                                                                 {col === winnerColumn ? (
-                                                                    <span className="font-bold text-slate-900">{row[col]}</span>
+                                                                    <span className="font-bold text-black">{row[col]}</span>
                                                                 ) : (
                                                                     row[col]
                                                                 )}
@@ -444,10 +492,10 @@
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={columns.length} className="px-6 py-20 text-center">
-                                                        <div className="flex flex-col items-center justify-center text-slate-400">
-                                                            <Search size={48} className="mb-4 opacity-20" />
-                                                            <p className="text-lg font-medium text-slate-600">No records found</p>
+                                                    <td colSpan={columns.length} className="px-6 py-20 text-center bg-[#f4f4f5]">
+                                                        <div className="flex flex-col items-center justify-center text-gray-500">
+                                                            <Search size={48} className="mb-4 opacity-30" />
+                                                            <p className="text-lg font-bold font-head uppercase tracking-wide text-gray-600">No records found</p>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -457,46 +505,46 @@
                                 </div>
 
                                 {/* Pagination / Controls Footer */}
-                                <div className="border-t border-slate-200 p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="border-t border-gray-300 p-4 bg-[#e4e4e7] flex flex-col sm:flex-row items-center justify-between gap-4">
                                     {isClassMode ? (
                                         <>
-                                            <div className="text-sm text-slate-500 font-medium">
-                                                Viewing <span className="text-blue-700 font-bold">Class {availableClasses[currentClassIndex]}</span>
+                                            <div className="text-sm text-gray-600 font-bold uppercase tracking-wide font-head text-lg">
+                                                Viewing <span className="text-pahs-gold drop-shadow-sm font-black ml-1">Class {availableClasses[currentClassIndex]}</span>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => setCurrentClassIndex(curr => Math.max(0, curr - 1))}
                                                     disabled={currentClassIndex === 0}
-                                                    className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 shadow-sm"
+                                                    className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold uppercase tracking-wider font-head text-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 shadow-sm transition-colors hover:text-pahs-gold hover:border-pahs-gold"
                                                 >
-                                                    <ChevronLeft size={16} /> Prev Class
+                                                    <ChevronLeft size={16} className="mt-0.5" /> Prev
                                                 </button>
                                                 <button
                                                     onClick={() => setCurrentClassIndex(curr => Math.min(availableClasses.length - 1, curr + 1))}
                                                     disabled={currentClassIndex === availableClasses.length - 1}
-                                                    className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 shadow-sm"
+                                                    className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold uppercase tracking-wider font-head text-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 shadow-sm transition-colors hover:text-pahs-gold hover:border-pahs-gold"
                                                 >
-                                                    Next Class <ChevronRight size={16} />
+                                                    Next <ChevronRight size={16} className="mt-0.5" />
                                                 </button>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="text-sm text-slate-500">
-                                                Page <span className="font-bold text-slate-900">{currentPage}</span> of {pageCount}
+                                            <div className="text-sm text-gray-600 font-medium">
+                                                Page <span className="font-bold text-gray-900">{currentPage}</span> of {pageCount}
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => setCurrentPage(curr => Math.max(curr - 1, 1))}
                                                     disabled={currentPage === 1}
-                                                    className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 shadow-sm"
+                                                    className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-pahs-gold disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 shadow-sm transition-colors"
                                                 >
                                                     <ChevronLeft size={20} />
                                                 </button>
                                                 <button
                                                     onClick={() => setCurrentPage(curr => Math.min(curr + 1, pageCount))}
                                                     disabled={currentPage === pageCount}
-                                                    className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 shadow-sm"
+                                                    className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-pahs-gold disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 shadow-sm transition-colors"
                                                 >
                                                     <ChevronRight size={20} />
                                                 </button>
@@ -508,38 +556,39 @@
                         </div>
                     ) : (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="content-card p-6 md:p-8 rounded-2xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <div>
-                                        <h3 className="text-xl font-bold text-slate-900">Leaderboard</h3>
-                                        <p className="text-sm text-slate-500">Top 10 Schools by Championship Count</p>
+                                        <h3 className="text-2xl font-bold font-head uppercase tracking-wide text-gray-900">Leaderboard</h3>
+                                        <p className="text-sm font-medium text-gray-600">Top 10 Schools by Championship Count</p>
                                     </div>
                                 </div>
-                                {/* Safe Check for Chart Library */}
                                 {BarChart ? (
                                     <div className="h-[500px] w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={stats.topTeams} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#d4d4d8" />
                                                 <XAxis type="number" hide />
                                                 <YAxis
                                                     dataKey="name"
                                                     type="category"
                                                     width={150}
-                                                    tick={{fontSize: 12, fill: '#64748b', fontWeight: 600}}
+                                                    tick={{fontSize: 12, fill: '#3f3f46', fontWeight: 700}}
                                                     interval={0}
                                                 />
                                                 <Tooltip
-                                                    cursor={{fill: '#f8fafc'}}
+                                                    cursor={{fill: 'rgba(251, 191, 36, 0.1)'}}
                                                     contentStyle={{
                                                         borderRadius: '8px',
-                                                        border: '1px solid #e2e8f0',
+                                                        border: '2px solid #fbbf24',
                                                         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                                        color: '#1e293b',
+                                                        backgroundColor: '#18181b',
+                                                        color: '#f4f4f5',
                                                         fontWeight: 'bold'
                                                     }}
+                                                    itemStyle={{ color: '#fbbf24' }}
                                                 />
-                                                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={28} label={{ position: 'right', fill: '#1e293b', fontSize: 13, fontWeight: '800', offset: 8 }}>
+                                                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={28} label={{ position: 'right', fill: '#18181b', fontSize: 13, fontWeight: '800', offset: 8 }}>
                                                     {stats.topTeams.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                                                     ))}
@@ -548,7 +597,7 @@
                                         </ResponsiveContainer>
                                     </div>
                                 ) : (
-                                    <div className="text-center p-10 text-slate-500 bg-slate-50 rounded-lg">
+                                    <div className="text-center p-10 text-gray-500 bg-gray-200 rounded-lg border border-gray-300 font-bold">
                                         Chart library failed to load. Use "Records" view.
                                     </div>
                                 )}
@@ -557,8 +606,8 @@
                     )}
 
                     {/* Footer */}
-                    <div className="mt-8 text-center text-sm text-slate-200 pb-8">
-                        <p>Data provided by PAHSFootball.com Database</p>
+                    <div className="mt-8 text-center text-sm text-gray-700 font-medium pb-8 uppercase tracking-widest font-head">
+                        <p>Data provided by PAHSFootball.com</p>
                     </div>
                 </div>
             </div>
