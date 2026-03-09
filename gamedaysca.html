@@ -37,18 +37,7 @@
         body { background-color: #adadad; font-family: 'Inter', sans-serif; color: #18181b; margin: 0; padding: 0; min-height: 100vh; }
         .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
         .countdown-box { background: #18181b; color: white; border-bottom: 3px solid #fbbf24; }
-        
         #loading-overlay { position: fixed; inset: 0; background: #adadad; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* --- LIKE ANIMATION --- */
-        @keyframes floatUpFade {
-            0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -40px) scale(1.5); }
-        }
-        .floating-like {
-            position: absolute; color: #fbbf24; font-weight: 900; font-size: 1.5rem;
-            animation: floatUpFade 0.8s ease-out forwards; pointer-events: none; z-index: 50; text-shadow: 0px 2px 10px rgba(0,0,0,0.8);
-        }
 
         /* --- LIVE WIDGET ANIMATIONS --- */
         .w1-gold-glow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); }
@@ -141,14 +130,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-8 flex flex-col items-center justify-center relative z-10">
-                    <button id="like-btn" onclick="addLike(event)" class="group relative flex items-center gap-2 px-6 py-2.5 bg-white/10 hover:bg-pahs-gold text-white hover:text-black rounded-full border border-white/20 transition-all duration-300 shadow-lg select-none">
-                        <i class="fa-solid fa-fire text-pahs-gold group-hover:text-black group-hover:scale-125 transition-all"></i>
-                        <span class="font-bold uppercase tracking-wider text-sm font-body">Hype Matchup</span>
-                        <span id="like-count" class="font-mono font-bold bg-black/50 group-hover:bg-white/50 px-2 py-0.5 rounded text-pahs-gold group-hover:text-black ml-2">0</span>
-                    </button>
-                </div>
             </div>
 
             <div class="p-6 text-center">
@@ -200,36 +181,6 @@
                 navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied to clipboard!"); });
-            }
-        }
-
-        // --- HYPE BUTTON LOGIC ---
-        let currentLikesRef = null;
-
-        function addLike(event) {
-            // Visual Animation
-            const btn = document.getElementById('like-btn');
-            const floatEl = document.createElement('div');
-            floatEl.className = 'floating-like font-head italic';
-            floatEl.innerText = '+1';
-            
-            const rect = btn.getBoundingClientRect();
-            floatEl.style.left = `${event.clientX - rect.left}px`; 
-            floatEl.style.top = `${event.clientY - rect.top}px`;
-            
-            btn.appendChild(floatEl); 
-            setTimeout(() => floatEl.remove(), 800);
-
-            // Instant Local Update
-            const countEl = document.getElementById('like-count');
-            let currentLocalCount = parseInt(countEl.innerText) || 0;
-            countEl.innerText = currentLocalCount + 1;
-
-            // Save to Firebase
-            if (currentLikesRef) {
-                currentLikesRef.transaction((current_value) => {
-                    return (current_value || 0) + 1;
-                }).catch(err => console.log("Firebase write permission denied. Update visual only.", err));
             }
         }
 
@@ -302,13 +253,6 @@
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('ui-map').src = mapUrl;
             }
-
-            // Connect Firebase listener to THIS specific week's hype counter
-            let cleanWeekId = weekNum.toLowerCase().replace(/[^a-z0-9]/g, '');
-            currentLikesRef = firebase.database().ref(`matchup_hype/week_${cleanWeekId}`);
-            currentLikesRef.on('value', (snapshot) => {
-                document.getElementById('like-count').innerText = snapshot.val() || 0;
-            });
 
             if (!isNaN(dateObj)) startCountdown(dateObj.getTime());
             else document.getElementById("countdown-container").innerHTML = "<div class='text-2xl font-head font-bold text-gray-500 uppercase py-4'>Time TBA</div>";
@@ -629,6 +573,7 @@
                             }
                         });
 
+                        // ONLY SHOW GAMES THAT ARE NOT FINAL AND NOT UPCOMING
                         const activeGames = gamesArray.filter(g => {
                             const s = (g.status || "").toUpperCase();
                             return s !== 'FINAL' && s !== 'UPCOMING';
@@ -640,6 +585,7 @@
 
             if (games.length === 0) return null;
 
+            // IF STATUS IS PREGAME, MAKE IT GOLD. IF LIVE (1Q, HALF, ETC), MAKE IT RED.
             const isLive = games.some(g => (g.status || "").toUpperCase() !== 'PREGAME');
             
             const cardClass = isLive 
