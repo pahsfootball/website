@@ -108,12 +108,9 @@
                         </div>
                         <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Southern Columbia</h3>
                         
-                        <div class="flex flex-col items-center justify-center mt-2 gap-1.5">
-                            <div class="flex items-center gap-2">
-                                <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
-                                <span id="ui-home-record" class="text-pahs-gold text-xs font-bold"></span>
-                            </div>
-                            <span id="ui-homeaway" class="text-[10px] font-bold bg-white text-black px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block">HOME</span>
+                        <div class="flex items-center justify-center gap-2 mt-2">
+                            <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
+                            <span id="ui-home-record" class="text-pahs-gold text-xs font-bold"></span>
                         </div>
                     </div>
                     
@@ -128,12 +125,9 @@
                         </div>
                         <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
                         
-                        <div class="flex flex-col items-center justify-center mt-2 gap-1.5">
-                            <div class="flex items-center gap-2">
-                                <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
-                                <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
-                            </div>
-                            <span class="text-[10px] px-2 py-0.5 opacity-0 invisible">AWAY</span>
+                        <div class="flex items-center justify-center gap-2 mt-2">
+                            <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
+                            <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
                         </div>
                     </div>
                 </div>
@@ -155,6 +149,7 @@
                 <div>
                     <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
                     <div class="space-y-4">
+                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Loading...</p></div></div>
@@ -258,13 +253,24 @@
             document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
             document.getElementById('ui-opp-mascot').innerText = game.Mascot || "";
             
-            document.getElementById('ui-home-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
-            document.getElementById('ui-opp-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
-            
-            let homeAwayBadge = document.getElementById('ui-homeaway');
+            // DYNAMIC RECORD ASSIGNMENT BASED ON HOME/AWAY STATUS
             let isHome = game.HomeAway && game.HomeAway.toLowerCase().includes('home');
+            
+            if (isHome) {
+                document.getElementById('ui-home-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
+                document.getElementById('ui-opp-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
+            } else {
+                // If it's an AWAY game, SCA (left side) gets the Away record
+                document.getElementById('ui-home-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
+                document.getElementById('ui-opp-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
+            }
+
+            // HOME/AWAY BADGE (MOVED TO GAME DETAILS SECTION)
+            let homeAwayBadge = document.getElementById('ui-homeaway');
             homeAwayBadge.innerText = game.HomeAway || "TBA";
-            homeAwayBadge.className = isHome ? "text-[10px] font-bold bg-pahs-gold text-black px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block" : "text-[10px] font-bold bg-gray-200 text-black px-2 py-0.5 rounded-sm uppercase tracking-wider border border-gray-300 inline-block";
+            homeAwayBadge.className = isHome 
+                ? "font-bold bg-pahs-gold text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" 
+                : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
             
             let dateObj = new Date(`${game.Date} ${game.Time}`);
             if (!isNaN(dateObj)) {
@@ -280,11 +286,9 @@
             // --- AUTOMATIC WEATHER LOGIC ---
             const weatherEl = document.getElementById('ui-weather');
             if (game.Weather && game.Weather.trim() !== "") {
-                // If user manually entered weather in the sheet, use it!
                 weatherEl.innerText = game.Weather;
             } else if (!isNaN(dateObj)) {
                 const diffDays = (dateObj.getTime() - new Date().getTime()) / (1000 * 3600 * 24);
-                // Only try to fetch weather if the game is within the next 7 days and we have an address
                 if (diffDays >= -1 && diffDays <= 7 && game.Address && game.Address.trim() !== "") {
                     weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-500"></i> Fetching...';
                     
@@ -348,7 +352,6 @@
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('ui-map').src = mapUrl;
                 
-                // Show direction buttons
                 const dirBtn = document.getElementById('btn-directions');
                 dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(game.Address)}`;
                 dirBtn.style.display = 'flex';
