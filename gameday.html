@@ -80,31 +80,34 @@
             <div class="bg-[#18181b] p-6 text-center relative overflow-hidden border-b-4 border-pahs-gold">
                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 
-                <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Week...</h2>
+                <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Matchup...</h2>
                 
-                <div class="flex items-center justify-center gap-4 md:gap-12 relative z-10">
+                <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
                     
-                    <div class="text-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mx-auto mb-3 overflow-hidden relative">
+                    <div class="text-center flex-1 flex flex-col items-center">
+                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative">
                             <img src="sca_logo.png" alt="SCA" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'">
                             <span class="text-2xl md:text-4xl font-black font-head text-black absolute">SCA</span>
                         </div>
-                        <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase">Southern Columbia</h3>
-                        <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
+                        <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Southern Columbia</h3>
+                        
+                        <div class="flex items-center justify-center gap-2 mt-2">
+                            <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
+                            <span id="ui-homeaway" class="text-[10px] font-bold bg-white text-black px-2 py-0.5 rounded-sm uppercase tracking-wider">HOME</span>
+                        </div>
                     </div>
                     
-                    <div class="flex flex-col items-center">
-                        <div class="text-3xl md:text-5xl font-black font-head text-white italic">VS</div>
-                        <span id="ui-homeaway" class="mt-2 text-xs font-bold bg-white text-black px-2 py-0.5 rounded uppercase">VS</span>
+                    <div class="flex flex-col items-center px-2 md:px-4">
+                        <div class="text-3xl md:text-5xl font-black font-head text-white italic opacity-90 drop-shadow-md">VS</div>
                     </div>
                     
-                    <div class="text-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mx-auto mb-3 overflow-hidden relative">
+                    <div class="text-center flex-1 flex flex-col items-center">
+                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative">
                             <img id="ui-opp-logo" src="" alt="Opponent" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='block';">
                             <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
                         </div>
-                        <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase">Loading...</h3>
-                        <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
+                        <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
+                        <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase mt-2">Mascot</p>
                     </div>
                 </div>
             </div>
@@ -151,6 +154,14 @@
                         <div>
                             <p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p>
                             <p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase">Forecast</p>
+                            <p id="ui-weather" class="font-bold text-gray-900">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -231,11 +242,24 @@
         function updateUI(game) {
             document.getElementById('loading-overlay').style.display = 'none';
 
+            // Format "WEEK X MATCHUP"
+            let weekNum = game.Week ? game.Week.toString().replace(/week/i, '').trim() : "";
+            document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
+            
             // Text Updates
-            document.getElementById('ui-week').innerText = game.Week || "Matchup";
             document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
             document.getElementById('ui-opp-mascot').innerText = game.Mascot || "";
-            document.getElementById('ui-homeaway').innerText = game.HomeAway || "VS";
+            
+            // Home/Away Badge Styling
+            let homeAwayBadge = document.getElementById('ui-homeaway');
+            let isHome = game.HomeAway && game.HomeAway.toLowerCase().includes('home');
+            homeAwayBadge.innerText = game.HomeAway || "TBA";
+            
+            if(isHome) {
+                homeAwayBadge.className = "text-[10px] font-bold bg-pahs-gold text-black px-2 py-0.5 rounded-sm uppercase tracking-wider";
+            } else {
+                homeAwayBadge.className = "text-[10px] font-bold bg-gray-200 text-black px-2 py-0.5 rounded-sm uppercase tracking-wider border border-gray-300";
+            }
             
             // Format Date
             let dateObj = new Date(`${game.Date} ${game.Time}`);
@@ -247,7 +271,9 @@
                 document.getElementById('ui-datetime').innerText = "Date/Time TBA";
             }
             
+            // Details
             document.getElementById('ui-theme').innerText = game.Theme || "No Theme";
+            document.getElementById('ui-weather').innerText = game.Weather || "Check back game week!";
             document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
             document.getElementById('ui-address').innerText = game.Address || "Address TBA";
             
@@ -264,12 +290,10 @@
             const oppFallbackEl = document.getElementById('ui-opp-fallback');
             
             if(game.OppLogo && game.OppLogo.trim() !== "") {
-                // If there's a link, show image, hide text
                 oppLogoEl.src = game.OppLogo;
                 oppLogoEl.style.display = 'block';
                 oppFallbackEl.style.display = 'none';
             } else {
-                // If blank, hide image, show text
                 oppLogoEl.style.display = 'none';
                 oppFallbackEl.style.display = 'block';
                 oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP";
