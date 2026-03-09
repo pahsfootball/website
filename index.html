@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
         /* --- MODERN VARIABLES (Matched to Game Day Page) --- */
@@ -61,7 +63,6 @@
         .header-gradient {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Fades into the new light gray body background */
             background: linear-gradient(to bottom, rgba(173,173,173,0) 0%, var(--bg-main) 100%);
             z-index: 1;
         }
@@ -73,13 +74,13 @@
             margin-top: 10px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centers the items perfectly */
+            align-items: center;
         }
 
         .header-logo {
             height: 110px;
             width: auto;
-            display: block; /* Forces it to act as a block element for better centering */
+            display: block;
             margin: 0 auto 5px auto;
             filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
         }
@@ -104,15 +105,25 @@
             margin-top: 5px;
         }
 
-        /* --- TICKER STYLES (Dark Contrast Bar) --- */
+        /* --- TICKER STYLES --- */
+        .ticker-title-bar {
+            background-color: var(--dark-header);
+            color: var(--gold-base);
+            text-align: center;
+            font-family: var(--font-head);
+            font-size: 18px;
+            letter-spacing: 2px;
+            padding: 6px 0 0 0;
+            border-top: 3px solid var(--gold-base);
+        }
+
         .ticker-container {
             width: 100%;
             background: var(--dark-header);
-            border-top: 3px solid var(--gold-base);
             border-bottom: 3px solid var(--gold-base);
             overflow: hidden;
             white-space: nowrap;
-            padding: 12px 0;
+            padding: 8px 0 12px 0;
             position: relative;
             z-index: 10;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -217,147 +228,70 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
-        button.nav-card {
-            cursor: pointer;
-            text-align: left;
-            font-family: inherit;
-        }
+        button.nav-card { cursor: pointer; text-align: left; font-family: inherit; }
 
         .nav-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 5px;
-            background: var(--gold-base);
-            transform: scaleY(0);
-            transform-origin: bottom;
-            transition: transform 0.3s ease;
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+            background: var(--gold-base); transform: scaleY(0); transform-origin: bottom; transition: transform 0.3s ease;
         }
 
-        .nav-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-            border-color: var(--gold-base);
-        }
-
+        .nav-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4); border-color: var(--gold-base); }
         .nav-card:hover::before { transform: scaleY(1); }
 
         .nav-text { display: flex; flex-direction: column; }
+        .nav-title { color: var(--text-main); font-family: var(--font-head); font-size: 26px; text-transform: uppercase; letter-spacing: 1px; line-height: 1; }
+        .nav-sub { color: var(--text-sub); font-size: 12px; margin-top: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .nav-title {
-            color: var(--text-main);
-            font-family: var(--font-head);
-            font-size: 26px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            line-height: 1;
-        }
+        .nav-icon { width: 32px; height: 32px; fill: #4b5563; transition: all 0.3s ease; }
+        .nav-card:hover .nav-icon { transform: scale(1.15) rotate(-5deg); fill: var(--text-main); }
 
-        .nav-sub { 
-            color: var(--text-sub);
-            font-size: 12px; 
-            margin-top: 6px; 
-            font-weight: 600; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .featured-card { background: linear-gradient(135deg, #ffffff, var(--card-bg)); border-left: 5px solid var(--gold-base); }
+        .featured-card .nav-icon { fill: var(--gold-base); filter: drop-shadow(0 2px 4px rgba(251,191,36,0.4)); }
 
-        .nav-icon { 
-            width: 32px; 
-            height: 32px; 
-            fill: #4b5563; /* Medium gray icon by default */
-            transition: all 0.3s ease; 
-        }
-
-        .nav-card:hover .nav-icon { 
-            transform: scale(1.15) rotate(-5deg); 
-            fill: var(--text-main); 
-        }
-
-        /* Featured Card Variation */
-        .featured-card {
-            background: linear-gradient(135deg, #ffffff, var(--card-bg));
-            border-left: 5px solid var(--gold-base);
-        }
-        .featured-card .nav-icon {
-            fill: var(--gold-base);
-            filter: drop-shadow(0 2px 4px rgba(251,191,36,0.4));
-        }
-
-        /* --- FOOTER STYLES (Dark Contrast) --- */
+        /* --- FOOTER STYLES --- */
         .app-footer {
-            margin-top: auto;
-            background: var(--dark-header);
-            border-top: 3px solid var(--gold-base);
-            padding: 30px 20px;
-            text-align: center;
-            color: #9ca3af;
-            font-size: 12px;
-            line-height: 1.5;
+            margin-top: auto; background: var(--dark-header); border-top: 3px solid var(--gold-base);
+            padding: 30px 20px; text-align: center; color: #9ca3af; font-size: 12px; line-height: 1.5;
         }
-
         .app-footer p { margin: 5px auto; max-width: 800px; }
-
         .footer-links { margin-top: 15px; }
         .footer-links a { color: var(--gold-base); text-decoration: none; margin: 0 10px; font-weight: 600; transition: color 0.2s; }
         .footer-links a:hover { color: #fff; text-decoration: underline; }
 
-        /* --- POPUP MODAL (Light Theme) --- */
+        /* --- POPUP MODAL --- */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 100; backdrop-filter: blur(5px);
+            align-items: center; justify-content: center; padding: 20px;
         }
-
         .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--border-light);
-            width: 100%; max-width: 450px;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            overflow: hidden;
-            animation: slideUp 0.3s ease-out;
-            position: relative;
+            background: var(--card-bg); border: 1px solid var(--border-light); width: 100%; max-width: 450px;
+            border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden;
+            animation: slideUp 0.3s ease-out; position: relative;
         }
-
-        .modal-content::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
-            background: var(--gold-base);
-        }
-
+        .modal-content::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-base); }
         .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
         .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 32px; color: var(--text-main); text-transform: uppercase; line-height: 1; }
         .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
         .close-btn:hover { color: #ef4444; }
-        
         .modal-body { padding: 24px; text-align: left; }
 
         label { color: var(--text-main); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
         input, textarea { 
             width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: var(--text-main); 
             padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; 
-            transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
         input:focus, textarea:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
-
         .submit-btn {
             width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; 
             padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
-            letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            margin-top: 12px; /* <-- Added Spacing Here */
+            letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 12px;
         }
         .submit-btn:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
     </style>
 </head>
 <body>
@@ -373,19 +307,12 @@
     </div>
 </header>
 
+<div class="ticker-title-bar">
+    <i class="fa-solid fa-bolt" style="margin-right: 5px;"></i> THIS WEEK'S FEATURED MATCHUPS
+</div>
 <div class="ticker-container">
     <div class="ticker-wrapper" id="matchupTicker">
-        <div class="matchup-card">
-            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-            <span class="team-name">WAITING ON 2026 SCHEDULE</span>
-            <span class="vs">VS</span>
-            <img src="logo_placeholder.png" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-            <span class="team-name">WAITING ON SCHEDULE...</span>
-            <div class="game-info">
-                <span class="game-date">TBD</span>
-                <span class="game-time">TBD</span>
-            </div>
-        </div>
+        <div class="matchup-card"><span class="team-name text-gray-400">Loading Featured Matchups...</span></div>
     </div>
 </div>
 
@@ -470,12 +397,52 @@
 </div>
 
 <script>
-    // --- TICKER LOGIC ---
-    function setupInfiniteTicker() {
-        const ticker = document.getElementById('matchupTicker');
-        if(!ticker) return;
-        const content = ticker.innerHTML;
-        ticker.innerHTML = content + content;
+    // --- TICKER LOGIC VIA GOOGLE SHEETS ---
+    
+    // PUT YOUR SHEET 2 CSV LINK HERE:
+    const TICKER_CSV_URL = "YOUR_NEW_CSV_LINK_HERE"; 
+
+    function loadTickerData() {
+        Papa.parse(TICKER_CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const games = results.data;
+                const ticker = document.getElementById('matchupTicker');
+                let html = '';
+
+                if (!games || games.length === 0) {
+                    html = '<div class="matchup-card"><span class="team-name">NO MATCHUPS SCHEDULED</span></div>';
+                } else {
+                    games.forEach(game => {
+                        const awayLogo = game.AwayLogo || 'logo_placeholder.png';
+                        const homeLogo = game.HomeLogo || 'logo_placeholder.png';
+                        
+                        html += `
+                            <div class="matchup-card">
+                                <img src="${awayLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                                <span class="team-name">${game.AwayTeam || 'TBA'}</span>
+                                <span class="vs">VS</span>
+                                <img src="${homeLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                                <span class="team-name">${game.HomeTeam || 'TBA'}</span>
+                                <div class="game-info">
+                                    <span class="game-date">${game.Date || 'TBD'}</span>
+                                    <span class="game-time">${game.Time || 'TBD'}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Duplicate content for smooth infinite scrolling loop
+                ticker.innerHTML = html + html;
+            },
+            error: function(err) {
+                console.error("Error loading ticker data:", err);
+                document.getElementById('matchupTicker').innerHTML = '<div class="matchup-card"><span class="team-name text-red-500">Error Loading Matchups</span></div>';
+            }
+        });
     }
 
     // --- MODAL LOGIC ---
@@ -553,9 +520,9 @@
         });
     });
 
-    // Initialize Ticker
+    // Initialize Everything
     document.addEventListener("DOMContentLoaded", () => {
-        setupInfiniteTicker();
+        loadTickerData(); // Replaces manual setupInfiniteTicker()
     });
 </script>
 
