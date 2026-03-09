@@ -181,6 +181,20 @@
 
         <div id="live-widget-root"></div>
 
+        <div class="content-card rounded-2xl p-6 mt-6">
+            <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4 flex items-center gap-2 text-gray-900">
+                <i class="fa-solid fa-list-ol text-gray-500"></i> Around The League
+            </h3>
+            <div class="scoreboard-container w-full rounded-xl overflow-hidden border border-gray-300 bg-white">
+                <div class="scorestream-widget-container"
+                     data-ss_widget_type="vertScoreboard"
+                     style="height:600px;"
+                     data-user-widget-id="58320">
+                </div>
+                <script async="async" type="text/javascript" src="https://scorestream.com/apiJsCdn/widgets/embed.js"></script>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -260,12 +274,10 @@
                 document.getElementById('ui-home-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
                 document.getElementById('ui-opp-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
             } else {
-                // If it's an AWAY game, SCA (left side) gets the Away record
                 document.getElementById('ui-home-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
                 document.getElementById('ui-opp-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
             }
 
-            // HOME/AWAY BADGE (MOVED TO GAME DETAILS SECTION)
             let homeAwayBadge = document.getElementById('ui-homeaway');
             homeAwayBadge.innerText = game.HomeAway || "TBA";
             homeAwayBadge.className = isHome 
@@ -322,7 +334,7 @@
                             if(code >= 71 && code <= 86) desc = "Snow";
                             if(code >= 95) desc = "Storms";
 
-                            weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span>  •  ${desc}`;
+                            weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span>  •  ${desc}`;
                         } else {
                             weatherEl.innerText = "Check back game week!";
                         }
@@ -336,7 +348,6 @@
             } else {
                 weatherEl.innerText = "TBA";
             }
-            // -------------------------------
             
             let ticketUrl = game.TicketLink || game['Ticket Link'] || game.Tickets || game.TicketURL || game['Ticket URL'];
             if(ticketUrl && ticketUrl.trim() !== "") { document.getElementById('ui-ticket').href = ticketUrl; document.getElementById('ui-ticket').style.display = 'block'; } 
@@ -347,7 +358,6 @@
             if(game.OppLogo && game.OppLogo.trim() !== "") { oppLogoEl.src = game.OppLogo; oppLogoEl.style.display = 'block'; oppFallbackEl.style.display = 'none'; } 
             else { oppLogoEl.style.display = 'none'; oppFallbackEl.style.display = 'block'; oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP"; }
 
-            // Map and Navigation Links
             if(game.Address && game.Address.trim() !== "") {
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('ui-map').src = mapUrl;
