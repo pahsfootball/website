@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Gallery | PAHSFootball</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #adadad; 
+            font-family: 'Inter', sans-serif;
+            color: #18181b;
+            margin: 0; padding: 0; min-height: 100vh;
+        }
+        .filter-btn.active {
+            background-color: #fbbf24;
+            color: #000;
+            border-color: #fbbf24;
+        }
+        
+        /* Lightbox CSS */
+        #lightbox {
+            display: none;
+            position: fixed; z-index: 999; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        #lightbox.show { display: flex; }
+        #lightbox img { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                </a>
+                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Media Gallery</h1>
+            </div>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-camera text-pahs-gold"></i>
+                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <div class="bg-[#f4f4f5] p-6 rounded-2xl shadow-md border border-gray-300 mb-8 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900">Week 1 vs Rival High</h2>
+            
+            <div class="flex flex-wrap justify-center gap-2">
+                <button class="filter-btn active px-4 py-1.5 rounded-lg border border-gray-400 font-bold text-sm uppercase transition-colors hover:bg-gray-200">All</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg border border-gray-400 text-gray-600 font-bold text-sm uppercase transition-colors hover:bg-gray-200">Game Action</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg border border-gray-400 text-gray-600 font-bold text-sm uppercase transition-colors hover:bg-gray-200">Student Section</button>
+                <button class="filter-btn px-4 py-1.5 rounded-lg border border-gray-400 text-gray-600 font-bold text-sm uppercase transition-colors hover:bg-gray-200">Band & Cheer</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            
+            <div class="overflow-hidden rounded-xl bg-gray-200 aspect-[4/3] cursor-pointer group relative border border-gray-300 shadow-sm" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80" alt="Game Photo" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 text-3xl drop-shadow-md transition-opacity"></i>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl bg-gray-200 aspect-[3/4] md:row-span-2 cursor-pointer group relative border border-gray-300 shadow-sm" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=800&q=80" alt="Game Photo" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 text-3xl drop-shadow-md transition-opacity"></i>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl bg-gray-200 aspect-square cursor-pointer group relative border border-gray-300 shadow-sm" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1522778147829-047360bdc7f6?auto=format&fit=crop&w=800&q=80" alt="Game Photo" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 text-3xl drop-shadow-md transition-opacity"></i>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl bg-gray-200 aspect-video cursor-pointer group relative border border-gray-300 shadow-sm" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1566933293069-b55c7f326dd4?auto=format&fit=crop&w=800&q=80" alt="Game Photo" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 text-3xl drop-shadow-md transition-opacity"></i>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl bg-gray-200 aspect-[4/3] md:col-span-2 cursor-pointer group relative border border-gray-300 shadow-sm" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1628126235206-5260b9ea6441?auto=format&fit=crop&w=1200&q=80" alt="Game Photo" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 text-3xl drop-shadow-md transition-opacity"></i>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white text-4xl hover:text-pahs-gold transition-colors z-50">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="Full Screen Photo" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        // Simple Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(element) {
+            const img = element.querySelector('img');
+            lightboxImg.src = img.src;
+            lightbox.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('show');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Filter Button UI Logic (Just visual for now)
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                buttons.forEach(b => {
+                    b.classList.remove('active', 'text-black');
+                    b.classList.add('text-gray-600');
+                });
+                btn.classList.add('active', 'text-black');
+                btn.classList.remove('text-gray-600');
+            });
+        });
+    </script>
+</body>
+</html>
