@@ -130,13 +130,14 @@
         }
 
         .ticker-wrapper {
-            display: flex; /* Changed from inline-block */
-        animation: ticker 25s linear infinite;
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+            will-change: transform;
         }
 
         @keyframes ticker {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
         }
 
         .matchup-card {
@@ -312,6 +313,7 @@
 </div>
 <div class="ticker-container">
     <div class="ticker-wrapper" id="matchupTicker">
+        <div class="matchup-card"><span class="team-name text-gray-400">Loading Featured Matchups...</span></div>
     </div>
 </div>
 
@@ -401,54 +403,48 @@
     // PUT YOUR SHEET 2 CSV LINK HERE:
     const TICKER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv"; 
 
-   function loadTickerData() {
-    Papa.parse(TICKER_CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            const games = results.data;
-            const ticker = document.getElementById('matchupTicker');
-            
-            // 1. Clear any existing content
-            ticker.innerHTML = ''; 
-            
-            let html = '';
+    function loadTickerData() {
+        Papa.parse(TICKER_CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const games = results.data;
+                const ticker = document.getElementById('matchupTicker');
+                let html = '';
 
-            if (!games || games.length === 0) {
-                html = '<div class="matchup-card"><span class="team-name">NO MATCHUPS SCHEDULED</span></div>';
-            } else {
-                games.forEach(game => {
-                    const awayLogo = game.AwayLogo || 'logo_placeholder.png';
-                    const homeLogo = game.HomeLogo || 'logo_placeholder.png';
-                    
-                    html += `
-                        <div class="matchup-card">
-                            <img src="${awayLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-                            <span class="team-name">${game.AwayTeam || 'TBA'}</span>
-                            <span class="vs">VS</span>
-                            <img src="${homeLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-                            <span class="team-name">${game.HomeTeam || 'TBA'}</span>
-                            <div class="game-info">
-                                <span class="game-date">${game.Date || 'TBD'}</span>
-                                <span class="game-time">${game.Time || 'TBD'}</span>
+                if (!games || games.length === 0) {
+                    html = '<div class="matchup-card"><span class="team-name">NO MATCHUPS SCHEDULED</span></div>';
+                } else {
+                    games.forEach(game => {
+                        const awayLogo = game.AwayLogo || 'logo_placeholder.png';
+                        const homeLogo = game.HomeLogo || 'logo_placeholder.png';
+                        
+                        html += `
+                            <div class="matchup-card">
+                                <img src="${awayLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                                <span class="team-name">${game.AwayTeam || 'TBA'}</span>
+                                <span class="vs">VS</span>
+                                <img src="${homeLogo}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                                <span class="team-name">${game.HomeTeam || 'TBA'}</span>
+                                <div class="game-info">
+                                    <span class="game-date">${game.Date || 'TBD'}</span>
+                                    <span class="game-time">${game.Time || 'TBD'}</span>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                }
+                
+                // Show matchups only once per loop
+                ticker.innerHTML = html;
+            },
+            error: function(err) {
+                console.error("Error loading ticker data:", err);
+                document.getElementById('matchupTicker').innerHTML = '<div class="matchup-card"><span class="team-name text-red-500">Error Loading Matchups</span></div>';
             }
-            
-            // 2. Set the innerHTML to the doubled string 
-            // The logic: If we have 10 games, 'html' has 10 cards. 
-            // 'html + html' gives us 20 cards (10 + 10) so the loop is seamless.
-            ticker.innerHTML = html + html;
-        },
-        error: function(err) {
-            console.error("Error loading ticker data:", err);
-            document.getElementById('matchupTicker').innerHTML = '<div class="matchup-card"><span class="team-name text-red-500">Error Loading Matchups</span></div>';
-        }
-    });
-}
+        });
+    }
 
     // --- MODAL LOGIC ---
     function openModal() {
