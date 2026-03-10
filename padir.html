@@ -18,10 +18,10 @@
                 extend: {
                     colors: {
                         pahs: {
-                            dark: '#0f0f0f',      // Deeper Main Background
-                            card: '#18181b',      // Zinc-900 Card Background
-                            input: '#27272a',     // Zinc-800 Input Background
-                            gold: '#fbbf24',      // Athletic Gold Accent
+                            dark: '#0f0f0f',
+                            card: '#18181b',
+                            input: '#27272a',
+                            gold: '#fbbf24',
                         }
                     },
                     fontFamily: {
@@ -43,26 +43,20 @@
     </script>
 
     <style>
-        /* --- MODERN AESTHETIC --- */
         body {
-            /* UPDATED: Main background color */
             background-color: #adadad;
-            background-image: none; 
-            /* UPDATED: Dark text for readability on light gray */
             color: #18181b;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
 
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #adadad; }
         ::-webkit-scrollbar-thumb { background: #71717a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
 
-        /* Light Gray Team Cards */
         .directory-card {
-            background: #f4f4f5; /* Very Light Gray */
+            background: #f4f4f5;
             border: 1px solid rgba(0, 0, 0, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -72,31 +66,27 @@
 
         .directory-card:hover {
             transform: translateY(-4px);
-            background: #ffffff; /* Bright white on hover */
+            background: #ffffff;
             border-color: rgba(0, 0, 0, 0.15);
             box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
         }
 
-        /* Light Inputs & Selects with Gold Glow */
         .modern-input {
-            background: #f4f4f5; /* Very Light Gray */
-            border: 2px solid #fbbf24; /* PAHS Gold Border */
-            color: #18181b; /* Dark text for readability */
+            background: #f4f4f5;
+            border: 2px solid #fbbf24;
+            color: #18181b;
             transition: all 0.3s ease;
         }
         
-        .modern-input::placeholder {
-            color: #71717a; /* Medium gray placeholder */
-        }
+        .modern-input::placeholder { color: #71717a; }
         
         .modern-input:focus {
-            background: #ffffff; /* Brighten on focus */
+            background: #ffffff;
             border-color: #fbbf24;
             outline: none;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); /* PAHS Gold Glow Effect */
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
         }
 
-        /* Dropdown Arrow */
         select {
             -webkit-appearance: none;
             appearance: none;
@@ -106,7 +96,6 @@
             background-size: 1em;
         }
 
-        /* Headers */
         h1, h2, h3, .teko-font { font-family: 'Teko', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
@@ -157,7 +146,7 @@
                 <div id="filterSummary" class="hidden flex items-center gap-2 ml-auto">
                     <span class="text-xs font-bold text-gray-300 uppercase tracking-wider font-head text-lg">Filtered by:</span>
                     <span id="activeFiltersList" class="flex gap-2"></span>
-                    <button onclick="resetAllFilters()" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
+                    <button id="resetFiltersBtn" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
                 </div>
             </div>
         </div>
@@ -179,17 +168,17 @@
         </div>
         <h3 class="text-2xl font-head text-gray-900">No teams found</h3>
         <p class="text-gray-700 max-w-xs mx-auto mt-1 font-body text-sm">Try adjusting your filters or search term.</p>
-        <button onclick="resetAllFilters()" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg shadow-pahs-gold/20 border border-yellow-500">
+        <button id="resetAllBtn" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg shadow-pahs-gold/20 border border-yellow-500">
             RESET ALL
         </button>
     </div>
 </main>
 
-<div id="modalOverlay" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" onclick="closeModal(event)">
-    <div id="modalContent" class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+<div id="modalOverlay" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+    <div id="modalContent" class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
 
         <div id="modalHeaderBanner" class="relative pt-12 pb-6 px-6 flex flex-col items-center text-center">
-            <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-10 backdrop-blur-sm">
+            <button id="closeModalBtn" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-10 backdrop-blur-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="relative z-10">
@@ -234,35 +223,56 @@
                 </div>
             </div>
 
-            <div class="mt-6 pt-6 border-t border-white/10">
+            <div class="mt-6 pt-6 border-t border-white/10 space-y-3">
                 <a id="modalSearchLink" href="#" target="_blank" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide">
                     <i class="fa-brands fa-google mr-2 text-lg"></i> SEARCH HISTORY
                 </a>
+
+                <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+                    <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
+                    <span id="followText">FOLLOW TEAM</span>
+                </button>
             </div>
-            <div class="mt-4">
-   <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
-    <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
-    <span id="followText">FOLLOW TEAM</span>
-</button>
-</div>
         </div>
     </div>
 </div>
 
-<div id="mapModalOverlay" class="fixed inset-0 bg-black/95 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="closeMapModal()">
-    <div class="bg-[#121212] w-full max-w-5xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-gray-700" onclick="event.stopPropagation()">
+<div id="mapModalOverlay" class="fixed inset-0 bg-black/95 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-[#121212] w-full max-w-5xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-gray-700">
         <div class="px-4 py-3 bg-[#18181b] border-b border-gray-700 flex justify-between items-center shrink-0">
             <span class="font-bold text-gray-200 font-head text-xl tracking-wide"><i class="fa-solid fa-satellite text-pahs-gold mr-2"></i>Satellite View</span>
-            <button onclick="closeMapModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-[#27272a] text-gray-400 hover:bg-[#3f3f46] hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            <button id="closeMapBtn" class="w-8 h-8 flex items-center justify-center rounded-full bg-[#27272a] text-gray-400 hover:bg-[#3f3f46] hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <iframe id="mapFrame" class="flex-1 w-full bg-black" frameborder="0"></iframe>
     </div>
 </div>
 
-<script>
+<script type="module">
+    // --- FIREBASE IMPORTS ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // --- CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+        authDomain: "pahs-football.firebaseapp.com",
+        projectId: "pahs-football",
+        storageBucket: "pahs-football.firebasestorage.app",
+        messagingSenderId: "260294523190",
+        appId: "1:260294523190:web:b3963804702d2a03749b97",
+        measurementId: "G-2J69C1LS6D"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
 
     let allData = [], filteredData = [];
+    let currentTeam = "";
+    let isFollowing = false;
 
     const colorNameMap = {
         "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
@@ -281,31 +291,51 @@
         district: document.getElementById('districtFilter'),
         class: document.getElementById('classFilter'),
         summary: document.getElementById('filterSummary'),
-        summaryList: document.getElementById('activeFiltersList')
+        summaryList: document.getElementById('activeFiltersList'),
+        resetFilters: document.getElementById('resetFiltersBtn'),
+        resetAll: document.getElementById('resetAllBtn'),
+        modalOverlay: document.getElementById('modalOverlay'),
+        modalContent: document.getElementById('modalContent'),
+        closeModal: document.getElementById('closeModalBtn'),
+        mapModalOverlay: document.getElementById('mapModalOverlay'),
+        closeMap: document.getElementById('closeMapBtn'),
+        followBtn: document.getElementById('followBtn'),
+        followText: document.getElementById('followText'),
+        followIcon: document.getElementById('followIcon')
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchData();
-        els.search.addEventListener('input', () => {
-            handleSearch();
-            els.clear.classList.toggle('hidden', els.search.value.trim().length === 0);
-        });
-        els.clear.addEventListener('click', () => {
-            els.search.value = '';
-            els.clear.classList.add('hidden');
-            handleSearch();
-            els.search.focus();
-        });
-        els.district.addEventListener('change', handleSearch);
-        els.class.addEventListener('change', handleSearch);
-        document.addEventListener('keydown', e => {
-            if(e.key === 'Escape') {
-                if(!document.getElementById('mapModalOverlay').classList.contains('hidden')) closeMapModal();
-                else closeModal();
-            }
-        });
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', fetchData);
+
+    els.search.addEventListener('input', () => {
+        handleSearch();
+        els.clear.classList.toggle('hidden', els.search.value.trim().length === 0);
     });
 
+    els.clear.addEventListener('click', () => {
+        els.search.value = '';
+        els.clear.classList.add('hidden');
+        handleSearch();
+        els.search.focus();
+    });
+
+    els.district.addEventListener('change', handleSearch);
+    els.class.addEventListener('change', handleSearch);
+    els.resetFilters.addEventListener('click', resetAllFilters);
+    els.resetAll.addEventListener('click', resetAllFilters);
+    els.closeModal.addEventListener('click', closeModal);
+    els.modalOverlay.addEventListener('click', (e) => { if(e.target === els.modalOverlay) closeModal(); });
+    els.closeMap.addEventListener('click', closeMapModal);
+    els.mapModalOverlay.addEventListener('click', (e) => { if(e.target === els.mapModalOverlay) closeMapModal(); });
+
+    document.addEventListener('keydown', e => {
+        if(e.key === 'Escape') {
+            if(!els.mapModalOverlay.classList.contains('hidden')) closeMapModal();
+            else closeModal();
+        }
+    });
+
+    // --- FETCH DATA ---
     function fetchData() {
         Papa.parse(sheetUrl, {
             download: true, header: true, skipEmptyLines: true,
@@ -342,28 +372,19 @@
         };
 
         const sortDistricts = (a, b) => {
-            const rA = romanToInt(a);
-            const rB = romanToInt(b);
+            const rA = romanToInt(a), rB = romanToInt(b);
             if (rA > 0 && rB > 0) return rA - rB;
-            const nA = parseInt(a.replace(/\D/g, ''));
-            const nB = parseInt(b.replace(/\D/g, ''));
+            const nA = parseInt(a.replace(/\D/g, '')), nB = parseInt(b.replace(/\D/g, ''));
             if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
             return a.localeCompare(b, undefined, {numeric: true});
         };
 
-        Array.from(dSet).sort(sortDistricts).forEach(d => {
-            els.district.add(new Option(`District ${d}`, d));
-        });
-
-        Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => {
-            els.class.add(new Option(`Class ${c}`, c));
-        });
+        Array.from(dSet).sort(sortDistricts).forEach(d => els.district.add(new Option(`District ${d}`, d)));
+        Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
     }
 
-    const normalizeColor = c => {
-        if(!c) return null;
-        return colorNameMap[c.toLowerCase().trim()] || c;
-    };
+    // --- CORE LOGIC ---
+    const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
 
     const getContrast = hex => {
         if(!hex) return 'black';
@@ -385,8 +406,8 @@
         else els.noResults.classList.add('hidden');
 
         data.forEach((row, idx) => {
-            const { p, a } = parseColors(row['Colors']||row['Color']||'');
-            const primaryColor = p || '#a1a1aa'; // fallback to gray
+            const { p } = parseColors(row['Colors']||row['Color']||'');
+            const primaryColor = p || '#a1a1aa';
 
             const card = document.createElement('div');
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
@@ -394,21 +415,14 @@
             
             card.innerHTML = `
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2" style="background-color: ${primaryColor};"></div>
-                
                 <div class="p-5 pl-6">
                     <div class="flex gap-2 mb-3">
-                        <span class="text-[10px] font-bold font-body px-2 py-1 bg-white text-gray-700 rounded border border-gray-200 shadow-sm">
-                            CLASS ${row['Class'] || 'N/A'}
-                        </span>
-                        <span class="text-[10px] font-bold font-body px-2 py-1 bg-white text-gray-700 rounded border border-gray-200 shadow-sm">
-                            DISTRICT ${row['District'] || 'N/A'}
-                        </span>
+                        <span class="text-[10px] font-bold font-body px-2 py-1 bg-white text-gray-700 rounded border border-gray-200 shadow-sm">CLASS ${row['Class'] || 'N/A'}</span>
+                        <span class="text-[10px] font-bold font-body px-2 py-1 bg-white text-gray-700 rounded border border-gray-200 shadow-sm">DISTRICT ${row['District'] || 'N/A'}</span>
                     </div>
-                    
                     <h3 class="font-bold text-2xl leading-tight font-head text-gray-900 mb-1 transition-colors">${row['School']}</h3>
                     <p class="text-gray-600 font-medium text-sm font-body">${row['Team'] || 'Team'}</p>
                 </div>
-                
                 <div class="px-5 pl-6 pb-4 pt-3 mt-auto border-t border-gray-200 flex items-center gap-2 text-gray-500 text-xs font-bold uppercase tracking-wide group-hover:text-gray-800 transition-colors font-body">
                     <i class="fa-solid fa-location-dot text-red-500/80"></i>
                     <span class="truncate">${row['City/Town']||'Unknown Location'}</span>
@@ -439,11 +453,14 @@
 
     function resetAllFilters() {
         els.search.value = ''; els.district.value = 'All'; els.class.value = 'All';
+        els.clear.classList.add('hidden');
         handleSearch();
     }
 
-    function openModal(idx) {
+    // --- MODAL & FOLLOW LOGIC ---
+    window.openModal = async function(idx) {
         const d = filteredData[idx];
+        currentTeam = d['School'];
         const { p, a } = parseColors(d['Colors']||'');
 
         document.getElementById('modalSchool').innerText = d['School'];
@@ -456,14 +473,10 @@
 
         const headerBanner = document.getElementById('modalHeaderBanner');
         const searchBtn = document.getElementById('modalSearchLink');
-        
         const primary = p || '#27272a';
         const secondary = (a && a[0]) ? a[0] : primary;
 
-        // Apply a beautiful gradient header based on team colors
         headerBanner.style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
-
-        // Style the search button with team colors
         searchBtn.style.backgroundColor = primary;
         searchBtn.style.color = getContrast(primary) === 'black' ? '#000000' : '#ffffff';
 
@@ -479,114 +492,89 @@
         const aiQuery = `Overview and history of the ${d['School']} ${d['Team']} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
 
-        const ov = document.getElementById('modalOverlay');
-        ov.classList.remove('hidden');
+        // Check if user is following
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (userSnap.exists()) {
+                    const followed = userSnap.data().followedTeams || [];
+                    isFollowing = followed.includes(currentTeam);
+                    updateFollowBtnUI();
+                }
+            } catch (err) { console.error("Error checking following status:", err); }
+        } else {
+            // Reset to default if not logged in
+            isFollowing = false;
+            updateFollowBtnUI();
+        }
+
+        els.modalOverlay.classList.remove('hidden');
         setTimeout(() => {
-            ov.classList.remove('opacity-0');
-            document.getElementById('modalContent').classList.remove('scale-95');
-            document.getElementById('modalContent').classList.add('scale-100');
+            els.modalOverlay.classList.remove('opacity-0');
+            els.modalContent.classList.remove('scale-95');
+            els.modalContent.classList.add('scale-100');
         }, 10);
         document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal() {
-        const ov = document.getElementById('modalOverlay');
-        const cnt = document.getElementById('modalContent');
-        ov.classList.add('opacity-0');
-        cnt.classList.remove('scale-100');
-        cnt.classList.add('scale-95');
-        setTimeout(() => {
-            ov.classList.add('hidden');
-            document.body.style.overflow = '';
-        }, 300);
-    }
-
-    function openMapModal(loc) {
-        document.getElementById('mapModalOverlay').classList.remove('hidden');
-        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=13&ie=UTF8&iwloc=&output=embed`;
-    }
-
-    function closeMapModal() {
-        document.getElementById('mapModalOverlay').classList.add('hidden');
-        document.getElementById('mapFrame').src = '';
-    }
-</script>
-<script type="module">
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-    const auth = getAuth();
-    const db = getFirestore();
-    let currentTeam = "";
-    let isFollowing = false;
-
-    // We modify your existing openModal to check status
-    window.openModal = async function(idx) {
-        const d = filteredData[idx];
-        currentTeam = d['School'];
-        
-        // ... (Keep all your existing modal setters here) ...
-
-        // Check if user is logged in and following this team
-        const user = auth.currentUser;
-        const btn = document.getElementById('followBtn');
-        const text = document.getElementById('followText');
-        const icon = document.getElementById('followIcon');
-
-        if (user) {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
-            if (userSnap.exists()) {
-                const followed = userSnap.data().followedTeams || [];
-                isFollowing = followed.includes(currentTeam);
-                
-                // Update Button State
-                if (isFollowing) {
-                    btn.classList.replace('bg-pahs-gold', 'bg-red-600');
-                    btn.classList.add('text-white');
-                    text.innerText = "UNFOLLOW TEAM";
-                    icon.classList.replace('fa-star', 'fa-trash');
-                } else {
-                    btn.classList.replace('bg-red-600', 'bg-pahs-gold');
-                    btn.classList.remove('text-white');
-                    text.innerText = "FOLLOW TEAM";
-                    icon.classList.replace('fa-trash', 'fa-star');
-                }
-            }
-        }
-        // ... (Show modal logic) ...
     };
 
-    // Toggle Follow/Unfollow
-    document.getElementById('followBtn').addEventListener('click', async () => {
+    function updateFollowBtnUI() {
+        if (isFollowing) {
+            els.followBtn.classList.replace('bg-pahs-gold', 'bg-red-600');
+            els.followBtn.classList.add('text-white');
+            els.followText.innerText = "UNFOLLOW TEAM";
+            els.followIcon.classList.replace('fa-star', 'fa-trash');
+        } else {
+            els.followBtn.classList.replace('bg-red-600', 'bg-pahs-gold');
+            els.followBtn.classList.remove('text-white');
+            els.followText.innerText = "FOLLOW TEAM";
+            els.followIcon.classList.replace('fa-trash', 'fa-star');
+        }
+    }
+
+    els.followBtn.addEventListener('click', async () => {
         const user = auth.currentUser;
         if (!user) {
-            if(confirm("You must be logged in to follow teams. Go to login?")) {
-                window.location.href = "login.html";
-            }
+            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
             return;
         }
 
         const userRef = doc(db, "users", user.uid);
-        const btn = document.getElementById('followBtn');
-        const text = document.getElementById('followText');
-
-        if (isFollowing) {
-            await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
-            isFollowing = false;
-            text.innerText = "FOLLOW TEAM";
-            btn.classList.replace('bg-red-600', 'bg-pahs-gold');
-            btn.classList.remove('text-white');
-        } else {
-            await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
-            isFollowing = true;
-            text.innerText = "UNFOLLOW TEAM";
-            btn.classList.replace('bg-pahs-gold', 'bg-red-600');
-            btn.classList.add('text-white');
+        try {
+            if (isFollowing) {
+                await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
+                isFollowing = false;
+            } else {
+                await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
+                isFollowing = true;
+            }
+            updateFollowBtnUI();
+        } catch (err) {
+            console.error("Update error:", err);
+            alert("Could not update. Make sure you are logged in.");
         }
     });
+
+    function closeModal() {
+        els.modalOverlay.classList.add('opacity-0');
+        els.modalContent.classList.remove('scale-100');
+        els.modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            els.modalOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+
+    window.openMapModal = function(loc) {
+        els.mapModalOverlay.classList.remove('hidden');
+        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=13&ie=UTF8&iwloc=&output=embed`;
+    };
+
+    function closeMapModal() {
+        els.mapModalOverlay.classList.add('hidden');
+        document.getElementById('mapFrame').src = '';
+    }
 </script>
+
 </body>
 </html>
-
-
-
