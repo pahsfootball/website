@@ -222,6 +222,13 @@
                 statusMsg.style.display = 'block';
             }
         });
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html"; // Kick them back to home
+            }).catch((error) => {
+                console.error("Logout Error:", error);
+            });
+        });
     </script>
 
 </body>
