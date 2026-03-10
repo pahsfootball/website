@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Day Central - SCA | PAHSFootball</title>
+    <title>Game Day Central | PAHSFootball</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -101,16 +101,17 @@
                 <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Matchup...</h2>
                 
                 <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
+                    
                     <div class="text-center flex-1 flex flex-col items-center">
                         <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative">
-                            <img src="https://cmsv2-assets.apptegy.net/uploads/8850/logo/10174/SCASD_logo.png" alt="SCA" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'">
-                            <span class="text-2xl md:text-4xl font-black font-head text-black absolute">SCA</span>
+                            <img id="ui-your-logo" src="" alt="Team Logo" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='block';">
+                            <span id="ui-your-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute" style="display:none;">TEA</span>
                         </div>
-                        <h3 class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Southern Columbia</h3>
+                        <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
                         
                         <div class="flex items-center justify-center gap-2 mt-2">
-                            <p class="text-gray-400 text-xs font-bold uppercase">Tigers</p>
-                            <span id="ui-home-record" class="text-pahs-gold text-xs font-bold"></span>
+                            <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
+                            <span id="ui-your-record" class="text-pahs-gold text-xs font-bold"></span>
                         </div>
                     </div>
                     
@@ -264,22 +265,45 @@
 
             let weekNum = game.Week ? game.Week.toString().replace(/week/i, '').trim() : "default";
             document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
-            document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
-            document.getElementById('ui-opp-mascot').innerText = game.Mascot || "";
             
-            // DYNAMIC RECORD ASSIGNMENT BASED ON HOME/AWAY STATUS
-            let isHome = game.HomeAway && game.HomeAway.toLowerCase().includes('home');
+            // --- YOUR TEAM (LEFT SIDE) ---
+            document.getElementById('ui-your-name').innerText = game.YourTeam || "TBA";
+            document.getElementById('ui-your-mascot').innerText = game.YourTeamMascot || "Mascot";
+            document.getElementById('ui-your-record').innerText = game.YourTeamRecord ? `(${game.YourTeamRecord})` : "";
             
-            if (isHome) {
-                document.getElementById('ui-home-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
-                document.getElementById('ui-opp-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
-            } else {
-                document.getElementById('ui-home-record').innerText = game.AwayRecord ? `(${game.AwayRecord})` : "";
-                document.getElementById('ui-opp-record').innerText = game.HomeRecord ? `(${game.HomeRecord})` : "";
+            const yourLogoEl = document.getElementById('ui-your-logo');
+            const yourFallbackEl = document.getElementById('ui-your-fallback');
+            if(game.YourTeamLogoUrl && game.YourTeamLogoUrl.trim() !== "") { 
+                yourLogoEl.src = game.YourTeamLogoUrl; 
+                yourLogoEl.style.display = 'block'; 
+                yourFallbackEl.style.display = 'none'; 
+            } else { 
+                yourLogoEl.style.display = 'none'; 
+                yourFallbackEl.style.display = 'block'; 
+                yourFallbackEl.innerText = game.YourTeam ? game.YourTeam.substring(0,3).toUpperCase() : "TEA"; 
             }
 
+            // --- OPPONENT (RIGHT SIDE) ---
+            document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
+            document.getElementById('ui-opp-mascot').innerText = game.OppMascot || "Mascot";
+            document.getElementById('ui-opp-record').innerText = game.OppTeamRecord ? `(${game.OppTeamRecord})` : "";
+
+            const oppLogoEl = document.getElementById('ui-opp-logo');
+            const oppFallbackEl = document.getElementById('ui-opp-fallback');
+            if(game.OppLogoUrl && game.OppLogoUrl.trim() !== "") { 
+                oppLogoEl.src = game.OppLogoUrl; 
+                oppLogoEl.style.display = 'block'; 
+                oppFallbackEl.style.display = 'none'; 
+            } else { 
+                oppLogoEl.style.display = 'none'; 
+                oppFallbackEl.style.display = 'block'; 
+                oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP"; 
+            }
+
+            // --- GAME DETAILS ---
+            let isHome = game.YourTeamHomeAway && game.YourTeamHomeAway.toLowerCase().includes('home');
             let homeAwayBadge = document.getElementById('ui-homeaway');
-            homeAwayBadge.innerText = game.HomeAway || "TBA";
+            homeAwayBadge.innerText = game.YourTeamHomeAway || "TBA";
             homeAwayBadge.className = isHome 
                 ? "font-bold bg-pahs-gold text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" 
                 : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
@@ -349,14 +373,13 @@
                 weatherEl.innerText = "TBA";
             }
             
-            let ticketUrl = game.TicketLink || game['Ticket Link'] || game.Tickets || game.TicketURL || game['Ticket URL'];
-            if(ticketUrl && ticketUrl.trim() !== "") { document.getElementById('ui-ticket').href = ticketUrl; document.getElementById('ui-ticket').style.display = 'block'; } 
-            else { document.getElementById('ui-ticket').style.display = 'none'; }
-
-            const oppLogoEl = document.getElementById('ui-opp-logo');
-            const oppFallbackEl = document.getElementById('ui-opp-fallback');
-            if(game.OppLogo && game.OppLogo.trim() !== "") { oppLogoEl.src = game.OppLogo; oppLogoEl.style.display = 'block'; oppFallbackEl.style.display = 'none'; } 
-            else { oppLogoEl.style.display = 'none'; oppFallbackEl.style.display = 'block'; oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP"; }
+            let ticketUrl = game.TicketLink;
+            if(ticketUrl && ticketUrl.trim() !== "") { 
+                document.getElementById('ui-ticket').href = ticketUrl; 
+                document.getElementById('ui-ticket').style.display = 'block'; 
+            } else { 
+                document.getElementById('ui-ticket').style.display = 'none'; 
+            }
 
             if(game.Address && game.Address.trim() !== "") {
                 let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
@@ -662,7 +685,11 @@
 
                         gamesArray = rawGames.map((entry, index) => {
                             const csvFallback = window.currentLiveCsvGame || {};
-                            
+                            // Properly parse the fallback records based on Home/Away logic for the Live Widget
+                            const isCsvFallbackHome = (csvFallback.YourTeamHomeAway || "").toLowerCase().includes('home');
+                            const fallbackHomeRec = isCsvFallbackHome ? csvFallback.YourTeamRecord : csvFallback.OppTeamRecord;
+                            const fallbackAwayRec = isCsvFallbackHome ? csvFallback.OppTeamRecord : csvFallback.YourTeamRecord;
+
                             return {
                                 ...entry,
                                 id: entry.id || index,
@@ -688,8 +715,8 @@
                                 awayc2: entry.awayc2 || entry.AwayC2 || entry["Away C2"] || null,
                                 week: entry.week || entry.Week || "",
                                 ticker: entry.message || entry.Message || entry.ticker || entry.Ticker || "",
-                                HomeRecord: entry.HomeRecord || entry.homeRecord || csvFallback.HomeRecord || "",
-                                AwayRecord: entry.AwayRecord || entry.awayRecord || csvFallback.AwayRecord || ""
+                                HomeRecord: entry.HomeRecord || entry.homeRecord || fallbackHomeRec || "",
+                                AwayRecord: entry.AwayRecord || entry.awayRecord || fallbackAwayRec || ""
                             }
                         });
 
