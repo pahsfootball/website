@@ -29,8 +29,9 @@
         .mini-header { background-color: var(--dark-header); border-bottom: 3px solid var(--gold-base); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .mini-header-logo { height: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
         .mini-header-title { font-family: var(--font-head); font-size: 24px; color: white; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin: 0; }
-        .nav-links a { color: var(--gold-base); text-decoration: none; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
-        .nav-links a:hover { color: white; }
+        
+        .back-link { color: var(--gold-base); text-decoration: none; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-weight: 700; font-family: var(--font-head); font-size: 20px; text-transform: uppercase; }
+        .back-link:hover { color: white; transform: translateX(-3px); }
 
         /* --- PROFILE CONTAINER --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
@@ -50,7 +51,7 @@
 
         /* --- FORM FIELDS --- */
         label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; color: var(--text-main); }
-        input, textarea { width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; color: var(--text-main); box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        input, textarea { width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; color: var(--text-main); }
         input:focus, textarea:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
         
         .readonly-text { padding: 12px 0; font-size: 14px; color: var(--text-sub); font-weight: 600; margin-bottom: 16px; }
@@ -58,23 +59,30 @@
         .btn-primary { width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 10px; }
         .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
-        /* SMALL RED LOGOUT BUTTON */
-        .btn-logout {
-            background-color: #ef4444;
-            color: white;
-            font-family: var(--font-head);
-            font-size: 16px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: bold;
-            transition: 0.2s;
-            display: inline-block;
-            margin-top: 15px;
-        }
+        .btn-logout { background-color: #ef4444; color: white; font-family: var(--font-head); font-size: 16px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; display: inline-block; margin-top: 25px; }
         .btn-logout:hover { background-color: #dc2626; }
+
+        /* TEAM BADGE STYLING */
+        .team-link {
+            display: inline-flex;
+            align-items: center;
+            background: #e4e4e7;
+            padding: 8px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #18181b;
+            text-decoration: none;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .team-link:hover {
+            background: #ffffff;
+            border-color: var(--gold-base);
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
 
         .status-msg { text-align: center; font-size: 14px; font-weight: bold; margin-top: 15px; display: none; }
         .status-success { color: #10b981; }
@@ -86,13 +94,13 @@
 <body>
 
     <header class="mini-header">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
-            <h1 class="mini-header-title">PAHS Football</h1>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="index.html" class="back-link">
+                <i class="fa-solid fa-chevron-left"></i> Back
+            </a>
+            <h1 class="mini-header-title">PAHS Profile</h1>
         </div>
-        <nav class="nav-links">
-            <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-        </nav>
+        <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
     </header>
 
     <div class="content-area">
@@ -113,29 +121,28 @@
             </div>
 
             <form id="profileForm">
-                <label>Email Address (Cannot be changed)</label>
+                <label>Email Address</label>
                 <div class="readonly-text" id="displayEmail">loading...</div>
 
-                <label for="usernameInput">Username</label>
-                <input type="text" id="usernameInput" placeholder="e.g. PAHS_Superfan99" required>
+                <label for="usernameInput">Display Username</label>
+                <input type="text" id="usernameInput" placeholder="Enter username..." required>
 
                 <label for="aboutMeInput">About Me / Bio</label>
-                <textarea id="aboutMeInput" rows="3" placeholder="Tell the community a bit about yourself..."></textarea>
+                <textarea id="aboutMeInput" rows="3" placeholder="Tell us about yourself..."></textarea>
 
-                <label>Followed Teams</label>
-                <div id="followedTeamsList" class="readonly-text" style="font-style: italic; color: var(--text-sub);">
-                    Loading followed teams...
+                <label>Teams I'm Following (Click to view info)</label>
+                <div id="followedTeamsList" class="py-2 mb-4" style="min-height: 40px;">
+                    <span class="text-xs text-gray-500 italic">Checking your watchlist...</span>
                 </div>
 
-                <button type="submit" id="saveBtn" class="btn-primary">Save Profile</button>
+                <button type="submit" id="saveBtn" class="btn-primary">Update Profile</button>
                 
                 <div style="text-align: center;">
-                    <button type="button" id="logoutBtn" class="btn-logout">Log Out</button>
+                    <button type="button" id="logoutBtn" class="btn-logout">Sign Out</button>
                 </div>
                 
                 <div id="statusMsg" class="status-msg"></div>
             </form>
-
         </div>
     </div>
 
@@ -173,16 +180,11 @@
         let currentUserUid = null;
 
         function calculateBadge(points) {
-            if (points >= 500) {
-                return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
-            } else if (points >= 100) {
-                return { title: "Varsity", icon: '<i class="fa-solid fa-medal"></i>' };
-            } else {
-                return { title: "Rookie", icon: '<i class="fa-solid fa-shield-halved"></i>' };
-            }
+            if (points >= 500) return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
+            if (points >= 100) return { title: "Varsity", icon: '<i class="fa-solid fa-medal"></i>' };
+            return { title: "Rookie", icon: '<i class="fa-solid fa-shield-halved"></i>' };
         }
 
-        // 1. Authenticate and Load Data
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUid = user.uid;
@@ -194,75 +196,58 @@
 
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        
                         usernameInput.value = data.username || "";
                         aboutMeInput.value = data.aboutMe || "";
-                        const pts = data.points || 0;
-                        userPoints.innerText = pts;
+                        userPoints.innerText = data.points || 0;
                         
-                        const badgeInfo = calculateBadge(pts);
+                        const badgeInfo = calculateBadge(data.points || 0);
                         userBadgeTitle.innerText = badgeInfo.title;
                         userBadgeIcon.innerHTML = badgeInfo.icon;
 
-                        // Display Followed Teams
+                        // RENDER CLICKABLE FOLLOWED TEAMS
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
-                                `<span style="display:inline-block; background:#e4e4e7; padding:4px 10px; border-radius:15px; margin:4px; font-size:12px; font-weight:700; color:var(--text-main);">${team}</span>`
+                                `<a href="padir.html?team=${encodeURIComponent(team)}" class="team-link">
+                                    <i class="fa-solid fa-location-arrow mr-2 text-[10px] opacity-40"></i> ${team}
+                                </a>`
                             ).join('');
-                            followedTeamsList.style.fontStyle = "normal";
                         } else {
-                            followedTeamsList.innerText = "Not following any teams yet.";
+                            followedTeamsList.innerHTML = '<span class="text-xs text-gray-500">Not following any teams yet. Head over to the Directory to add some!</span>';
                         }
                     }
                 } catch (error) {
-                    console.error("Error loading profile:", error);
+                    console.error("Load error:", error);
                 }
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // 2. Save Profile Updates
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUserUid) return;
-
             saveBtn.innerText = "Saving...";
-            statusMsg.style.display = 'none';
-            statusMsg.className = 'status-msg';
-
             try {
                 const userRef = doc(db, "users", currentUserUid);
                 await updateDoc(userRef, {
                     username: usernameInput.value.trim(),
                     aboutMe: aboutMeInput.value.trim()
                 });
-
-                saveBtn.innerText = "Save Profile";
-                statusMsg.innerText = "Profile updated successfully!";
-                statusMsg.classList.add('status-success');
-                statusMsg.style.display = 'block';
-
-                setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
+                statusMsg.innerText = "Profile saved!";
+                statusMsg.className = "status-msg status-success block";
+                saveBtn.innerText = "Update Profile";
+                setTimeout(() => statusMsg.style.display = 'none', 3000);
             } catch (error) {
-                console.error("Error updating profile:", error);
-                saveBtn.innerText = "Save Profile";
-                statusMsg.innerText = "Error updating profile. Try again.";
-                statusMsg.classList.add('status-error');
-                statusMsg.style.display = 'block';
+                statusMsg.innerText = "Error saving. Try again.";
+                statusMsg.className = "status-msg status-error block";
+                saveBtn.innerText = "Update Profile";
             }
         });
 
-        // 3. Logout Logic (Fixed)
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            }).catch((error) => {
-                console.error("Logout Error:", error);
-            });
+            signOut(auth).then(() => window.location.href = "index.html");
         });
     </script>
-
 </body>
 </html>
