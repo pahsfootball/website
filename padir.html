@@ -240,9 +240,10 @@
                 </a>
             </div>
             <div class="mt-4">
-    <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
-        <i class="fa-solid fa-star mr-2"></i> FOLLOW THIS TEAM
-    </button>
+   <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+    <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
+    <span id="followText">FOLLOW TEAM</span>
+</button>
 </div>
         </div>
     </div>
@@ -511,50 +512,81 @@
     }
 </script>
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const firebaseConfig = { /* ... keep your existing config ... */ };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const auth = getAuth();
+    const db = getFirestore();
+    let currentTeam = "";
+    let isFollowing = false;
 
-    let currentSelectedTeam = ""; // Variable to track the team in the modal
-
-    // Update modal open logic to track the team
-    window.openModal = function(idx) {
+    // We modify your existing openModal to check status
+    window.openModal = async function(idx) {
         const d = filteredData[idx];
-        currentSelectedTeam = d['School']; // Store the school name
-        // ... (keep all your existing modal content setters here)
+        currentTeam = d['School'];
+        
+        // ... (Keep all your existing modal setters here) ...
+
+        // Check if user is logged in and following this team
+        const user = auth.currentUser;
+        const btn = document.getElementById('followBtn');
+        const text = document.getElementById('followText');
+        const icon = document.getElementById('followIcon');
+
+        if (user) {
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                const followed = userSnap.data().followedTeams || [];
+                isFollowing = followed.includes(currentTeam);
+                
+                // Update Button State
+                if (isFollowing) {
+                    btn.classList.replace('bg-pahs-gold', 'bg-red-600');
+                    btn.classList.add('text-white');
+                    text.innerText = "UNFOLLOW TEAM";
+                    icon.classList.replace('fa-star', 'fa-trash');
+                } else {
+                    btn.classList.replace('bg-red-600', 'bg-pahs-gold');
+                    btn.classList.remove('text-white');
+                    text.innerText = "FOLLOW TEAM";
+                    icon.classList.replace('fa-trash', 'fa-star');
+                }
+            }
+        }
+        // ... (Show modal logic) ...
     };
 
-    // The Follow Logic
+    // Toggle Follow/Unfollow
     document.getElementById('followBtn').addEventListener('click', async () => {
         const user = auth.currentUser;
-
         if (!user) {
-            alert("You must be logged in to follow teams! Redirecting to login...");
-            window.location.href = "login.html";
+            if(confirm("You must be logged in to follow teams. Go to login?")) {
+                window.location.href = "login.html";
+            }
             return;
         }
 
-        try {
-            const userRef = doc(db, "users", user.uid);
-            await updateDoc(userRef, {
-                followedTeams: arrayUnion(currentSelectedTeam)
-            });
-            
-            alert(`You are now following ${currentSelectedTeam}!`);
-            document.getElementById('followBtn').innerText = "FOLLOWED!";
-            document.getElementById('followBtn').classList.add('bg-green-500');
-        } catch (error) {
-            console.error("Error following team:", error);
-            alert("Could not follow team. Please try again.");
+        const userRef = doc(db, "users", user.uid);
+        const btn = document.getElementById('followBtn');
+        const text = document.getElementById('followText');
+
+        if (isFollowing) {
+            await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
+            isFollowing = false;
+            text.innerText = "FOLLOW TEAM";
+            btn.classList.replace('bg-red-600', 'bg-pahs-gold');
+            btn.classList.remove('text-white');
+        } else {
+            await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
+            isFollowing = true;
+            text.innerText = "UNFOLLOW TEAM";
+            btn.classList.replace('bg-pahs-gold', 'bg-red-600');
+            btn.classList.add('text-white');
         }
     });
 </script>
 </body>
 </html>
+
 
 
