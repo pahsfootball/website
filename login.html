@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PAHS Football</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- MATCHING VARIABLES --- */
+        :root {
+            --bg-main: #adadad;
+            --card-bg: #f4f4f5; 
+            --text-main: #18181b;
+            --text-sub: #52525b; 
+            --gold-base: #fbbf24;
+            --gold-hover: #f59e0b;
+            --dark-header: #0f0f0f;
+            --border-light: rgba(0, 0, 0, 0.1);
+            --font-head: 'Teko', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            font-family: var(--font-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- LOGIN CARD STYLES --- */
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            border-top: 5px solid var(--gold-base);
+            animation: fadeIn 0.6s ease-out;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-header h1 {
+            font-family: var(--font-head);
+            font-size: 38px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+
+        .auth-header p {
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        label {
+            color: var(--text-main);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: 800;
+            display: block;
+        }
+
+        input { 
+            width: 100%; 
+            background: #ffffff; 
+            border: 1px solid #d1d5db; 
+            color: var(--text-main); 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-family: var(--font-body); 
+            font-size: 14px; 
+            transition: 0.2s; 
+            box-sizing: border-box; 
+            margin-bottom: 16px; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        input:focus { 
+            border-color: var(--gold-base); 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(251,191,36,0.3); 
+        }
+
+        .btn-primary {
+            width: 100%; 
+            background: var(--gold-base); 
+            color: black; 
+            font-family: var(--font-head); 
+            font-size: 22px; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover { 
+            background: var(--gold-hover); 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); 
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background: transparent;
+            color: var(--text-sub);
+            border: 1px solid var(--border-light);
+            padding: 10px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-main);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gold-hover);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Portal Access</h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <div id="errorMsg" class="error-message"></div>
+
+        <form id="authForm">
+            <label for="emailInput">Email Address</label>
+            <input type="email" id="emailInput" required placeholder="fan@example.com">
+
+            <label for="passwordInput">Password</label>
+            <input type="password" id="passwordInput" required placeholder="••••••••">
+
+            <button type="submit" id="loginBtn" class="btn-primary">Sign In</button>
+            <button type="button" id="signUpBtn" class="btn-secondary">Create Account</button>
+        </form>
+
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // TODO: Replace this with your app's Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // UI Elements
+        const authForm = document.getElementById('authForm');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const errorMsg = document.getElementById('errorMsg');
+        const signUpBtn = document.getElementById('signUpBtn');
+
+        function showError(message) {
+            errorMsg.innerText = message;
+            errorMsg.style.display = 'block';
+        }
+
+        // Handle Sign In (Form Submit)
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed in successfully!
+                    const user = userCredential.user;
+                    console.log("Logged in:", user.email);
+                    // Redirect to your protected page
+                    window.location.href = "media-hub.html"; 
+                })
+                .catch((error) => {
+                    console.error("Login error:", error.message);
+                    showError("Invalid email or password.");
+                });
+        });
+
+        // Handle Sign Up (Button Click)
+        signUpBtn.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if(!email || !password) {
+                showError("Please enter an email and password to sign up.");
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed up successfully!
+                    const user = userCredential.user;
+                    console.log("Account created:", user.email);
+                    // Redirect to your protected page
+                    window.location.href = "media-hub.html";
+                })
+                .catch((error) => {
+                    console.error("Sign up error:", error.message);
+                    showError(error.message); // Shows specific Firebase error (e.g., password too weak)
+                });
+        });
+    </script>
+</body>
+</html>
