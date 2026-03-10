@@ -135,6 +135,16 @@
                     <span class="text-xs text-gray-500 italic">Checking your watchlist...</span>
                 </div>
 
+                <div id="admin-controls" class="hidden mt-4 mb-8 border-t border-gray-300 pt-6">
+                    <h3 class="text-xl font-bold font-head mb-2 text-gray-800 uppercase tracking-wide">
+                        <i class="fa-solid fa-screwdriver-wrench text-pahs-gold mr-2"></i>Admin Tools
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-4 font-body">You have manager access. Update your team's Game Day page below.</p>
+                    <a href="controller.html" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24]" style="text-decoration: none;">
+                        <i class="fa-solid fa-gear mr-2"></i> Open Game Day Controller
+                    </a>
+                </div>
+
                 <button type="submit" id="saveBtn" class="btn-primary">Update Profile</button>
                 
                 <div style="text-align: center;">
@@ -214,6 +224,11 @@
                             ).join('');
                         } else {
                             followedTeamsList.innerHTML = '<span class="text-xs text-gray-500">Not following any teams yet. Head over to the Directory to add some!</span>';
+                        }
+
+                        // ADMIN CHECK: UNHIDE ADMIN TOOLS IF APPLICABLE
+                        if (data.role === 'admin') {
+                            document.getElementById('admin-controls').classList.remove('hidden');
                         }
                     }
                 } catch (error) {
