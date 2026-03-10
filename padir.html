@@ -505,5 +505,49 @@
         document.getElementById('mapFrame').src = '';
     }
 </script>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // Your Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+        authDomain: "pahs-football.firebaseapp.com",
+        projectId: "pahs-football",
+        storageBucket: "pahs-football.firebasestorage.app",
+        messagingSenderId: "260294523190",
+        appId: "1:260294523190:web:b3963804702d2a03749b97",
+        measurementId: "G-2J69C1LS6D"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // This listens for login state changes
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User IS logged in
+            console.log("Welcome back, " + user.email);
+            // Example: Change a "Login" button to say "My Account" or "Logout"
+            // document.getElementById("navLoginBtn").innerText = "Logout";
+        } else {
+            // User is NOT logged in
+            console.log("No user is logged in.");
+            // Example: If this is a protected page, kick them back to login
+            // window.location.href = "login.html";
+        }
+    });
+
+    // Optional: A function to log the user out if you add a logout button
+    window.logoutUser = function() {
+        signOut(auth).then(() => {
+            window.location.href = "login.html";
+        }).catch((error) => {
+            console.error("Logout Error", error);
+        });
+    }
+</script>
 </body>
 </html>
+
