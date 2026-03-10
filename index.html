@@ -259,14 +259,14 @@
         const authTitle = document.getElementById("authNavTitle");
         const authSub = document.getElementById("authNavSub");
 
-        if (user) {
-            // 1. Update the Button UI to the green state
+       if (user) {
+            // 1. Update the Button UI to the green state and link to Profile
             if(authBtn) {
                 authBtn.classList.add("logged-in-state");
-                authBtn.href = "#"; 
-                authBtn.onclick = window.logoutUser; 
-                authTitle.innerText = "Log Out";
-                authSub.innerText = "Signed in as " + user.email;
+                authBtn.href = "profile.html"; // <-- CHANGED to point to profile
+                authBtn.onclick = null; // <-- CHANGED so it doesn't log them out
+                authTitle.innerText = "My Profile";
+                authSub.innerText = "Manage your account & stats";
             }
 
             // 2. Fetch User Data from Firestore to Autofill Contact Form
