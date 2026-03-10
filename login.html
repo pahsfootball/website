@@ -150,6 +150,57 @@
             color: var(--text-main);
         }
 
+        .btn-google {
+            width: 100%;
+            background: white;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 10px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .btn-google img {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0 5px 0;
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
         .error-message {
             color: #ef4444;
             font-size: 13px;
@@ -187,6 +238,13 @@
 
         <div id="errorMsg" class="error-message"></div>
 
+        <button id="googleBtn" class="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+            Sign in with Google
+        </button>
+
+        <div class="divider">or</div>
+
         <form id="authForm">
             <label for="emailInput">Email Address</label>
             <input type="email" id="emailInput" required placeholder="fan@example.com">
@@ -202,23 +260,24 @@
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // Import Auth functions, including Google provider
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // TODO: Replace this with your app's Firebase project configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+            authDomain: "pahs-football.firebaseapp.com",
+            projectId: "pahs-football",
+            storageBucket: "pahs-football.firebasestorage.app",
+            messagingSenderId: "260294523190",
+            appId: "1:260294523190:web:b3963804702d2a03749b97",
+            measurementId: "G-2J69C1LS6D"
         };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
         // UI Elements
         const authForm = document.getElementById('authForm');
@@ -226,24 +285,32 @@
         const passwordInput = document.getElementById('passwordInput');
         const errorMsg = document.getElementById('errorMsg');
         const signUpBtn = document.getElementById('signUpBtn');
+        const googleBtn = document.getElementById('googleBtn');
 
         function showError(message) {
             errorMsg.innerText = message;
             errorMsg.style.display = 'block';
         }
 
-        // Handle Sign In (Form Submit)
+        // 1. Handle Google Sign In
+        googleBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log("Google Logged in:", user.displayName);
+                    window.location.href = "media-hub.html"; 
+                }).catch((error) => {
+                    console.error("Google Login error:", error.message);
+                    showError(error.message);
+                });
+        });
+
+        // 2. Handle Email/Password Sign In
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = emailInput.value;
-            const password = passwordInput.value;
-
-            signInWithEmailAndPassword(auth, email, password)
+            signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
                 .then((userCredential) => {
-                    // Signed in successfully!
-                    const user = userCredential.user;
-                    console.log("Logged in:", user.email);
-                    // Redirect to your protected page
+                    console.log("Logged in:", userCredential.user.email);
                     window.location.href = "media-hub.html"; 
                 })
                 .catch((error) => {
@@ -252,27 +319,20 @@
                 });
         });
 
-        // Handle Sign Up (Button Click)
+        // 3. Handle Email/Password Sign Up
         signUpBtn.addEventListener('click', () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-
-            if(!email || !password) {
+            if(!emailInput.value || !passwordInput.value) {
                 showError("Please enter an email and password to sign up.");
                 return;
             }
-
-            createUserWithEmailAndPassword(auth, email, password)
+            createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
                 .then((userCredential) => {
-                    // Signed up successfully!
-                    const user = userCredential.user;
-                    console.log("Account created:", user.email);
-                    // Redirect to your protected page
+                    console.log("Account created:", userCredential.user.email);
                     window.location.href = "media-hub.html";
                 })
                 .catch((error) => {
                     console.error("Sign up error:", error.message);
-                    showError(error.message); // Shows specific Firebase error (e.g., password too weak)
+                    showError(error.message); 
                 });
         });
     </script>
