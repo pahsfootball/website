@@ -58,6 +58,24 @@
         .btn-primary { width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 10px; }
         .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
+        /* SMALL RED LOGOUT BUTTON */
+        .btn-logout {
+            background-color: #ef4444;
+            color: white;
+            font-family: var(--font-head);
+            font-size: 16px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.2s;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn-logout:hover { background-color: #dc2626; }
+
         .status-msg { text-align: center; font-size: 14px; font-weight: bold; margin-top: 15px; display: none; }
         .status-success { color: #10b981; }
         .status-error { color: #ef4444; }
@@ -105,10 +123,16 @@
                 <textarea id="aboutMeInput" rows="3" placeholder="Tell the community a bit about yourself..."></textarea>
 
                 <label>Followed Teams</label>
-                <div class="readonly-text" style="font-style: italic;">Feature coming soon!</div>
+                <div id="followedTeamsList" class="readonly-text" style="font-style: italic; color: var(--text-sub);">
+                    Loading followed teams...
+                </div>
 
                 <button type="submit" id="saveBtn" class="btn-primary">Save Profile</button>
-                <button type="button" id="logoutBtn" class="btn-secondary" style="margin-top: 15px; color: #ef4444; border-color: #ef4444;">Log Out</button>
+                
+                <div style="text-align: center;">
+                    <button type="button" id="logoutBtn" class="btn-logout">Log Out</button>
+                </div>
+                
                 <div id="statusMsg" class="status-msg"></div>
             </form>
 
@@ -117,7 +141,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -138,6 +162,7 @@
         const displayEmail = document.getElementById('displayEmail');
         const usernameInput = document.getElementById('usernameInput');
         const aboutMeInput = document.getElementById('aboutMeInput');
+        const followedTeamsList = document.getElementById('followedTeamsList');
         const userPoints = document.getElementById('userPoints');
         const userBadgeTitle = document.getElementById('userBadgeTitle');
         const userBadgeIcon = document.getElementById('userBadgeIcon');
@@ -147,7 +172,6 @@
 
         let currentUserUid = null;
 
-        // Determine Badge Title and Icon based on points
         function calculateBadge(points) {
             if (points >= 500) {
                 return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
@@ -171,23 +195,30 @@
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         
-                        // Populate Inputs
                         usernameInput.value = data.username || "";
                         aboutMeInput.value = data.aboutMe || "";
-                        
-                        // Populate Stats
                         const pts = data.points || 0;
                         userPoints.innerText = pts;
                         
                         const badgeInfo = calculateBadge(pts);
                         userBadgeTitle.innerText = badgeInfo.title;
                         userBadgeIcon.innerHTML = badgeInfo.icon;
+
+                        // Display Followed Teams
+                        const followed = data.followedTeams || [];
+                        if (followed.length > 0) {
+                            followedTeamsList.innerHTML = followed.map(team => 
+                                `<span style="display:inline-block; background:#e4e4e7; padding:4px 10px; border-radius:15px; margin:4px; font-size:12px; font-weight:700; color:var(--text-main);">${team}</span>`
+                            ).join('');
+                            followedTeamsList.style.fontStyle = "normal";
+                        } else {
+                            followedTeamsList.innerText = "Not following any teams yet.";
+                        }
                     }
                 } catch (error) {
                     console.error("Error loading profile:", error);
                 }
             } else {
-                // Not logged in! Kick them out.
                 window.location.href = "login.html";
             }
         });
@@ -199,7 +230,7 @@
 
             saveBtn.innerText = "Saving...";
             statusMsg.style.display = 'none';
-            statusMsg.className = 'status-msg'; // reset classes
+            statusMsg.className = 'status-msg';
 
             try {
                 const userRef = doc(db, "users", currentUserUid);
@@ -222,9 +253,11 @@
                 statusMsg.style.display = 'block';
             }
         });
+
+        // 3. Logout Logic (Fixed)
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth).then(() => {
-                window.location.href = "index.html"; // Kick them back to home
+                window.location.href = "index.html";
             }).catch((error) => {
                 console.error("Logout Error:", error);
             });
