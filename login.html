@@ -261,7 +261,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // Import Auth functions, including Google provider
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -296,11 +295,9 @@
         googleBtn.addEventListener('click', () => {
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    const user = result.user;
-                    console.log("Google Logged in:", user.displayName);
-                    window.location.href = "media-hub.html"; 
+                    // Redirects to index.html upon success
+                    window.location.href = "index.html"; 
                 }).catch((error) => {
-                    console.error("Google Login error:", error.message);
                     showError(error.message);
                 });
         });
@@ -310,29 +307,30 @@
             e.preventDefault();
             signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
                 .then((userCredential) => {
-                    console.log("Logged in:", userCredential.user.email);
-                    window.location.href = "media-hub.html"; 
+                    // Redirects to index.html upon success
+                    window.location.href = "index.html"; 
                 })
                 .catch((error) => {
-                    console.error("Login error:", error.message);
                     showError("Invalid email or password.");
                 });
         });
 
         // 3. Handle Email/Password Sign Up
-        signUpBtn.addEventListener('click', () => {
+        signUpBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevents browser from treating this like a normal form submit
+            
             if(!emailInput.value || !passwordInput.value) {
                 showError("Please enter an email and password to sign up.");
                 return;
             }
+            
             createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
                 .then((userCredential) => {
-                    console.log("Account created:", userCredential.user.email);
-                    window.location.href = "media-hub.html";
+                    // Redirects to index.html upon success
+                    window.location.href = "index.html";
                 })
                 .catch((error) => {
-                    console.error("Sign up error:", error.message);
-                    showError(error.message); 
+                    showError(error.message); // Will show error on screen if password is too short, etc.
                 });
         });
     </script>
