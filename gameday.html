@@ -425,15 +425,6 @@
     }
     </script>
 
-// ... your Firebase script ends here ...
-    window.logoutUser = function() {
-        signOut(auth).then(() => {
-            window.location.href = "login.html";
-        }).catch((error) => {
-            console.error("Logout Error", error);
-        });
-    }
-    </script>
 
     <script>
         // Refreshes the page every 60 seconds
