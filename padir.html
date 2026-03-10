@@ -228,10 +228,17 @@
                     <i class="fa-brands fa-google mr-2 text-lg"></i> SEARCH HISTORY
                 </a>
 
-                <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
-                    <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
-                    <span id="followText">FOLLOW TEAM</span>
-                </button>
+                <div class="grid grid-cols-1 gap-3">
+                    <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+                        <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
+                        <span id="followText">FOLLOW TEAM</span>
+                    </button>
+
+                    <button id="claimTeamBtn" class="hidden flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-blue-600 text-white">
+                        <i class="fa-solid fa-hand-fist mr-2"></i>
+                        <span id="claimText">CLAIM TEAM ADMIN</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -251,7 +258,7 @@
     // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, updateDoc, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // --- CONFIG ---
     const firebaseConfig = {
@@ -301,7 +308,9 @@
         closeMap: document.getElementById('closeMapBtn'),
         followBtn: document.getElementById('followBtn'),
         followText: document.getElementById('followText'),
-        followIcon: document.getElementById('followIcon')
+        followIcon: document.getElementById('followIcon'),
+        claimBtn: document.getElementById('claimTeamBtn'),
+        claimText: document.getElementById('claimText')
     };
 
     // --- INITIALIZATION ---
@@ -354,6 +363,17 @@
                 renderCards(filteredData);
                 els.loading.classList.add('hidden');
                 els.grid.classList.remove('hidden');
+
+                // --- DEEP LINKING LOGIC ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const teamParam = urlParams.get('team');
+                if (teamParam) {
+                    els.search.value = teamParam;
+                    els.clear.classList.remove('hidden');
+                    handleSearch(); 
+                    const matchIdx = allData.findIndex(r => r['School'] === teamParam);
+                    if (matchIdx !== -1) setTimeout(() => window.openModal(matchIdx), 300);
+                }
             },
             error: () => console.error("Could not load data.")
         });
@@ -411,7 +431,7 @@
 
             const card = document.createElement('div');
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
-            card.onclick = () => openModal(idx);
+            card.onclick = () => window.openModal(idx);
             
             card.innerHTML = `
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2" style="background-color: ${primaryColor};"></div>
@@ -457,7 +477,7 @@
         handleSearch();
     }
 
-    // --- MODAL & FOLLOW LOGIC ---
+    // --- MODAL, FOLLOW & CLAIM LOGIC ---
     window.openModal = async function(idx) {
         const d = filteredData[idx];
         currentTeam = d['School'];
@@ -492,21 +512,58 @@
         const aiQuery = `Overview and history of the ${d['School']} ${d['Team']} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
 
-        // Check if user is following
+        // Check if user is logged in
         const user = auth.currentUser;
         if (user) {
             try {
+                // 1. Check Following Status
                 const userSnap = await getDoc(doc(db, "users", user.uid));
+                const userData = userSnap.data();
+                
                 if (userSnap.exists()) {
-                    const followed = userSnap.data().followedTeams || [];
+                    const followed = userData.followedTeams || [];
                     isFollowing = followed.includes(currentTeam);
                     updateFollowBtnUI();
+
+                    // 2. Check Claiming Status
+                    const teamSnap = await getDoc(doc(db, "team_pages", currentTeam));
+                    
+                    els.claimBtn.classList.remove('hidden');
+                    els.claimBtn.disabled = false;
+                    els.claimBtn.style.opacity = "1";
+
+                    // User already admins THIS team
+                    if (userData.adminOf === currentTeam) {
+                        els.claimText.innerText = "MANAGE TEAM PANEL";
+                        els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                        els.claimBtn.onclick = () => window.location.href = "manage.html";
+                    } 
+                    // Someone else already claimed this team
+                    else if (teamSnap.exists()) {
+                        els.claimText.innerText = "TEAM ADMIN CLAIMED";
+                        els.claimBtn.disabled = true;
+                        els.claimBtn.style.opacity = "0.5";
+                        els.claimBtn.onclick = null;
+                    }
+                    // User already admins a DIFFERENT team
+                    else if (userData.adminOf && userData.adminOf !== currentTeam) {
+                        els.claimText.innerText = `ADMIN OF ${userData.adminOf.toUpperCase()}`;
+                        els.claimBtn.disabled = true;
+                        els.claimBtn.style.opacity = "0.5";
+                        els.claimBtn.onclick = null;
+                    }
+                    // Team is free and user is available
+                    else {
+                        els.claimText.innerText = "CLAIM TEAM ADMIN";
+                        els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                        els.claimBtn.onclick = () => handleClaimTeam(currentTeam);
+                    }
                 }
-            } catch (err) { console.error("Error checking following status:", err); }
+            } catch (err) { console.error("Error checking user status:", err); }
         } else {
-            // Reset to default if not logged in
             isFollowing = false;
             updateFollowBtnUI();
+            els.claimBtn.classList.add('hidden');
         }
 
         els.modalOverlay.classList.remove('hidden');
@@ -532,48 +589,63 @@
         }
     }
 
-   // --- UPDATED FOLLOW CLICK LOGIC ---
+    // --- ACTION LISTENERS ---
     els.followBtn.addEventListener('click', async () => {
-        console.log("Follow button clicked for:", currentTeam); // Debug line
-        
         const user = auth.currentUser;
-        
         if (!user) {
-            console.log("No user found, showing redirect confirm.");
-            if(confirm("You must be logged in to follow teams. Go to login?")) {
-                window.location.href = "login.html";
-            }
+            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
             return;
         }
 
         const userRef = doc(db, "users", user.uid);
-        
         try {
-            // Disable button briefly to prevent double-clicks
             els.followBtn.disabled = true;
-            els.followBtn.style.opacity = "0.5";
-
             if (isFollowing) {
-                console.log("Removing team:", currentTeam);
                 await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
                 isFollowing = false;
             } else {
-                console.log("Adding team:", currentTeam);
                 await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
                 isFollowing = true;
             }
-            
             updateFollowBtnUI();
-            console.log("Database update successful.");
-            
-        } catch (err) {
-            console.error("Update error detailed:", err);
-            alert("Error: " + err.message);
-        } finally {
-            els.followBtn.disabled = false;
-            els.followBtn.style.opacity = "1";
-        }
+        } catch (err) { console.error("Follow update error:", err); }
+        finally { els.followBtn.disabled = false; }
     });
+
+    async function handleClaimTeam(school) {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        if (confirm(`Do you want to become the official reporter for ${school}? You can only manage one team at a time.`)) {
+            try {
+                els.claimBtn.disabled = true;
+                els.claimText.innerText = "CLAIMING...";
+
+                // 1. Assign team to user
+                await updateDoc(doc(db, "users", user.uid), { adminOf: school });
+                
+                // 2. Create team document
+                await setDoc(doc(db, "team_pages", school), {
+                    adminUid: user.uid,
+                    schoolName: school,
+                    claimedDate: new Date(),
+                    homeScore: 0,
+                    awayScore: 0,
+                    nextOpponent: "TBD",
+                    gameTime: "TBD",
+                    lastUpdated: new Date()
+                });
+
+                alert(`Congratulations! You are now the official Admin for ${school}. Redirecting to your panel...`);
+                window.location.href = "manage.html";
+            } catch (err) {
+                console.error("Claim error:", err);
+                alert("Error claiming team. Please try again.");
+                els.claimBtn.disabled = false;
+                els.claimText.innerText = "CLAIM TEAM ADMIN";
+            }
+        }
+    }
 
     function closeModal() {
         els.modalOverlay.classList.add('opacity-0');
