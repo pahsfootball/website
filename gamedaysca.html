@@ -21,13 +21,8 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        pahs: { dark: '#0f0f0f', gold: '#fbbf24' }
-                    },
-                    fontFamily: {
-                        'head': ['Teko', 'sans-serif'],
-                        'body': ['Inter', 'sans-serif'],
-                    }
+                    colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } },
+                    fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -39,7 +34,7 @@
         .countdown-box { background: #18181b; color: white; border-bottom: 3px solid #fbbf24; }
         #loading-overlay { position: fixed; inset: 0; background: #adadad; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* --- LIVE WIDGET ANIMATIONS --- */
+        /* --- RESTORED LIVE WIDGET ANIMATIONS --- */
         .w1-gold-glow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); }
         @keyframes w1-colorPulse { 0% { text-shadow: none; transform: scale(1); } 50% { color: var(--pulse-color, #facc15); text-shadow: 0 0 25px var(--pulse-color, rgba(234, 179, 8, 0.8)); transform: scale(1.05); } 100% { text-shadow: none; transform: scale(1); } }
         .w1-score-pulse { animation: w1-colorPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; display: inline-block; }
@@ -98,7 +93,7 @@
                     <i class="fa-solid fa-share-nodes"></i>
                 </button>
 
-                <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Matchup...</h2>
+                <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading...</h2>
                 
                 <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
                     <div class="text-center flex-1 flex flex-col items-center">
@@ -107,7 +102,6 @@
                             <span id="ui-your-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute hidden">TEAM</span>
                         </div>
                         <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
-                        
                         <div class="flex items-center justify-center gap-2 mt-2">
                             <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
                             <span id="ui-your-record" class="text-pahs-gold text-xs font-bold"></span>
@@ -124,9 +118,8 @@
                             <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute hidden">OPP</span>
                         </div>
                         <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
-                        
                         <div class="flex items-center justify-center gap-2 mt-2">
-                            <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
+                            <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
                             <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
                         </div>
                     </div>
@@ -151,7 +144,7 @@
                     <div class="space-y-4">
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
-                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
+                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
                         <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Loading...</p></div></div>
                     </div>
                 </div>
@@ -167,34 +160,23 @@
                 <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 min-h-[200px] bg-gray-200">
                     <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
                 </div>
-                
                 <div class="mt-4 flex items-center justify-between gap-3">
-                    <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden">
-                        <i class="fa-solid fa-location-arrow"></i> Directions
-                    </a>
-                    <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden">
-                        <i class="fa-regular fa-copy"></i> Copy Address
-                    </button>
+                    <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-solid fa-location-arrow"></i> Directions</a>
+                    <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-regular fa-copy"></i> Copy Address</button>
                 </div>
             </div>
         </div>
 
         <div id="live-widget-root"></div>
-
         <div class="content-card rounded-2xl p-6 mt-6">
             <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4 flex items-center gap-2 text-gray-900">
                 <i class="fa-solid fa-list-ol text-gray-500"></i> Around The League
             </h3>
             <div class="scoreboard-container w-full rounded-xl overflow-hidden border border-gray-300 bg-white">
-                <div class="scorestream-widget-container"
-                     data-ss_widget_type="vertScoreboard"
-                     style="height:600px;"
-                     data-user-widget-id="58320">
-                </div>
+                <div class="scorestream-widget-container" data-ss_widget_type="vertScoreboard" style="height:600px;" data-user-widget-id="58320"></div>
                 <script async="async" type="text/javascript" src="https://scorestream.com/apiJsCdn/widgets/embed.js"></script>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -203,30 +185,19 @@
     </script>
 
     <script>
-        // Page Sharing
+        // Restored helper functions
         function sharePage() {
-            if (navigator.share) {
-                navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied to clipboard!"); });
-            }
+            if (navigator.share) navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
+            else { navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); }); }
         }
-
-        // Copy Address to Clipboard
         function copyAddress() {
             const btn = document.getElementById('btn-copy-address');
             const address = btn.getAttribute('data-address');
             if (address) {
                 navigator.clipboard.writeText(address).then(() => {
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    const orig = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
                     btn.classList.add('bg-green-500', 'text-white');
-                    btn.classList.remove('bg-gray-200', 'text-gray-800');
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.classList.remove('bg-green-500', 'text-white');
-                        btn.classList.add('bg-gray-200', 'text-gray-800');
-                    }, 2000);
+                    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-green-500', 'text-white'); }, 2000);
                 });
             }
         }
@@ -239,151 +210,80 @@
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
                     const games = results.data;
-                    window.csvGames = games; 
-
+                    window.csvGames = games;
                     const now = new Date().getTime();
                     let nextGame = null;
-
                     for(let i = 0; i < games.length; i++) {
-                        // Using new Header "DateTime"
                         let gameTime = new Date(games[i].DateTime).getTime();
-                        if (gameTime + (1000 * 60 * 60 * 4) > now) {
-                            nextGame = games[i]; break;
-                        }
+                        if (gameTime + (1000 * 60 * 60 * 4) > now) { nextGame = games[i]; break; }
                     }
                     if(!nextGame && games.length > 0) nextGame = games[games.length - 1];
                     window.currentLiveCsvGame = nextGame || {};
-
                     if(nextGame) updateUI(nextGame);
-                    else document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2>";
+                    else document.getElementById('loading-overlay').innerHTML = "No Schedule Found";
                 }
             });
         });
 
         function updateUI(game) {
             document.getElementById('loading-overlay').style.display = 'none';
-
-            let weekNum = game.Week ? game.Week.toString().replace(/week/i, '').trim() : "default";
-            document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
+            document.getElementById('ui-week').innerText = game.Week ? `WEEK ${game.Week.replace(/week/i, '').trim()} MATCHUP` : "MATCHUP";
             
-            // MAP UNIVERSAL FIELDS FROM SHEET
+            // Your Team mapping
             document.getElementById('ui-your-name').innerText = game.YourTeam || "TBA";
             document.getElementById('ui-your-mascot').innerText = game.YourTeamMascot || "";
             document.getElementById('ui-your-record').innerText = game.YourTeamRecord ? `(${game.YourTeamRecord})` : "";
-            
-            const yourLogoEl = document.getElementById('ui-your-logo');
-            const yourFallbackEl = document.getElementById('ui-your-fallback');
-            if(game.YourTeamLogoUrl && game.YourTeamLogoUrl.trim() !== "") {
-                yourLogoEl.src = game.YourTeamLogoUrl;
-                yourLogoEl.style.display = 'block';
-                yourFallbackEl.style.display = 'none';
-            } else {
-                yourLogoEl.style.display = 'none';
-                yourFallbackEl.style.display = 'block';
-                yourFallbackEl.innerText = game.YourTeam ? game.YourTeam.substring(0,3).toUpperCase() : "TEAM";
-            }
+            const yLogo = document.getElementById('ui-your-logo'); const yFall = document.getElementById('ui-your-fallback');
+            if(game.YourTeamLogoUrl) { yLogo.src = game.YourTeamLogoUrl; yLogo.style.display='block'; yFall.style.display='none'; }
+            else { yLogo.style.display='none'; yFall.style.display='block'; yFall.innerText=game.YourTeam?.substring(0,3).toUpperCase(); }
 
+            // Opponent mapping
             document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
             document.getElementById('ui-opp-mascot').innerText = game.OppMascot || "";
             document.getElementById('ui-opp-record').innerText = game.OppTeamRecord ? `(${game.OppTeamRecord})` : "";
+            const oLogo = document.getElementById('ui-opp-logo'); const oFall = document.getElementById('ui-opp-fallback');
+            if(game.OppLogoUrl) { oLogo.src = game.OppLogoUrl; oLogo.style.display='block'; oFall.style.display='none'; }
+            else { oLogo.style.display='none'; oFall.style.display='block'; oFall.innerText=game.Opponent?.substring(0,3).toUpperCase(); }
 
-            const oppLogoEl = document.getElementById('ui-opp-logo');
-            const oppFallbackEl = document.getElementById('ui-opp-fallback');
-            if(game.OppLogoUrl && game.OppLogoUrl.trim() !== "") {
-                oppLogoEl.src = game.OppLogoUrl;
-                oppLogoEl.style.display = 'block';
-                oppFallbackEl.style.display = 'none';
-            } else {
-                oppLogoEl.style.display = 'none';
-                oppFallbackEl.style.display = 'block';
-                oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP";
-            }
-
-            // Home/Away Status
-            let isHome = game.YourTeamHomeAway && game.YourTeamHomeAway.toLowerCase().includes('home');
-            let homeAwayBadge = document.getElementById('ui-homeaway');
-            homeAwayBadge.innerText = game.YourTeamHomeAway || "TBA";
-            homeAwayBadge.className = isHome 
-                ? "font-bold bg-pahs-gold text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" 
-                : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-            
-            // DateTime Logic
-            let dateObj = new Date(game.DateTime);
-            if (!isNaN(dateObj)) {
-                let dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
-                let timeOptions = { hour: 'numeric', minute: '2-digit' };
-                document.getElementById('ui-datetime').innerText = `${dateObj.toLocaleDateString('en-US', dateOptions)} • ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
-                startCountdown(dateObj.getTime());
-            } else { 
-                document.getElementById('ui-datetime').innerText = "Date/Time TBA"; 
-                document.getElementById("countdown-container").innerHTML = "<div class='text-2xl font-head font-bold text-gray-500 uppercase py-4'>Time TBA</div>";
-            }
-            
+            // Location & Details
+            document.getElementById('ui-homeaway').innerText = game.YourTeamHomeAway || "TBA";
+            document.getElementById('ui-stadium').innerText = game.StadiumName || "TBA";
+            document.getElementById('ui-address').innerText = game.Address || "TBA";
             document.getElementById('ui-theme').innerText = game.Theme || "No Theme";
-            document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
-            document.getElementById('ui-address').innerText = game.Address || "Address TBA";
-
-            // Weather Fetching
-            const weatherEl = document.getElementById('ui-weather');
-            if (!isNaN(dateObj) && game.Address && game.Address.trim() !== "") {
-                weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-500"></i> Fetching...';
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(game.Address)}&limit=1`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data && data.length > 0) {
-                        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data[0].lat}&longitude=${data[0].lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York`);
-                    }
-                    throw new Error();
-                })
-                .then(res => res.json())
-                .then(wData => {
-                    const targetStr = dateObj.toISOString().split('T')[0];
-                    const idx = wData.daily.time.indexOf(targetStr);
-                    if(idx !== -1) {
-                        const max = Math.round(wData.daily.temperature_2m_max[idx]);
-                        const min = Math.round(wData.daily.temperature_2m_min[idx]);
-                        const code = wData.daily.weathercode[idx];
-                        let desc = "Clear";
-                        if(code >= 1 && code <= 3) desc = "Partly Cloudy";
-                        if(code >= 51 && code <= 67) desc = "Rain";
-                        weatherEl.innerHTML = `<span class="text-red-600 font-black">${max}°</span> / <span class="text-blue-600 font-bold">${min}°</span>  •  ${desc}`;
-                    } else { weatherEl.innerText = "Check game week"; }
-                }).catch(() => { weatherEl.innerText = "TBA"; });
-            } else { weatherEl.innerText = "TBA"; }
             
-            // Ticket Link
-            let ticketUrl = game.TicketLink;
-            if(ticketUrl && ticketUrl.trim() !== "") { 
-                document.getElementById('ui-ticket').href = ticketUrl; 
-                document.getElementById('ui-ticket').style.display = 'block'; 
-            } else { document.getElementById('ui-ticket').style.display = 'none'; }
+            let dateObj = new Date(game.DateTime);
+            if(!isNaN(dateObj)){
+                document.getElementById('ui-datetime').innerText = dateObj.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+                startCountdown(dateObj.getTime());
+                // Weather
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(game.Address)}&limit=1`)
+                .then(r=>r.json()).then(d=>{
+                    if(d.length) return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${d[0].lat}&longitude=${d[0].lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York`);
+                }).then(r=>r.json()).then(w=>{
+                    const idx = w.daily.time.indexOf(dateObj.toISOString().split('T')[0]);
+                    if(idx!==-1) document.getElementById('ui-weather').innerHTML = `<span class="text-red-600">${Math.round(w.daily.temperature_2m_max[idx])}°</span> / <span class="text-blue-600">${Math.round(w.daily.temperature_2m_min[idx])}°</span>`;
+                }).catch(()=> document.getElementById('ui-weather').innerText = "TBA");
+            }
 
-            // Map & Directions
-            if(game.Address && game.Address.trim() !== "") {
-                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
+            if(game.TicketLink) document.getElementById('ui-ticket').href = game.TicketLink;
+            if(game.Address) {
+                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&output=embed`;
                 document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(game.Address)}`;
                 document.getElementById('btn-directions').style.display = 'flex';
-                const copyBtn = document.getElementById('btn-copy-address');
-                copyBtn.setAttribute('data-address', game.Address);
-                copyBtn.style.display = 'flex';
+                document.getElementById('btn-copy-address').setAttribute('data-address', game.Address);
+                document.getElementById('btn-copy-address').style.display = 'flex';
             }
         }
 
-        function startCountdown(kickoffTime) {
+        function startCountdown(time) {
             if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(function() {
-                const now = new Date().getTime();
-                const distance = kickoffTime - now;
-                if (distance < 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById("countdown-label").style.display = 'none';
-                    document.getElementById("countdown-container").innerHTML = "<div class='text-4xl font-head font-bold text-red-600 uppercase'>Game Day</div>";
-                    return;
-                }
-                document.getElementById("cd-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById("cd-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            timerInterval = setInterval(()=>{
+                const dist = time - new Date().getTime();
+                if(dist < 0) { clearInterval(timerInterval); document.getElementById("countdown-container").innerHTML = "<h2 class='text-red-600 font-head text-4xl'>GAME DAY</h2>"; return; }
+                document.getElementById("cd-days").innerText = Math.floor(dist / 86400000).toString().padStart(2,'0');
+                document.getElementById("cd-hours").innerText = Math.floor((dist % 86400000) / 3600000).toString().padStart(2,'0');
+                document.getElementById("cd-mins").innerText = Math.floor((dist % 3600000) / 60000).toString().padStart(2,'0');
+                document.getElementById("cd-secs").innerText = Math.floor((dist % 60000) / 1000).toString().padStart(2,'0');
             }, 1000);
         }
     </script>
@@ -395,24 +295,21 @@
             <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
                 <g transform="rotate(-45 16 16)">
                     <ellipse cx="16" cy="16" rx="15" ry="10" fill="#8B4513" stroke="#FFFFFF" strokeWidth="1.5" />
-                    <path d="M6 16H26" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M11 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M16 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M21 11V21" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M6 16H26" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <path d="M11 11V21" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <path d="M16 11V21" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <path d="M21 11V21" stroke="#FFFFFF" strokeWidth="1.5" />
                 </g>
             </svg>
         );
 
         const W1TeamLogo = ({ name, logoUrl, colorClass }) => {
             const [imgError, setImgError] = useState(false);
-            useEffect(() => { setImgError(false); }, [logoUrl]);
-            if (logoUrl && !imgError) {
-                return (
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-gray-400 shadow-md relative z-10 shrink-0">
-                        <img src={logoUrl} alt={name} className="w-full h-full object-contain p-1" onError={() => setImgError(true)} />
-                    </div>
-                );
-            }
+            if (logoUrl && !imgError) return (
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-gray-400 shadow-md relative z-10 shrink-0">
+                    <img src={logoUrl} alt={name} className="w-full h-full object-contain p-1" onError={() => setImgError(true)} />
+                </div>
+            );
             return <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 shadow-md relative z-10 shrink-0 uppercase ${colorClass}`}>{name ? name.substring(0, 2).toUpperCase() : "??"}</div>;
         };
 
@@ -420,42 +317,39 @@
             if (!game.ballOn || ['PREGAME', 'FINAL', 'HALF', 'UPCOMING'].includes(game.status)) return null;
             const yardInt = parseInt(game.ballOn) || 0;
             const isOpp = (game.ownOpp || "").toUpperCase() === "OPP";
-            let percentage = 0;
-            if (yardInt === 50) { percentage = 50; } else if (isOpp) { percentage = 100 - yardInt; } else { percentage = yardInt; }
+            let percentage = isOpp ? 100 - yardInt : yardInt;
             percentage = Math.max(0, Math.min(100, percentage));
             const isHomePossession = game.possession === 'home';
             const teamColor = isHomePossession ? (game.color2 || '#facc15') : (game.awayc2 || '#facc15');
-            const yardMarkers = [10, 20, 30, 40, 50, 40, 30, 20, 10];
             return (
                 <div className="mt-6 mb-2">
                      <div className="flex justify-between items-end mb-1 px-1">
                         <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Live Drive Tracker</span>
                         <div className="flex items-center gap-2">
                              <div className={`w-2 h-2 rounded-full ${isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.color2 || '#facc15'}}></div>
-                             <span className="text-[9px] font-mono text-gray-400 uppercase">POSSESSION</span>
+                             <span className="text-[9px] font-mono text-gray-400">POSSESSION</span>
                              <div className={`w-2 h-2 rounded-full ${!isHomePossession ? 'animate-pulse' : ''}`} style={{backgroundColor: game.awayc2 || '#facc15'}}></div>
                         </div>
                      </div>
                     <div className="relative w-full h-20 w1-drive-field rounded-md border-2 border-white/10 shadow-inner overflow-hidden flex">
-                        <div className="relative h-full w-[10%] border-r border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden bg-black">
-                            {game.homeLogo ? <img src={game.homeLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.home ? game.home.substring(0,3).toUpperCase() : 'HOM'}</span> }
+                        <div className="relative h-full w-[10%] border-r border-white/30 flex items-center justify-center bg-black">
+                            {game.homeLogo ? <img src={game.homeLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" /> : <span className="text-[8px] text-white/70 uppercase">{game.home?.substring(0,3)}</span> }
                         </div>
                         <div className="relative h-full flex-1">
-                            {yardMarkers.map((yard, i) => (
-                                <div key={i} className="absolute top-0 bottom-0 w-px flex flex-col items-center justify-center z-0" style={{ left: `${(i + 1) * 10}%`, transform: 'translateX(-50%)' }}>
+                            {[10, 20, 30, 40, 50, 40, 30, 20, 10].map((yard, i) => (
+                                <div key={i} className="absolute top-0 bottom-0 w-px flex flex-col items-center justify-center" style={{ left: `${(i + 1) * 10}%`, transform: 'translateX(-50%)' }}>
                                     <div className="absolute top-0 bottom-0 w-px bg-white/30"></div>
                                     <span className="relative bg-[#1a472a] px-0.5 text-[8px] font-mono font-bold text-white/60 z-10">{yard}</span>
                                 </div>
                             ))}
-                            <div className="absolute top-0 bottom-0 z-10 transition-all duration-700 ease-out flex items-center" style={{ left: isHomePossession ? '0' : 'auto', right: isHomePossession ? 'auto' : '0', width: `${percentage}%`, background: `linear-gradient(${isHomePossession ? '90deg' : '-90deg'}, ${teamColor}44, ${teamColor})`, borderRight: isHomePossession ? `2px solid #fff` : 'none', borderLeft: !isHomePossession ? `2px solid #fff` : 'none' }}>
+                            <div className="absolute top-0 bottom-0 z-10 transition-all duration-700 ease-out flex items-center" style={{ left: isHomePossession ? '0' : 'auto', right: isHomePossession ? 'auto' : '0', width: `${percentage}%`, background: `linear-gradient(${isHomePossession ? '90deg' : '-90deg'}, ${teamColor}44, ${teamColor})`, borderRight: isHomePossession ? '2px solid #fff' : 'none', borderLeft: !isHomePossession ? '2px solid #fff' : 'none' }}>
                                 <div className={`absolute top-1/2 -translate-y-1/2 flex items-center ${isHomePossession ? 'flex-row' : 'flex-row-reverse'}`} style={{ [isHomePossession ? 'right' : 'left']: '-28px' }}>
-                                    <W1FootballIcon className="w-5 h-5 drop-shadow-md relative z-10" />
-                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white drop-shadow-md -ml-1" style={{ transform: isHomePossession ? 'none' : 'rotate(180deg)' }}><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" /></svg>
+                                    <W1FootballIcon className="w-5 h-5 drop-shadow-md" />
                                 </div>
                             </div>
                         </div>
-                        <div className="relative h-full w-[10%] border-l border-white/30 flex items-center justify-center shrink-0 z-10 overflow-hidden bg-black">
-                             {game.awayLogo ? <img src={game.awayLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" /> : <span className="text-[8px] font-black text-white/70 uppercase">{game.away ? game.away.substring(0,3).toUpperCase() : 'AWY'}</span> }
+                        <div className="relative h-full w-[10%] border-l border-white/30 flex items-center justify-center bg-black">
+                             {game.awayLogo ? <img src={game.awayLogo} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" /> : <span className="text-[8px] text-white/70 uppercase">{game.away?.substring(0,3)}</span> }
                         </div>
                     </div>
                 </div>
@@ -465,15 +359,15 @@
         const W1StatusBadge = ({ status, clock, quarter }) => {
             if (status === "FINAL") return <span className="px-3 py-1 bg-gray-800 text-gray-400 text-xs font-bold rounded border border-gray-700 uppercase">FINAL</span>;
             if (status === "UPCOMING") return <span className="px-3 py-1 bg-gray-800 text-yellow-500 text-xs font-bold rounded border border-yellow-900/30 uppercase">{clock}</span>;
-            if (status === "PREGAME") return (<div className="flex flex-col items-end animate-pulse"><span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded mb-1 shadow-lg shadow-green-900/50 whitespace-nowrap uppercase">Starting Soon ...</span></div>);
+            if (status === "PREGAME") return <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded animate-pulse shadow-lg uppercase">Starting Soon</span>;
             const isHalf = status === "HALF";
             return (
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded shadow-lg animate-pulse uppercase ${isHalf ? "bg-yellow-600 text-black" : "bg-red-600 text-white"}`}>{isHalf ? "HALF" : "LIVE"}</span>
-                        {!isHalf && <span className="text-xs text-white font-black tracking-tight uppercase">Q{quarter}</span>}
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded shadow-lg animate-pulse uppercase ${isHalf ? "bg-yellow-600" : "bg-red-600 text-white"}`}>{isHalf ? "HALF" : "LIVE"}</span>
+                        {!isHalf && <span className="text-xs text-white font-black uppercase">Q{quarter}</span>}
                     </div>
-                    <span className="text-sm text-white font-mono font-bold tracking-widest leading-none uppercase">{isHalf ? "HALF" : clock}</span>
+                    <span className="text-sm text-white font-mono font-bold tracking-widest">{isHalf ? "HALF" : clock}</span>
                 </div>
             );
         };
@@ -552,14 +446,14 @@
                         <div className="bg-yellow-500 text-black text-[10px] font-black uppercase px-2 py-1 rounded-sm shadow-sm tracking-tighter shrink-0">WEEK {game.week}</div>
                         {!isPregame && !isUpcoming && (
                             <div className="flex items-center space-x-3 px-2 border-x border-white/10 bg-white/5 rounded py-1">
-                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">DOWN</span><span className="text-white font-mono font-bold text-sm leading-none">{game.down || "-"}</span></div>
-                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">TO GO</span><span className="text-white font-mono font-bold text-sm leading-none">{game.togo || "-"}</span></div>
-                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">BALL</span><span className="text-white font-mono font-bold text-sm leading-none">{game.ownOpp ? `${game.ownOpp} ${game.ballOn}` : (game.ballOn || "-")}</span></div>
+                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">DOWN</span><span className="text-white font-mono font-bold text-sm">{game.down || "-"}</span></div>
+                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">TO GO</span><span className="text-white font-mono font-bold text-sm">{game.togo || "-"}</span></div>
+                                <div className="text-center flex flex-col"><span className="text-[9px] text-gray-400 uppercase leading-none mb-1">BALL</span><span className="text-white font-mono font-bold text-sm">{game.ownOpp ? `${game.ownOpp} ${game.ballOn}` : (game.ballOn || "-")}</span></div>
                             </div>
                         )}
                         <div className="shrink-0"><W1StatusBadge status={game.status} clock={game.clock} quarter={game.quarter} /></div>
                     </div>
-                    <div className="p-6 flex flex-col justify-center min-h-[16rem]">
+                    <div className="p-6 flex flex-col justify-center min-h-[18rem]">
                         {game.ticker && (
                             <div className="mb-4 overflow-hidden relative bg-yellow-900/30 border border-yellow-500/50 rounded px-2 py-1.5 flex items-center shadow-inner">
                                 <div className="overflow-hidden w-full relative h-5"><div className="w1-animate-marquee text-xs font-mono font-bold text-yellow-300 uppercase">{game.ticker}</div></div>
@@ -614,11 +508,18 @@
                             id: entry.id || index,
                             home: entry.home || entry.Home || "Home",
                             away: entry.away || entry.Away || "Away",
-                            homeScore: parseInt(entry.homeScore || entry.HomeScore || 0),
-                            awayScore: parseInt(entry.awayScore || entry.AwayScore || 0),
+                            homeScore: parseInt(entry.homeScore || 0),
+                            awayScore: parseInt(entry.awayScore || 0),
+                            quarter: entry.quarter || 1,
                             status: (entry.status || "UPCOMING").toUpperCase(),
-                            week: entry.week || entry.Week || "",
-                            ticker: entry.ticker || entry.message || ""
+                            clock: entry.clock || entry.time || "00:00",
+                            possession: (entry.possession || "").toLowerCase(),
+                            down: entry.down || "", togo: entry.togo || "", ballOn: entry.ballon || "", ownOpp: (entry.ownopp || "").toUpperCase(),
+                            homeClass: entry.homeClass || "", awayClass: entry.awayClass || "",
+                            homeLogo: entry.homeLogo || null, awayLogo: entry.awayLogo || null,
+                            color1: entry.color1 || null, color2: entry.color2 || null,
+                            awayc1: entry.awayc1 || null, awayc2: entry.awayc2 || null,
+                            week: entry.week || "", ticker: entry.message || entry.ticker || ""
                         }));
                         setGames(gamesArray.filter(g => g.status !== 'FINAL' && g.status !== 'UPCOMING'));
                     }
@@ -627,13 +528,11 @@
 
             if (games.length === 0) return null;
             const isLive = games.some(g => g.status !== 'PREGAME');
-            const cardClass = `content-card rounded-2xl p-6 mt-6 border-2 transition-all duration-500 ${isLive ? 'border-red-500 shadow-lg' : 'border-pahs-gold shadow-md'}`;
-
             return (
-                <div className={cardClass}>
+                <div className={`content-card rounded-2xl p-6 mt-6 border-2 transition-all duration-500 ${isLive ? 'border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.5)]' : 'border-pahs-gold shadow-[0_0_20px_rgba(251,191,36,0.4)]'}`}>
                     <h3 className="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4 flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full animate-pulse ${isLive ? 'bg-red-600' : 'bg-pahs-gold'}`}></span> 
-                        {isLive ? 'Live Action' : 'Live Scoreboard'}
+                        <span className={`w-3 h-3 rounded-full animate-pulse ${isLive ? 'bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-pahs-gold shadow-[0_0_8px_rgba(251,191,36,0.8)]'}`}></span> 
+                        {isLive ? 'Live Action' : 'Upcoming Matchup'}
                     </h3>
                     <div className="w-full relative z-10">
                         {games.map((game) => <W1GameCard key={game.id} game={game} isLive={isLive} />)}
