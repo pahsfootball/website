@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- MATCHING VARIABLES --- */
         :root {
             --bg-main: #adadad;
             --card-bg: #f4f4f5; 
@@ -18,222 +17,74 @@
             --text-sub: #52525b; 
             --gold-base: #fbbf24;
             --gold-hover: #f59e0b;
-            --dark-header: #0f0f0f;
             --border-light: rgba(0, 0, 0, 0.1);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-main);
-            font-family: var(--font-body);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            align-items: center;
-            justify-content: center;
+            margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body);
+            color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh;
+            align-items: center; justify-content: center;
         }
 
-        /* --- LOGIN CARD STYLES --- */
         .auth-container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-            border-top: 5px solid var(--gold-base);
-            animation: fadeIn 0.6s ease-out;
-            padding: 30px;
-            box-sizing: border-box;
+            width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); overflow: hidden;
+            border-top: 5px solid var(--gold-base); padding: 30px; box-sizing: border-box;
         }
 
-        .auth-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+        .auth-header { text-align: center; margin-bottom: 25px; }
+        .auth-header h1 { font-family: var(--font-head); font-size: 38px; text-transform: uppercase; margin: 0; line-height: 1; }
+        .auth-header p { color: var(--text-sub); font-size: 14px; font-weight: 600; text-transform: uppercase; margin-top: 5px; }
 
-        .auth-header h1 {
-            font-family: var(--font-head);
-            font-size: 38px;
-            text-transform: uppercase;
-            color: var(--text-main);
-            margin: 0;
-            line-height: 1;
-            letter-spacing: 1px;
-        }
-
-        .auth-header p {
-            color: var(--text-sub);
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-top: 5px;
-            letter-spacing: 0.5px;
-        }
-
-        label {
-            color: var(--text-main);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-            font-weight: 800;
-            display: block;
-        }
-
+        label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
         input { 
-            width: 100%; 
-            background: #ffffff; 
-            border: 1px solid #d1d5db; 
-            color: var(--text-main); 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-family: var(--font-body); 
-            font-size: 14px; 
-            transition: 0.2s; 
-            box-sizing: border-box; 
-            margin-bottom: 16px; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; 
+            font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 16px;
         }
-
-        input:focus { 
-            border-color: var(--gold-base); 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(251,191,36,0.3); 
-        }
+        input:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
 
         .btn-primary {
-            width: 100%; 
-            background: var(--gold-base); 
-            color: black; 
-            font-family: var(--font-head); 
-            font-size: 22px; 
-            padding: 12px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: bold; 
-            transition: 0.3s; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
-            margin-top: 10px;
+            width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; 
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
+            font-weight: bold; transition: 0.3s; margin-top: 10px;
         }
-
-        .btn-primary:hover { 
-            background: var(--gold-hover); 
-            transform: translateY(-2px); 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3); 
-        }
+        .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); }
 
         .btn-secondary {
-            width: 100%;
-            background: transparent;
-            color: var(--text-sub);
-            border: 1px solid var(--border-light);
-            padding: 10px;
-            font-family: var(--font-body);
-            font-size: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
-            transition: 0.2s;
+            width: 100%; background: transparent; color: var(--text-sub); border: 1px solid var(--border-light);
+            padding: 10px; font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px; transition: 0.2s;
         }
-
-        .btn-secondary:hover {
-            background: rgba(0,0,0,0.05);
-            color: var(--text-main);
-        }
+        .btn-secondary:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
 
         .btn-google {
-            width: 100%;
-            background: white;
-            color: #3c4043;
-            border: 1px solid #dadce0;
-            padding: 10px;
-            font-family: var(--font-body);
-            font-size: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            width: 100%; background: white; color: #3c4043; border: 1px solid #dadce0; padding: 10px;
+            font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 15px; display: flex;
+            align-items: center; justify-content: center; transition: 0.2s;
         }
+        .btn-google:hover { background: #f8f9fa; }
+        .btn-google img { width: 18px; height: 18px; margin-right: 10px; }
 
-        .btn-google:hover {
-            background: #f8f9fa;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .btn-google img {
-            width: 18px;
-            height: 18px;
-            margin-right: 10px;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 20px 0 5px 0;
-            color: #9ca3af;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #d1d5db;
-        }
-
+        .divider { display: flex; align-items: center; text-align: center; margin: 20px 0 5px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #d1d5db; }
         .divider:not(:empty)::before { margin-right: .5em; }
         .divider:not(:empty)::after { margin-left: .5em; }
 
-        .error-message {
-            color: #ef4444;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 10px;
-            display: none;
-        }
+        .error-message { color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 10px; display: none; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .back-link:hover { color: var(--gold-hover); }
 
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: var(--text-sub);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .back-link:hover {
-            color: var(--gold-hover);
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Hidden class for toggling form modes */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="auth-container">
         <div class="auth-header">
-            <h1>Portal Access</h1>
-            <p>Sign in to your account</p>
+            <h1 id="formTitle">Portal Access</h1>
+            <p id="formSubtitle">Sign in to your account</p>
         </div>
 
         <div id="errorMsg" class="error-message"></div>
@@ -246,14 +97,28 @@
         <div class="divider">or</div>
 
         <form id="authForm">
-            <label for="emailInput">Email Address</label>
+            <div id="signUpFields" class="hidden">
+                <label>First Name <span style="color:red">*</span></label>
+                <input type="text" id="fNameInput" placeholder="John">
+
+                <label>Last Name <span style="color:red">*</span></label>
+                <input type="text" id="lNameInput" placeholder="Doe">
+
+                <label>Date of Birth <span style="color:red">*</span></label>
+                <input type="date" id="dobInput">
+
+                <label>Mobile Number (Optional)</label>
+                <input type="tel" id="phoneInput" placeholder="xxx-xxx-xxxx">
+            </div>
+
+            <label>Email Address <span style="color:red">*</span></label>
             <input type="email" id="emailInput" required placeholder="fan@example.com">
 
-            <label for="passwordInput">Password</label>
+            <label>Password <span style="color:red">*</span></label>
             <input type="password" id="passwordInput" required placeholder="••••••••">
 
-            <button type="submit" id="loginBtn" class="btn-primary">Sign In</button>
-            <button type="button" id="signUpBtn" class="btn-secondary">Create Account</button>
+            <button type="submit" id="mainSubmitBtn" class="btn-primary">Sign In</button>
+            <button type="button" id="toggleModeBtn" class="btn-secondary">Need an account? Sign Up</button>
         </form>
 
         <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
@@ -262,6 +127,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // Import Firestore
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -273,17 +140,22 @@
             measurementId: "G-2J69C1LS6D"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app); // Initialize DB
         const provider = new GoogleAuthProvider();
 
-        // UI Elements
+        let isSignUpMode = false;
+
         const authForm = document.getElementById('authForm');
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
+        const signUpFields = document.getElementById('signUpFields');
+        const mainSubmitBtn = document.getElementById('mainSubmitBtn');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
         const errorMsg = document.getElementById('errorMsg');
-        const signUpBtn = document.getElementById('signUpBtn');
         const googleBtn = document.getElementById('googleBtn');
 
         function showError(message) {
@@ -291,47 +163,90 @@
             errorMsg.style.display = 'block';
         }
 
-        // 1. Handle Google Sign In
-        googleBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    // Redirects to index.html upon success
-                    window.location.href = "index.html"; 
-                }).catch((error) => {
-                    showError(error.message);
-                });
-        });
+        // Toggle between Sign In and Sign Up modes
+        toggleModeBtn.addEventListener('click', () => {
+            isSignUpMode = !isSignUpMode;
+            errorMsg.style.display = 'none';
 
-        // 2. Handle Email/Password Sign In
-        authForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-                .then((userCredential) => {
-                    // Redirects to index.html upon success
-                    window.location.href = "index.html"; 
-                })
-                .catch((error) => {
-                    showError("Invalid email or password.");
-                });
-        });
-
-        // 3. Handle Email/Password Sign Up
-        signUpBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevents browser from treating this like a normal form submit
-            
-            if(!emailInput.value || !passwordInput.value) {
-                showError("Please enter an email and password to sign up.");
-                return;
+            if (isSignUpMode) {
+                signUpFields.classList.remove('hidden');
+                mainSubmitBtn.innerText = "Create Account";
+                toggleModeBtn.innerText = "Already have an account? Sign In";
+                formTitle.innerText = "Join the Team";
+                formSubtitle.innerText = "Create your fan account";
+                // Make new fields required
+                document.getElementById('fNameInput').required = true;
+                document.getElementById('lNameInput').required = true;
+                document.getElementById('dobInput').required = true;
+            } else {
+                signUpFields.classList.add('hidden');
+                mainSubmitBtn.innerText = "Sign In";
+                toggleModeBtn.innerText = "Need an account? Sign Up";
+                formTitle.innerText = "Portal Access";
+                formSubtitle.innerText = "Sign in to your account";
+                // Remove required attribute so sign-in doesn't block
+                document.getElementById('fNameInput').required = false;
+                document.getElementById('lNameInput').required = false;
+                document.getElementById('dobInput').required = false;
             }
+        });
+
+        // Handle Google Sign In
+        googleBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider).then(async (result) => {
+                const user = result.user;
+                // For Google users, we split their display name and save to DB
+                const nameParts = user.displayName ? user.displayName.split(" ") : ["", ""];
+                await setDoc(doc(db, "users", user.uid), {
+                    firstName: nameParts[0] || "",
+                    lastName: nameParts.slice(1).join(" ") || "",
+                    email: user.email,
+                    role: "fan",
+                    points: 0
+                }, { merge: true }); // Merge ensures we don't overwrite if they already exist
+                
+                window.location.href = "index.html"; 
+            }).catch((error) => {
+                showError(error.message);
+            });
+        });
+
+        // Handle Form Submit (Sign In OR Sign Up)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-                .then((userCredential) => {
-                    // Redirects to index.html upon success
+            if (isSignUpMode) {
+                // SIGN UP FLOW
+                const fName = document.getElementById('fNameInput').value.trim();
+                const lName = document.getElementById('lNameInput').value.trim();
+                const dob = document.getElementById('dobInput').value;
+                const phone = document.getElementById('phoneInput').value.trim();
+
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+                    const user = userCredential.user;
+                    
+                    // Save extra data to Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        firstName: fName,
+                        lastName: lName,
+                        dob: dob,
+                        phone: phone,
+                        email: user.email,
+                        role: "fan",
+                        points: 0
+                    });
+
                     window.location.href = "index.html";
-                })
-                .catch((error) => {
-                    showError(error.message); // Will show error on screen if password is too short, etc.
-                });
+                } catch (error) {
+                    showError(error.message);
+                }
+            } else {
+                // SIGN IN FLOW
+                signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+                    .then(() => { window.location.href = "index.html"; })
+                    .catch(() => { showError("Invalid email or password."); });
+            }
         });
     </script>
 </body>
