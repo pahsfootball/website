@@ -146,7 +146,7 @@
                 <div id="filterSummary" class="hidden flex items-center gap-2 ml-auto">
                     <span class="text-xs font-bold text-gray-300 uppercase tracking-wider font-head text-lg">Filtered by:</span>
                     <span id="activeFiltersList" class="flex gap-2"></span>
-                    <button id="resetFiltersBtn" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
+                    <button id="resetFiltersLink" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
                 </div>
             </div>
         </div>
@@ -178,7 +178,7 @@
     <div id="modalContent" class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
 
         <div id="modalHeaderBanner" class="relative pt-12 pb-6 px-6 flex flex-col items-center text-center">
-            <button id="closeModalBtn" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-10 backdrop-blur-sm">
+            <button id="closeModalX" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-10 backdrop-blur-sm">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="relative z-10">
@@ -192,11 +192,11 @@
             <div class="grid grid-cols-2 gap-3 mb-6">
                 <div id="modalBadgeClass" class="bg-[#27272a] p-3 rounded-xl border border-white/5 text-center shadow-inner">
                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">Class</p>
-                    <p id="modalClass" class="text-2xl font-bold font-head text-white">6A</p>
+                    <p id="modalClass" class="text-2xl font-bold font-head text-white">-</p>
                 </div>
                 <div id="modalBadgeDistrict" class="bg-[#27272a] p-3 rounded-xl border border-white/5 text-center shadow-inner">
                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">District</p>
-                    <p id="modalDistrict" class="text-2xl font-bold font-head text-white">1</p>
+                    <p id="modalDistrict" class="text-2xl font-bold font-head text-white">-</p>
                 </div>
             </div>
 
@@ -228,7 +228,7 @@
                     <i class="fa-brands fa-google mr-2 text-lg"></i> SEARCH HISTORY
                 </a>
 
-                <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+                <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black transition-colors duration-200">
                     <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
                     <span id="followText">FOLLOW TEAM</span>
                 </button>
@@ -250,10 +250,9 @@
 <script type="module">
     // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // --- CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
         authDomain: "pahs-football.firebaseapp.com",
@@ -268,8 +267,8 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // --- DIRECTORY VARIABLES ---
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-
     let allData = [], filteredData = [];
     let currentTeam = "";
     let isFollowing = false;
@@ -292,13 +291,10 @@
         class: document.getElementById('classFilter'),
         summary: document.getElementById('filterSummary'),
         summaryList: document.getElementById('activeFiltersList'),
-        resetFilters: document.getElementById('resetFiltersBtn'),
-        resetAll: document.getElementById('resetAllBtn'),
         modalOverlay: document.getElementById('modalOverlay'),
         modalContent: document.getElementById('modalContent'),
-        closeModal: document.getElementById('closeModalBtn'),
-        mapModalOverlay: document.getElementById('mapModalOverlay'),
-        closeMap: document.getElementById('closeMapBtn'),
+        mapOverlay: document.getElementById('mapModalOverlay'),
+        mapFrame: document.getElementById('mapFrame'),
         followBtn: document.getElementById('followBtn'),
         followText: document.getElementById('followText'),
         followIcon: document.getElementById('followIcon')
@@ -307,6 +303,7 @@
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', fetchData);
 
+    // Event Listeners for UI
     els.search.addEventListener('input', () => {
         handleSearch();
         els.clear.classList.toggle('hidden', els.search.value.trim().length === 0);
@@ -321,16 +318,16 @@
 
     els.district.addEventListener('change', handleSearch);
     els.class.addEventListener('change', handleSearch);
-    els.resetFilters.addEventListener('click', resetAllFilters);
-    els.resetAll.addEventListener('click', resetAllFilters);
-    els.closeModal.addEventListener('click', closeModal);
+    document.getElementById('resetFiltersLink').addEventListener('click', resetAllFilters);
+    document.getElementById('resetAllBtn').addEventListener('click', resetAllFilters);
+    document.getElementById('closeModalX').addEventListener('click', closeModal);
     els.modalOverlay.addEventListener('click', (e) => { if(e.target === els.modalOverlay) closeModal(); });
-    els.closeMap.addEventListener('click', closeMapModal);
-    els.mapModalOverlay.addEventListener('click', (e) => { if(e.target === els.mapModalOverlay) closeMapModal(); });
+    document.getElementById('closeMapBtn').addEventListener('click', closeMapModal);
+    els.mapOverlay.addEventListener('click', (e) => { if(e.target === els.mapOverlay) closeMapModal(); });
 
     document.addEventListener('keydown', e => {
         if(e.key === 'Escape') {
-            if(!els.mapModalOverlay.classList.contains('hidden')) closeMapModal();
+            if(!els.mapOverlay.classList.contains('hidden')) closeMapModal();
             else closeModal();
         }
     });
@@ -341,12 +338,12 @@
             download: true, header: true, skipEmptyLines: true,
             complete: res => {
                 allData = res.data.map(row => {
-                    const newRow = {};
-                    Object.keys(row).forEach(k => newRow[k.trim()] = row[k]);
-                    if(newRow['Team']) newRow['Team'] = newRow['Team'].replace(/^\*+|\*+$/g, '').trim();
-                    if(newRow['School']) newRow['School'] = newRow['School'].replace(/^\*+|\*+$/g, '').trim();
-                    if(newRow['District']) newRow['District'] = newRow['District'].replace(/district/gi, '').trim();
-                    return newRow;
+                    const nr = {};
+                    Object.keys(row).forEach(k => nr[k.trim()] = row[k]);
+                    if(nr['Team']) nr['Team'] = nr['Team'].replace(/^\*+|\*+$/g, '').trim();
+                    if(nr['School']) nr['School'] = nr['School'].replace(/^\*+|\*+$/g, '').trim();
+                    if(nr['District']) nr['District'] = nr['District'].replace(/district/gi, '').trim();
+                    return nr;
                 }).filter(r => r['School']);
 
                 filteredData = allData;
@@ -354,8 +351,17 @@
                 renderCards(filteredData);
                 els.loading.classList.add('hidden');
                 els.grid.classList.remove('hidden');
-            },
-            error: () => console.error("Could not load data.")
+
+                // DEEP LINKING LOGIC
+                const urlParams = new URLSearchParams(window.location.search);
+                const teamToOpen = urlParams.get('team');
+                if (teamToOpen) {
+                    const idx = allData.findIndex(r => r['School'] === teamToOpen);
+                    if (idx !== -1) {
+                        setTimeout(() => window.openModal(idx), 300);
+                    }
+                }
+            }
         });
     }
 
@@ -383,9 +389,9 @@
         Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
     }
 
-    // --- CORE LOGIC ---
+    // --- RENDER & SEARCH ---
     const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
-
+    
     const getContrast = hex => {
         if(!hex) return 'black';
         let h = normalizeColor(hex).replace('#','');
@@ -411,7 +417,7 @@
 
             const card = document.createElement('div');
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
-            card.onclick = () => openModal(idx);
+            card.onclick = () => window.openModal(idx);
             
             card.innerHTML = `
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2" style="background-color: ${primaryColor};"></div>
@@ -453,7 +459,6 @@
 
     function resetAllFilters() {
         els.search.value = ''; els.district.value = 'All'; els.class.value = 'All';
-        els.clear.classList.add('hidden');
         handleSearch();
     }
 
@@ -471,42 +476,31 @@
         document.getElementById('modalConference').innerText = d['Conference/League'] || 'N/A';
         document.getElementById('modalChamps').innerText = d['State Championships'] || 'None';
 
-        const headerBanner = document.getElementById('modalHeaderBanner');
-        const searchBtn = document.getElementById('modalSearchLink');
         const primary = p || '#27272a';
         const secondary = (a && a[0]) ? a[0] : primary;
+        document.getElementById('modalHeaderBanner').style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
+        document.getElementById('modalSearchLink').style.backgroundColor = primary;
+        document.getElementById('modalSearchLink').style.color = getContrast(primary) === 'black' ? '#000000' : '#ffffff';
 
-        headerBanner.style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
-        searchBtn.style.backgroundColor = primary;
-        searchBtn.style.color = getContrast(primary) === 'black' ? '#000000' : '#ffffff';
-
-        const locBox = document.getElementById('modalLocationContainer');
         if(d['City/Town']) {
-            locBox.onclick = () => openMapModal(d['City/Town']);
-            locBox.classList.remove('opacity-50','pointer-events-none');
-        } else {
-            locBox.onclick = null;
-            locBox.classList.add('opacity-50','pointer-events-none');
+            document.getElementById('modalLocationContainer').onclick = () => window.openMapModal(d['City/Town']);
         }
 
         const aiQuery = `Overview and history of the ${d['School']} ${d['Team']} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
 
-        // Check if user is following
+        // Check Following Status from Firestore
         const user = auth.currentUser;
         if (user) {
-            try {
-                const userSnap = await getDoc(doc(db, "users", user.uid));
-                if (userSnap.exists()) {
-                    const followed = userSnap.data().followedTeams || [];
-                    isFollowing = followed.includes(currentTeam);
-                    updateFollowBtnUI();
-                }
-            } catch (err) { console.error("Error checking following status:", err); }
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                const followed = userSnap.data().followedTeams || [];
+                isFollowing = followed.includes(currentTeam);
+                updateFollowUI();
+            }
         } else {
-            // Reset to default if not logged in
             isFollowing = false;
-            updateFollowBtnUI();
+            updateFollowUI();
         }
 
         els.modalOverlay.classList.remove('hidden');
@@ -518,7 +512,7 @@
         document.body.style.overflow = 'hidden';
     };
 
-    function updateFollowBtnUI() {
+    function updateFollowUI() {
         if (isFollowing) {
             els.followBtn.classList.replace('bg-pahs-gold', 'bg-red-600');
             els.followBtn.classList.add('text-white');
@@ -532,70 +526,43 @@
         }
     }
 
-   // --- UPDATED FOLLOW CLICK LOGIC ---
     els.followBtn.addEventListener('click', async () => {
-        console.log("Follow button clicked for:", currentTeam); // Debug line
-        
         const user = auth.currentUser;
-        
         if (!user) {
-            console.log("No user found, showing redirect confirm.");
-            if(confirm("You must be logged in to follow teams. Go to login?")) {
-                window.location.href = "login.html";
-            }
+            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
             return;
         }
 
         const userRef = doc(db, "users", user.uid);
-        
-        try {
-            // Disable button briefly to prevent double-clicks
-            els.followBtn.disabled = true;
-            els.followBtn.style.opacity = "0.5";
-
-            if (isFollowing) {
-                console.log("Removing team:", currentTeam);
-                await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
-                isFollowing = false;
-            } else {
-                console.log("Adding team:", currentTeam);
-                await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
-                isFollowing = true;
-            }
-            
-            updateFollowBtnUI();
-            console.log("Database update successful.");
-            
-        } catch (err) {
-            console.error("Update error detailed:", err);
-            alert("Error: " + err.message);
-        } finally {
-            els.followBtn.disabled = false;
-            els.followBtn.style.opacity = "1";
+        if (isFollowing) {
+            await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
+            isFollowing = false;
+        } else {
+            await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
+            isFollowing = true;
         }
+        updateFollowUI();
     });
 
-    function closeModal() {
+    window.closeModal = () => {
         els.modalOverlay.classList.add('opacity-0');
-        els.modalContent.classList.remove('scale-100');
         els.modalContent.classList.add('scale-95');
         setTimeout(() => {
             els.modalOverlay.classList.add('hidden');
             document.body.style.overflow = '';
         }, 300);
-    }
-
-    window.openMapModal = function(loc) {
-        els.mapModalOverlay.classList.remove('hidden');
-        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=13&ie=UTF8&iwloc=&output=embed`;
     };
 
-    function closeMapModal() {
-        els.mapModalOverlay.classList.add('hidden');
-        document.getElementById('mapFrame').src = '';
-    }
-</script>
+    window.openMapModal = (loc) => {
+        els.mapOverlay.classList.remove('hidden');
+        els.mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=13&ie=UTF8&iwloc=&output=embed`;
+    };
 
+    window.closeMapModal = () => {
+        els.mapOverlay.classList.add('hidden');
+        els.mapFrame.src = '';
+    };
+
+</script>
 </body>
 </html>
-
