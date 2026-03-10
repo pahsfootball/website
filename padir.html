@@ -532,26 +532,46 @@
         }
     }
 
+   // --- UPDATED FOLLOW CLICK LOGIC ---
     els.followBtn.addEventListener('click', async () => {
+        console.log("Follow button clicked for:", currentTeam); // Debug line
+        
         const user = auth.currentUser;
+        
         if (!user) {
-            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
+            console.log("No user found, showing redirect confirm.");
+            if(confirm("You must be logged in to follow teams. Go to login?")) {
+                window.location.href = "login.html";
+            }
             return;
         }
 
         const userRef = doc(db, "users", user.uid);
+        
         try {
+            // Disable button briefly to prevent double-clicks
+            els.followBtn.disabled = true;
+            els.followBtn.style.opacity = "0.5";
+
             if (isFollowing) {
+                console.log("Removing team:", currentTeam);
                 await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
                 isFollowing = false;
             } else {
+                console.log("Adding team:", currentTeam);
                 await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
                 isFollowing = true;
             }
+            
             updateFollowBtnUI();
+            console.log("Database update successful.");
+            
         } catch (err) {
-            console.error("Update error:", err);
-            alert("Could not update. Make sure you are logged in.");
+            console.error("Update error detailed:", err);
+            alert("Error: " + err.message);
+        } finally {
+            els.followBtn.disabled = false;
+            els.followBtn.style.opacity = "1";
         }
     });
 
@@ -578,3 +598,4 @@
 
 </body>
 </html>
+
