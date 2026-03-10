@@ -88,7 +88,7 @@
             width: 100%; background: #fbbf24; color: black; font-family: 'Teko', sans-serif; font-size: 22px; 
             padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
             letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            margin-top: 12px; /* Spacing added here previously */
+            margin-top: 12px;
         }
         .submit-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
@@ -301,13 +301,9 @@
         if (user) {
             // User IS logged in
             console.log("Welcome back, " + user.email);
-            // Example: Change a "Login" button to say "My Account" or "Logout"
-            // document.getElementById("navLoginBtn").innerText = "Logout";
         } else {
             // User is NOT logged in
             console.log("No user is logged in.");
-            // Example: If this is a protected page, kick them back to login
-            // window.location.href = "login.html";
         }
     });
 
@@ -322,5 +318,3 @@
 </script>
 </body>
 </html>
-
-
