@@ -75,7 +75,6 @@
         .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; }
         .back-link:hover { color: var(--gold-hover); }
 
-        /* Hidden class for toggling form modes */
         .hidden { display: none !important; }
     </style>
 </head>
@@ -127,7 +126,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        // Import Firestore
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -142,7 +140,7 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // Initialize DB
+        const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
         let isSignUpMode = false;
@@ -163,7 +161,6 @@
             errorMsg.style.display = 'block';
         }
 
-        // Toggle between Sign In and Sign Up modes
         toggleModeBtn.addEventListener('click', () => {
             isSignUpMode = !isSignUpMode;
             errorMsg.style.display = 'none';
@@ -174,7 +171,6 @@
                 toggleModeBtn.innerText = "Already have an account? Sign In";
                 formTitle.innerText = "Join the Team";
                 formSubtitle.innerText = "Create your fan account";
-                // Make new fields required
                 document.getElementById('fNameInput').required = true;
                 document.getElementById('lNameInput').required = true;
                 document.getElementById('dobInput').required = true;
@@ -184,7 +180,6 @@
                 toggleModeBtn.innerText = "Need an account? Sign Up";
                 formTitle.innerText = "Portal Access";
                 formSubtitle.innerText = "Sign in to your account";
-                // Remove required attribute so sign-in doesn't block
                 document.getElementById('fNameInput').required = false;
                 document.getElementById('lNameInput').required = false;
                 document.getElementById('dobInput').required = false;
@@ -195,7 +190,6 @@
         googleBtn.addEventListener('click', () => {
             signInWithPopup(auth, provider).then(async (result) => {
                 const user = result.user;
-                // For Google users, we split their display name and save to DB
                 const nameParts = user.displayName ? user.displayName.split(" ") : ["", ""];
                 await setDoc(doc(db, "users", user.uid), {
                     firstName: nameParts[0] || "",
@@ -203,20 +197,19 @@
                     email: user.email,
                     role: "fan",
                     points: 0
-                }, { merge: true }); // Merge ensures we don't overwrite if they already exist
+                }, { merge: true });
                 
-                window.location.href = "index.html"; 
+                window.location.href = "profile.html"; // <-- UPDATED
             }).catch((error) => {
                 showError(error.message);
             });
         });
 
-        // Handle Form Submit (Sign In OR Sign Up)
+        // Handle Form Submit
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (isSignUpMode) {
-                // SIGN UP FLOW
                 const fName = document.getElementById('fNameInput').value.trim();
                 const lName = document.getElementById('lNameInput').value.trim();
                 const dob = document.getElementById('dobInput').value;
@@ -226,7 +219,6 @@
                     const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                     const user = userCredential.user;
                     
-                    // Save extra data to Firestore
                     await setDoc(doc(db, "users", user.uid), {
                         firstName: fName,
                         lastName: lName,
@@ -237,14 +229,15 @@
                         points: 0
                     });
 
-                    window.location.href = "profile.html";
+                    window.location.href = "profile.html"; // <-- UPDATED
                 } catch (error) {
                     showError(error.message);
                 }
             } else {
-                // SIGN IN FLOW
                 signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-                    .then(() => { window.location.href = "index.html"; })
+                    .then(() => { 
+                        window.location.href = "profile.html"; // <-- UPDATED
+                    })
                     .catch(() => { showError("Invalid email or password."); });
             }
         });
