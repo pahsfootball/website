@@ -239,6 +239,11 @@
                     <i class="fa-brands fa-google mr-2 text-lg"></i> SEARCH HISTORY
                 </a>
             </div>
+            <div class="mt-4">
+    <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+        <i class="fa-solid fa-star mr-2"></i> FOLLOW THIS TEAM
+    </button>
+</div>
         </div>
     </div>
 </div>
@@ -505,49 +510,51 @@
         document.getElementById('mapFrame').src = '';
     }
 </script>
-    <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Your Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
-        authDomain: "pahs-football.firebaseapp.com",
-        projectId: "pahs-football",
-        storageBucket: "pahs-football.firebasestorage.app",
-        messagingSenderId: "260294523190",
-        appId: "1:260294523190:web:b3963804702d2a03749b97",
-        measurementId: "G-2J69C1LS6D"
-    };
-
-    // Initialize Firebase
+    const firebaseConfig = { /* ... keep your existing config ... */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // This listens for login state changes
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // User IS logged in
-            console.log("Welcome back, " + user.email);
-            // Example: Change a "Login" button to say "My Account" or "Logout"
-            // document.getElementById("navLoginBtn").innerText = "Logout";
-        } else {
-            // User is NOT logged in
-            console.log("No user is logged in.");
-            // Example: If this is a protected page, kick them back to login
-            // window.location.href = "login.html";
+    let currentSelectedTeam = ""; // Variable to track the team in the modal
+
+    // Update modal open logic to track the team
+    window.openModal = function(idx) {
+        const d = filteredData[idx];
+        currentSelectedTeam = d['School']; // Store the school name
+        // ... (keep all your existing modal content setters here)
+    };
+
+    // The Follow Logic
+    document.getElementById('followBtn').addEventListener('click', async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("You must be logged in to follow teams! Redirecting to login...");
+            window.location.href = "login.html";
+            return;
+        }
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, {
+                followedTeams: arrayUnion(currentSelectedTeam)
+            });
+            
+            alert(`You are now following ${currentSelectedTeam}!`);
+            document.getElementById('followBtn').innerText = "FOLLOWED!";
+            document.getElementById('followBtn').classList.add('bg-green-500');
+        } catch (error) {
+            console.error("Error following team:", error);
+            alert("Could not follow team. Please try again.");
         }
     });
-
-    // Optional: A function to log the user out if you add a logout button
-    window.logoutUser = function() {
-        signOut(auth).then(() => {
-            window.location.href = "login.html";
-        }).catch((error) => {
-            console.error("Logout Error", error);
-        });
-    }
 </script>
 </body>
 </html>
+
 
