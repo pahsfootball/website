@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -58,7 +59,7 @@
         <div id="scoreboards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div id="loading-state" class="col-span-full text-center py-12">
                 <i class="fa-solid fa-circle-notch fa-spin text-5xl text-pahs-gold mb-4"></i>
-                <h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">Fetching Live Scores...</h3>
+                <h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">Fetching Matchups...</h3>
             </div>
         </div>
 
@@ -68,7 +69,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // 1. Initialize Firebase
+        // --- 1. PASTE YOUR TICKER CSV URL HERE ---
+        const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
+
+        // --- 2. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
@@ -84,151 +88,213 @@
 
         const container = document.getElementById('scoreboards-container');
         const loadingState = document.getElementById('loading-state');
+        
+        let baseScheduleGames = {}; // Will hold all games from the CSV as defaults
 
-        // Function to format team names into URLs (Southern Columbia -> gameday-Southern-Columbia.html)
-     const formatTeamUrl = (teamName) => {
+        // Function to format team names into URLs
+        const formatTeamUrl = (teamName) => {
             if (!teamName) return '#';
             return `gameday.html?team=${encodeURIComponent(teamName.trim())}`;
         };
 
-        // 2. Listen to the entire 'live_scores' folder
-        onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
-            const data = snapshot.val();
-            
-            if (!data) {
-                container.innerHTML = `<div class="col-span-full text-center py-12"><i class="fa-solid fa-ghost text-5xl text-gray-500 mb-4"></i><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3><p class="text-gray-500">Wait for kickoff!</p></div>`;
-                return;
-            }
-
-            // Convert Firebase object into an Array so we can sort it
-            const gamesArray = [];
-            for (let teamKey in data) {
-                if (data[teamKey].home && data[teamKey].away) {
-                    gamesArray.push({ id: teamKey, ...data[teamKey] });
-                }
-            }
-
-            if (gamesArray.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-12"><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3></div>`;
-                return;
-            }
-
-            // 3. Sort the Games: LIVE -> HALF -> PREGAME -> FINAL
-            gamesArray.sort((a, b) => {
-                const getWeight = (status) => {
-                    if (status === 'LIVE') return 1;
-                    if (status === 'HALF') return 2;
-                    if (status === 'PREGAME') return 3;
-                    if (status === 'FINAL') return 4;
-                    return 5;
-                };
-
-                const weightA = getWeight(a.status);
-                const weightB = getWeight(b.status);
-
-                if (weightA !== weightB) return weightA - weightB;
-                return new Date(b.lastUpdated) - new Date(a.lastUpdated);
-            });
-
-            // 4. Render the HTML
-            loadingState.style.display = 'none';
-            container.innerHTML = ''; 
-
-            gamesArray.forEach(game => {
-                let badgeText = "";
-                let badgeClass = "";
-                let dotClass = "hidden";
-                let cardBorder = "border-gray-300 shadow-md";
-
-                if (game.status === "PREGAME") {
-                    badgeText = "PREGAME";
-                    badgeClass = "bg-yellow-500 text-black";
-                    cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
-                } else if (game.status === "HALF") {
-                    badgeText = "HALFTIME";
-                    badgeClass = "bg-yellow-600 text-black";
-                    dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                    cardBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
-                } else if (game.status === "FINAL") {
-                    badgeText = "FINAL";
-                    badgeClass = "bg-gray-800 text-white";
-                    cardBorder = "border-gray-400 shadow-sm opacity-80"; 
-                } else {
-                    badgeText = "QTR " + game.quarter;
-                    badgeClass = "bg-red-600 text-white animate-pulse";
-                    dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                    cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
-                }
-
-                const homeLogoHtml = game.homeLogo 
-                    ? `<img src="${game.homeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
-                    : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
+        // --- 3. FETCH THE SCHEDULE FIRST ---
+        Papa.parse(SCHEDULE_CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const games = results.data;
                 
-                const awayLogoHtml = game.awayLogo 
-                    ? `<img src="${game.awayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
-                    : `<span class="font-bold text-lg text-gray-500 uppercase">${game.away.substring(0,3)}</span>`;
+                games.forEach(game => {
+                    if (!game.HomeTeam || !game.AwayTeam) return;
 
-                let updatedText = "Unknown";
-                if (game.lastUpdated) {
-                    const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
-                    if (diffMins < 1) updatedText = "Just now";
-                    else if (diffMins === 1) updatedText = "1 min ago";
-                    else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
-                    else updatedText = "Over an hour ago";
-                }
+                    // Generate universal game key to match Firebase
+                    const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
+                    const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
+                    const gameKey = [homeNameStr, awayNameStr].sort().join('_');
 
-                // Generate exact URLs dynamically
-                const homeUrl = formatTeamUrl(game.home);
-                const awayUrl = formatTeamUrl(game.away);
+                    // Create a default PREGAME template for every scheduled matchup
+                    baseScheduleGames[gameKey] = {
+                        id: gameKey,
+                        home: game.HomeTeam,
+                        away: game.AwayTeam,
+                        homeLogo: game.HomeLogo || "",
+                        awayLogo: game.AwayLogo || "",
+                        homeScore: 0,
+                        awayScore: 0,
+                        status: "PREGAME",
+                        quarter: "PREGAME",
+                        clock: game.Time || "12:00",
+                        updatedBy: "Schedule",
+                        lastUpdated: new Date(0).toISOString() // Set to old date so it sits at bottom naturally
+                    };
+                });
 
-                // Build the Card HTML
-                const cardHTML = `
-                    <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
-                            <div class="flex items-center gap-2">
-                                <div class="${dotClass}"></div>
-                                <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
-                                <span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center px-2 flex-grow">
-                            <a href="${homeUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
-                                    ${homeLogoHtml}
-                                </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}</span>
-                                <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
-                            </a>
-                            
-                            <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
-                            
-                            <a href="${awayUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
-                                    ${awayLogoHtml}
-                                </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}</span>
-                                <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
-                            </a>
-                        </div>
-
-                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1">
-                            <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
-                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
-                            </div>
-                            <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right">
-                                <i class="fa-regular fa-clock mr-1"></i> ${updatedText}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                container.innerHTML += cardHTML;
-            });
+                // Once schedule is loaded, start listening to Firebase for live overlays
+                startFirebaseListener();
+            },
+            error: function(err) {
+                console.error("Error loading schedule CSV", err);
+                startFirebaseListener(); // Fallback: Just load Firebase if CSV fails
+            }
         });
+
+        // --- 4. MERGE LIVE SCORES AND RENDER ---
+        function startFirebaseListener() {
+            onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
+                const liveData = snapshot.val() || {};
+                const mergedGamesArray = [];
+
+                // Copy our base schedule so we don't mutate the original data
+                const tempGamesMap = { ...baseScheduleGames };
+
+                // Overlay any live data from Firebase
+                for (let teamKey in liveData) {
+                    const liveGame = liveData[teamKey];
+                    if (liveGame.home && liveGame.away) {
+                        // If it exists in schedule, merge the live updates into it. 
+                        // If it's totally new, just add it.
+                        tempGamesMap[teamKey] = { 
+                            ...tempGamesMap[teamKey], 
+                            ...liveGame, 
+                            id: teamKey 
+                        };
+                    }
+                }
+
+                // Convert Map to Array for sorting
+                for (let key in tempGamesMap) {
+                    mergedGamesArray.push(tempGamesMap[key]);
+                }
+
+                if (mergedGamesArray.length === 0) {
+                    container.innerHTML = `<div class="col-span-full text-center py-12"><i class="fa-solid fa-ghost text-5xl text-gray-500 mb-4"></i><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3><p class="text-gray-500">Wait for kickoff!</p></div>`;
+                    return;
+                }
+
+                // Sort: LIVE -> HALF -> PREGAME -> FINAL
+                mergedGamesArray.sort((a, b) => {
+                    const getWeight = (status) => {
+                        const s = (status || "").toUpperCase();
+                        if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; // Any Qtr
+                        if (s === 'HALF') return 2;
+                        if (s === 'PREGAME' || s === 'UPCOMING') return 3;
+                        if (s === 'FINAL') return 4;
+                        return 5;
+                    };
+
+                    const weightA = getWeight(a.status);
+                    const weightB = getWeight(b.status);
+
+                    if (weightA !== weightB) return weightA - weightB;
+                    
+                    // If they have the same status, sort by newest update
+                    return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+                });
+
+                // Clear container and render
+                loadingState.style.display = 'none';
+                container.innerHTML = ''; 
+
+                mergedGamesArray.forEach(game => {
+                    let badgeText = "";
+                    let badgeClass = "";
+                    let dotClass = "hidden";
+                    let cardBorder = "border-gray-300 shadow-md";
+
+                    const statusUpper = (game.status || "").toUpperCase();
+                    const qtrUpper = (game.quarter || "").toUpperCase();
+
+                    if (statusUpper === "PREGAME" || qtrUpper === "PREGAME") {
+                        badgeText = "PREGAME";
+                        badgeClass = "bg-yellow-500 text-black";
+                        cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
+                    } else if (qtrUpper === "HALF") {
+                        badgeText = "HALFTIME";
+                        badgeClass = "bg-yellow-600 text-black";
+                        dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                        cardBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                    } else if (statusUpper === "FINAL" || qtrUpper === "FINAL") {
+                        badgeText = "FINAL";
+                        badgeClass = "bg-gray-800 text-white";
+                        cardBorder = "border-gray-400 shadow-sm opacity-80"; 
+                    } else {
+                        badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + game.quarter;
+                        badgeClass = "bg-red-600 text-white animate-pulse";
+                        dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                        cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
+                    }
+
+                    const homeLogoHtml = game.homeLogo 
+                        ? `<img src="${game.homeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
+                        : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
+                    
+                    const awayLogoHtml = game.awayLogo 
+                        ? `<img src="${game.awayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
+                        : `<span class="font-bold text-lg text-gray-500 uppercase">${game.away.substring(0,3)}</span>`;
+
+                    let updatedText = "Unknown";
+                    if (game.lastUpdated && game.updatedBy !== "Schedule") {
+                        const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
+                        if (diffMins < 1) updatedText = "Just now";
+                        else if (diffMins === 1) updatedText = "1 min ago";
+                        else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
+                        else updatedText = "Over an hour ago";
+                    } else {
+                        updatedText = "Scheduled"; // Identifies un-started schedule games
+                    }
+
+                    const homeUrl = formatTeamUrl(game.home);
+                    const awayUrl = formatTeamUrl(game.away);
+
+                    const cardHTML = `
+                        <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="${dotClass}"></div>
+                                    <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
+                                    <span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center px-2 flex-grow">
+                                <a href="${homeUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
+                                    <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
+                                        ${homeLogoHtml}
+                                    </div>
+                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}</span>
+                                    <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
+                                </a>
+                                
+                                <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
+                                
+                                <a href="${awayUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
+                                    <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
+                                        ${awayLogoHtml}
+                                    </div>
+                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}</span>
+                                    <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
+                                </a>
+                            </div>
+
+                            <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1">
+                                <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                                    <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
+                                </div>
+                                <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right">
+                                    <i class="fa-regular fa-clock mr-1"></i> ${updatedText}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.innerHTML += cardHTML;
+                });
+            });
+        }
     </script>
 </body>
 </html>
