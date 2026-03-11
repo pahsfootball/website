@@ -515,7 +515,7 @@
                 if (result.status === 'error' || !result.data || !result.data.yourTeam) {
                     // Show "Claim this Team" prompt
                     document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
-                    document.getElementById('claim-email-btn').href = `mailto:admin@pahsfootball.com?subject=Admin Request for ${teamParam}&body=I would like to apply to manage the Game Day page for ${teamParam}.`;
+                    document.getElementById('claim-email-btn').href = `mailto:thepahsfootball@gmail.com?subject=Admin Request for ${teamParam}&body=I would like to apply to manage the Game Day page for ${teamParam}.`;
                     document.getElementById('claim-team-prompt').classList.remove('hidden');
                     return;
                 }
