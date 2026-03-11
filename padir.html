@@ -241,7 +241,7 @@
 
                     <button id="claimTeamBtn" class="hidden flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-blue-600 text-white">
                         <i class="fa-solid fa-hand-fist mr-2"></i>
-                        <span id="claimText">CLAIM TEAM ADMIN</span>
+                        <span id="claimText">REQUEST TEAM ADMIN</span>
                     </button>
                 </div>
             </div>
@@ -542,9 +542,9 @@
 
                     // User already admins THIS team
                     if (userData.adminOf === currentTeam) {
-                        els.claimText.innerText = "MANAGE TEAM PANEL";
+                        els.claimText.innerText = "GO TO MY PROFILE";
                         els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
-                        els.claimBtn.onclick = () => window.location.href = "manage.html";
+                        els.claimBtn.onclick = () => window.location.href = "profile.html"; 
                     } 
                     // Someone else already claimed this team
                     else if (teamSnap.exists()) {
@@ -562,7 +562,7 @@
                     }
                     // Team is free and user is available
                     else {
-                        els.claimText.innerText = "CLAIM TEAM ADMIN";
+                        els.claimText.innerText = "REQUEST TEAM ADMIN";
                         els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
                         els.claimBtn.onclick = () => handleClaimTeam(currentTeam);
                     }
@@ -620,39 +620,19 @@
         finally { els.followBtn.disabled = false; }
     });
 
-    async function handleClaimTeam(school) {
+    function handleClaimTeam(school) {
         const user = auth.currentUser;
         if (!user) return;
 
-        if (confirm(`Do you want to become the official reporter for ${school}? You can only manage one team at a time.`)) {
-            try {
-                els.claimBtn.disabled = true;
-                els.claimText.innerText = "CLAIMING...";
+        // Formats a pre-filled email to you
+        const adminEmail = "thepahsfootball@gmail.com";
+        const subject = encodeURIComponent(`Admin Request for ${school}`);
+        const body = encodeURIComponent(
+            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy PAHSFootball account email is: ${user.email}\n\nThank you!`
+        );
 
-                // 1. Assign team to user
-                await updateDoc(doc(db, "users", user.uid), { adminOf: school });
-                
-                // 2. Create team document
-                await setDoc(doc(db, "team_pages", school), {
-                    adminUid: user.uid,
-                    schoolName: school,
-                    claimedDate: new Date(),
-                    homeScore: 0,
-                    awayScore: 0,
-                    nextOpponent: "TBD",
-                    gameTime: "TBD",
-                    lastUpdated: new Date()
-                });
-
-                alert(`Congratulations! You are now the official Admin for ${school}. Redirecting to your panel...`);
-                window.location.href = "manage.html";
-            } catch (err) {
-                console.error("Claim error:", err);
-                alert("Error claiming team. Please try again.");
-                els.claimBtn.disabled = false;
-                els.claimText.innerText = "CLAIM TEAM ADMIN";
-            }
-        }
+        // Opens their default mail app (Outlook, Apple Mail, Gmail, etc.)
+        window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
     }
 
     function closeModal() {
