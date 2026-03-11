@@ -44,9 +44,9 @@
             <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
                 <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-crown text-pahs-gold mr-1"></i> Claim Your Team</h3>
                 <p class="text-sm text-gray-500 mb-4">Are you a super fan? Request admin access to manage this team's page, post live updates, and keep your community informed.</p>
-                <a id="claim-email-btn" href="#" class="inline-block bg-pahs-dark text-pahs-gold font-bold font-head text-xl py-3 px-6 rounded-lg uppercase tracking-wide hover:bg-gray-800 transition shadow-md w-full">
+                <button id="claim-email-btn" type="button" class="w-full bg-pahs-dark text-pahs-gold font-bold font-head text-xl py-3 px-6 rounded-lg uppercase tracking-wide hover:bg-gray-800 transition shadow-md">
                     Request Admin Access
-                </a>
+                </button>
             </div>
             <a href="padir.html" class="text-blue-600 font-bold text-sm hover:underline"><i class="fa-solid fa-arrow-left"></i> Back to PAHSFOOTBALL Team Directory</a>
         </div>
@@ -493,6 +493,27 @@
             });
         }
 
+        // Add handler for Email claim
+        window.handleClaimTeamGameDay = function(school) {
+            const user = auth.currentUser;
+            if (!user) {
+                if(confirm("You must be logged in to request Team Admin. Go to login?")) {
+                    window.location.href = "login.html";
+                }
+                return;
+            }
+
+            const adminEmail = "thepahsfootball@gmail.com";
+            const subject = encodeURIComponent(`Admin Request for ${school}`);
+            const displayName = (window.currentUserProfile && window.currentUserProfile.username) ? window.currentUserProfile.username : "User"; 
+
+            const body = encodeURIComponent(
+                `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
+            );
+
+            window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+        };
+
         // UNIVERSAL LOADER
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -515,7 +536,11 @@
                 if (result.status === 'error' || !result.data || !result.data.yourTeam) {
                     // Show "Claim this Team" prompt
                     document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
-                    document.getElementById('claim-email-btn').href = `mailto:thepahsfootball@gmail.com?subject=Admin Request for ${teamParam}&body=I would like to apply to manage the Game Day page for ${teamParam}.`;
+                    
+                    // Trigger the claim function properly based on Auth
+                    const claimBtn = document.getElementById('claim-email-btn');
+                    claimBtn.onclick = () => window.handleClaimTeamGameDay(teamParam);
+                    
                     document.getElementById('claim-team-prompt').classList.remove('hidden');
                     return;
                 }
@@ -581,9 +606,9 @@
                 }
 
                 if(game.address) {
-                    
-                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
-                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}`;
+                    const encodedAddress = encodeURIComponent(game.address);
+                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
+                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
                     document.getElementById('btn-directions').style.display = 'flex';
                     document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
                     document.getElementById('btn-copy-address').style.display = 'flex';
