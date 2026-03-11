@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameDay | PAHSFOOTBALL.com</title>
+    <title>Game Day Central | Team Template</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,20 +11,12 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        pahs: { dark: '#0f0f0f', gold: '#fbbf24' }
-                    },
-                    fontFamily: {
-                        'head': ['Teko', 'sans-serif'],
-                        'body': ['Inter', 'sans-serif'],
-                    }
+                    colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } },
+                    fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -127,10 +119,6 @@
             <div class="bg-[#18181b] p-6 text-center relative overflow-hidden border-b-4 border-pahs-gold">
                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 
-                <button onclick="sharePage()" class="absolute top-4 right-4 z-20 bg-white/10 hover:bg-pahs-gold text-white hover:text-black border border-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg" title="Share Page">
-                    <i class="fa-solid fa-share-nodes"></i>
-                </button>
-
                 <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Matchup...</h2>
                 
                 <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
@@ -237,6 +225,12 @@
                     <span id="sb-away-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
                 </div>
             </div>
+
+            <div class="text-center mt-6 pt-4 border-t border-gray-200">
+                <p class="text-[11px] uppercase tracking-widest text-gray-500">
+                    <i class="fa-solid fa-user-pen mr-1"></i> Scoreboard last updated by: <span id="sb-updated-by" class="font-bold text-gray-800">Awaiting First Update</span>
+                </p>
+            </div>
         </div>
 
         <div id="fanControlPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-[0_0_15px_rgba(251,191,36,0.3)] relative overflow-hidden">
@@ -258,16 +252,57 @@
 
     </main>
 
-    <script>
-        const firebaseConfig = { databaseURL: "https://pahsfootball-d35c2-default-rtdb.firebaseio.com/" };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        function sharePage() {
+        // 1. Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+            authDomain: "pahs-football.firebaseapp.com",
+            projectId: "pahs-football",
+            storageBucket: "pahs-football.firebasestorage.app",
+            messagingSenderId: "260294523190",
+            appId: "1:260294523190:web:b3963804702d2a03749b97",
+            measurementId: "G-2J69C1LS6D"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Store user profile globally so the form can use the username
+        window.currentUserProfile = null;
+
+        // 2. Auth Check - Fetch username and show update panel if logged in
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Fetch their username from the profiles collection
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        window.currentUserProfile = userDoc.data();
+                    } else {
+                        window.currentUserProfile = { username: "Anonymous Fan" };
+                    }
+                } catch(e) {
+                    window.currentUserProfile = { username: "Fan" };
+                }
+
+                // Show the reporter control panel
+                const ctrlPanel = document.getElementById('fanControlPanel');
+                if (ctrlPanel) ctrlPanel.classList.remove('hidden');
+            }
+        });
+
+        // 3. Expose Click Handlers to the Window
+        window.sharePage = function() {
             if (navigator.share) navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
             else navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); });
-        }
+        };
         
-        function copyAddress() {
+        window.copyAddress = function() {
             const btn = document.getElementById('btn-copy-address');
             const address = btn.getAttribute('data-address');
             if (address) {
@@ -277,9 +312,154 @@
                     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-green-500', 'text-white'); btn.classList.add('bg-gray-200', 'text-gray-800'); }, 2000);
                 });
             }
+        };
+
+        window.openScoreModal = async function() {
+            const game = window.currentLiveCsvGame;
+            if (!game || !game.YourTeam) return alert("Game data hasn't loaded yet. Please wait a moment.");
+            
+            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
+            document.getElementById('lblHome').innerText = (isHome ? game.YourTeam : game.Opponent) + " Score";
+            document.getElementById('lblAway').innerText = (!isHome ? game.YourTeam : game.Opponent) + " Score";
+            
+            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            
+            // Read current score from Firestore before showing the form
+            try {
+                const docSnap = await getDoc(doc(db, "live_scores", teamKey));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('inpHomeScore').value = data.homeScore || 0;
+                    document.getElementById('inpAwayScore').value = data.awayScore || 0;
+                    document.getElementById('inpQuarter').value = data.quarter || '1';
+                    document.getElementById('inpTime').value = data.clock || '12:00';
+                }
+            } catch(e) { console.error("Error reading current score:", e); }
+            
+            document.getElementById('scoreUpdateModal').style.display = 'flex';
+        };
+
+        window.closeScoreModal = function() {
+            document.getElementById('scoreUpdateModal').style.display = 'none';
+        };
+
+        // 4. Handle Form Submission to FIRESTORE
+        document.getElementById('scoreUpdateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnPushScore');
+            btn.innerText = "Pushing...";
+            btn.disabled = true;
+
+            const game = window.currentLiveCsvGame;
+            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
+            
+            const qtr = document.getElementById('inpQuarter').value;
+            let status = "LIVE";
+            if (qtr === "FINAL") status = "FINAL";
+            if (qtr === "HALF") status = "HALF";
+            if (qtr === "PREGAME") status = "PREGAME";
+
+            const usernameToSave = window.currentUserProfile ? window.currentUserProfile.username : "Unknown Fan";
+
+            const updateData = {
+                homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
+                awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
+                quarter: qtr,
+                clock: document.getElementById('inpTime').value || "00:00",
+                status: status,
+                updatedBy: usernameToSave, // Attach the username here!
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                // Write to Firestore 'live_scores' collection
+                await setDoc(doc(db, "live_scores", teamKey), updateData, { merge: true });
+                window.closeScoreModal();
+                btn.innerText = "Push Live Update";
+                btn.disabled = false;
+            } catch(err) {
+                console.error(err);
+                alert("Error updating score. Check console.");
+                btn.innerText = "Push Live Update";
+                btn.disabled = false;
+            }
+        });
+
+        // 5. Firestore Listener (Instant Updates to UI)
+        window.listenToLiveScore = function(game) {
+            if (!game.YourTeam) return;
+            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
+            
+            const sbCard = document.getElementById('basicScoreboardCard');
+            const statusBadge = document.getElementById('sb-status');
+            const liveDot = document.getElementById('sb-live-dot');
+            const updaterText = document.getElementById('sb-updated-by');
+
+            // Listen to Firestore document changes
+            onSnapshot(doc(db, "live_scores", teamKey), (docSnap) => {
+                // Setup default static data from Google Sheets first
+                document.getElementById('sb-home-name').innerText = isHome ? game.YourTeam : game.Opponent;
+                document.getElementById('sb-away-name').innerText = !isHome ? game.YourTeam : game.Opponent;
+
+                const hLogo = document.getElementById('sb-home-logo');
+                const aLogo = document.getElementById('sb-away-logo');
+                let homeLogoUrl = isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
+                let awayLogoUrl = !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
+                
+                if(homeLogoUrl) { hLogo.src = homeLogoUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
+                if(awayLogoUrl) { aLogo.src = awayLogoUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Fill in scores from Firestore
+                    document.getElementById('sb-home-score').innerText = data.homeScore || 0;
+                    document.getElementById('sb-away-score').innerText = data.awayScore || 0;
+                    document.getElementById('sb-clock').innerText = data.clock || "12:00";
+                    
+                    // Show who updated it
+                    updaterText.innerText = data.updatedBy ? `@${data.updatedBy}` : "System";
+
+                    const qtr = data.quarter || "PREGAME";
+                    if (qtr === "PREGAME" || data.status === "UPCOMING") {
+                        statusBadge.innerText = "PREGAME";
+                        statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
+                    } else if (qtr === "HALF") {
+                        statusBadge.innerText = "HALFTIME";
+                        statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
+                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                    } else if (qtr === "FINAL" || data.status === "FINAL") {
+                        statusBadge.innerText = "FINAL";
+                        statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
+                    } else {
+                        statusBadge.innerText = "QTR " + qtr;
+                        statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
+                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                    }
+                } else {
+                    // NO FIRESTORE DATA YET - FALLBACK TO DEFAULTS
+                    document.getElementById('sb-home-score').innerText = 0;
+                    document.getElementById('sb-away-score').innerText = 0;
+                    document.getElementById('sb-clock').innerText = "12:00";
+                    updaterText.innerText = "Awaiting First Update";
+                    
+                    statusBadge.innerText = "PREGAME";
+                    statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                    liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
+                    sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
+                }
+            });
         }
 
-        // CSV FETCH LOGIC - REPLACE URL FOR EACH NEW TEAM
+        // 6. Init CSV Parsing 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1581126650&single=true&output=csv";
         let timerInterval;
 
@@ -288,27 +468,28 @@
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
                     const games = results.data;
-                    window.csvGames = games; 
+                    window.currentLiveCsvGame = games.length > 0 ? games[games.length - 1] : {};
 
                     const now = new Date().getTime();
-                    let nextGame = null;
-
                     for(let i = 0; i < games.length; i++) {
                         let gameTime = new Date(`${games[i].Date} ${games[i].Time}`).getTime();
                         if (gameTime + (1000 * 60 * 60 * 4) > now) {
-                            nextGame = games[i]; break;
+                            window.currentLiveCsvGame = games[i]; break;
                         }
                     }
-                    if(!nextGame && games.length > 0) nextGame = games[games.length - 1];
-                    window.currentLiveCsvGame = nextGame || {};
 
-                    if(nextGame && nextGame.Week) updateUI(nextGame);
-                    else document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2><p class='text-gray-600 mt-2'>Waiting for admin to push Game Day data.</p>";
+                    if(window.currentLiveCsvGame.Week) {
+                        updateUICsvData(window.currentLiveCsvGame);
+                        listenToLiveScore(window.currentLiveCsvGame); // Hook up Firestore Listener
+                    } else {
+                        document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2><p class='text-gray-600 mt-2'>Waiting for admin to push Game Day data.</p>";
+                    }
                 }
             });
         });
 
-        function updateUI(game) {
+        // Setup Matchup Header from CSV
+        function updateUICsvData(game) {
             document.getElementById('loading-overlay').style.display = 'none';
 
             let weekNum = game.Week ? game.Week.toString().replace(/week/i, '').trim() : "default";
@@ -360,7 +541,6 @@
             document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
             document.getElementById('ui-address').innerText = game.Address || "Address TBA";
 
-            // Weather & Maps Logic...
             if(game.Address && game.Address.trim() !== "") {
                 document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                 document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(game.Address)}`;
@@ -373,9 +553,6 @@
             if(ticketUrl && ticketUrl.trim() !== "") { 
                 document.getElementById('ui-ticket').href = ticketUrl; document.getElementById('ui-ticket').style.display = 'block'; 
             } else { document.getElementById('ui-ticket').style.display = 'none'; }
-
-            // START LISTENING TO FIREBASE FOR BASIC SCOREBOARD
-            listenToLiveScore(game);
         }
 
         function startCountdown(kickoffTime) {
@@ -396,171 +573,7 @@
             }, 1000);
         }
 
-        // ==============================================
-        // VANILLA JS LIVE SCORE LISTENER
-        // ==============================================
-        function listenToLiveScore(game) {
-            if (!game.YourTeam) return;
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
-            const sbCard = document.getElementById('basicScoreboardCard');
-            const statusBadge = document.getElementById('sb-status');
-            const liveDot = document.getElementById('sb-live-dot');
-
-            firebase.database().ref('games/' + teamKey).on('value', (snapshot) => {
-                const data = snapshot.val();
-                
-                // If there is data in Firebase, update the scoreboard with it
-                if (data) {
-                    document.getElementById('sb-home-score').innerText = data.homeScore || 0;
-                    document.getElementById('sb-away-score').innerText = data.awayScore || 0;
-                    document.getElementById('sb-clock').innerText = data.clock || "12:00";
-
-                    // Set Names & Logos (from Firebase if exist, fallback to CSV)
-                    document.getElementById('sb-home-name').innerText = data.home || (isHome ? game.YourTeam : game.Opponent);
-                    document.getElementById('sb-away-name').innerText = data.away || (!isHome ? game.YourTeam : game.Opponent);
-
-                    const hLogo = document.getElementById('sb-home-logo');
-                    const aLogo = document.getElementById('sb-away-logo');
-                    let homeLogoUrl = data.homeLogo || (isHome ? game.YourTeamLogoUrl : game.OppLogoUrl);
-                    let awayLogoUrl = data.awayLogo || (!isHome ? game.YourTeamLogoUrl : game.OppLogoUrl);
-                    
-                    if(homeLogoUrl) { hLogo.src = homeLogoUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
-                    if(awayLogoUrl) { aLogo.src = awayLogoUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
-
-                    // Status Badge Logic
-                    const qtr = data.quarter || "PREGAME";
-                    
-                    if (qtr === "PREGAME" || data.status === "UPCOMING") {
-                        statusBadge.innerText = "PREGAME";
-                        statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
-                    } else if (qtr === "HALF") {
-                        statusBadge.innerText = "HALFTIME";
-                        statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
-                    } else if (qtr === "FINAL" || data.status === "FINAL") {
-                        statusBadge.innerText = "FINAL";
-                        statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
-                    } else {
-                        statusBadge.innerText = "QTR " + qtr;
-                        statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
-                    }
-                } else {
-                    // NO FIREBASE DATA YET - FALLBACK TO CSV DEFAULTS (0-0 Pregame)
-                    document.getElementById('sb-home-score').innerText = 0;
-                    document.getElementById('sb-away-score').innerText = 0;
-                    document.getElementById('sb-clock').innerText = "12:00";
-                    
-                    document.getElementById('sb-home-name').innerText = isHome ? game.YourTeam : game.Opponent;
-                    document.getElementById('sb-away-name').innerText = !isHome ? game.YourTeam : game.Opponent;
-
-                    const hLogo = document.getElementById('sb-home-logo');
-                    const aLogo = document.getElementById('sb-away-logo');
-                    let homeLogoUrl = isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
-                    let awayLogoUrl = !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
-                    
-                    if(homeLogoUrl) { hLogo.src = homeLogoUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
-                    if(awayLogoUrl) { aLogo.src = awayLogoUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
-                    
-                    statusBadge.innerText = "PREGAME";
-                    statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                    liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
-                    sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
-                }
-            });
-        }
-
-        // ==============================================
-        // CROWD-SOURCED UPDATER LOGIC
-        // ==============================================
-        function openScoreModal() {
-            const game = window.currentLiveCsvGame;
-            if (!game || !game.YourTeam) return alert("Game data hasn't loaded yet. Please wait a moment.");
-            
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
-            document.getElementById('lblHome').innerText = (isHome ? game.YourTeam : game.Opponent) + " Score";
-            document.getElementById('lblAway').innerText = (!isHome ? game.YourTeam : game.Opponent) + " Score";
-            
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
-            
-            firebase.database().ref('games/' + teamKey).once('value').then((snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    document.getElementById('inpHomeScore').value = data.homeScore || 0;
-                    document.getElementById('inpAwayScore').value = data.awayScore || 0;
-                    document.getElementById('inpQuarter').value = data.quarter || '1';
-                    document.getElementById('inpTime').value = data.clock || '12:00';
-                }
-                document.getElementById('scoreUpdateModal').style.display = 'flex';
-            });
-        }
-
-        function closeScoreModal() {
-            document.getElementById('scoreUpdateModal').style.display = 'none';
-        }
-
-        document.getElementById('scoreUpdateForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnPushScore');
-            btn.innerText = "Pushing...";
-            btn.disabled = true;
-
-            const game = window.currentLiveCsvGame;
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
-            
-            const qtr = document.getElementById('inpQuarter').value;
-            let status = "LIVE";
-            if (qtr === "FINAL") status = "FINAL";
-            if (qtr === "HALF") status = "HALF";
-            if (qtr === "PREGAME") status = "PREGAME";
-
-            const updateData = {
-                home: isHome ? game.YourTeam : game.Opponent,
-                away: !isHome ? game.YourTeam : game.Opponent,
-                homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
-                awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
-                quarter: qtr,
-                clock: document.getElementById('inpTime').value || "00:00",
-                status: status,
-                homeLogo: isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
-                awayLogo: !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
-                week: game.Week || ""
-            };
-
-            firebase.database().ref('games/' + teamKey).update(updateData).then(() => {
-                closeScoreModal();
-                btn.innerText = "Push Live Update";
-                btn.disabled = false;
-            }).catch(err => {
-                alert("Error updating score.");
-                btn.innerText = "Push Live Update";
-                btn.disabled = false;
-            });
-        });
-
-        // Auto Refresh logic
         setInterval(() => { window.location.reload(); }, 60000);
     </script>
-
-    <script type="module">
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        const auth = getAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                const ctrlPanel = document.getElementById('fanControlPanel');
-                if (ctrlPanel) ctrlPanel.classList.remove('hidden');
-            }
-        });
-    </script>
-
 </body>
 </html>
