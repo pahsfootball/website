@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statewide Scoreboards | PAHSFootball</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } },
+                    fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #adadad; font-family: 'Inter', sans-serif; color: #18181b; min-height: 100vh; }
+        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+        .pulse-live { animation: pulseLive 2s infinite; }
+        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                </a>
+                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Statewide Scores</h1>
+            </div>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-list-ol text-pahs-gold"></i>
+                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <div class="text-center mb-10">
+            <h2 class="font-head text-5xl uppercase tracking-wide text-gray-900 drop-shadow-sm">Live Friday Night Action</h2>
+            <p class="text-gray-700 font-medium max-w-2xl mx-auto mt-2">Real-time scores updated by fans in the stands. Live games are displayed at the top.</p>
+        </div>
+
+        <div id="scoreboards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="loading-state" class="col-span-full text-center py-12">
+                <i class="fa-solid fa-circle-notch fa-spin text-5xl text-pahs-gold mb-4"></i>
+                <h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">Fetching Live Scores...</h3>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // 1. Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+            authDomain: "pahs-football.firebaseapp.com",
+            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/", // Correct RTDB URL
+            projectId: "pahs-football",
+            storageBucket: "pahs-football.firebasestorage.app",
+            messagingSenderId: "260294523190",
+            appId: "1:260294523190:web:b3963804702d2a03749b97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const dbRealtime = getDatabase(app);
+
+        const container = document.getElementById('scoreboards-container');
+        const loadingState = document.getElementById('loading-state');
+
+        // 2. Listen to the entire 'live_scores' folder
+        onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
+            const data = snapshot.val();
+            
+            if (!data) {
+                container.innerHTML = `<div class="col-span-full text-center py-12"><i class="fa-solid fa-ghost text-5xl text-gray-500 mb-4"></i><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3><p class="text-gray-500">Wait for kickoff!</p></div>`;
+                return;
+            }
+
+            // Convert Firebase object into an Array so we can sort it
+            const gamesArray = [];
+            for (let teamKey in data) {
+                // Only include games that have actual team names saved
+                if (data[teamKey].home && data[teamKey].away) {
+                    gamesArray.push({ id: teamKey, ...data[teamKey] });
+                }
+            }
+
+            if (gamesArray.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12"><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3></div>`;
+                return;
+            }
+
+            // 3. Sort the Games: LIVE -> HALF -> PREGAME -> FINAL
+            gamesArray.sort((a, b) => {
+                const getWeight = (status) => {
+                    if (status === 'LIVE') return 1;
+                    if (status === 'HALF') return 2;
+                    if (status === 'PREGAME') return 3;
+                    if (status === 'FINAL') return 4;
+                    return 5;
+                };
+
+                const weightA = getWeight(a.status);
+                const weightB = getWeight(b.status);
+
+                // If statuses are different, sort by status priority
+                if (weightA !== weightB) return weightA - weightB;
+
+                // If statuses are the same, sort by whoever updated most recently
+                return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+            });
+
+            // 4. Render the HTML
+            loadingState.style.display = 'none';
+            container.innerHTML = ''; // Clear container
+
+            gamesArray.forEach(game => {
+                // Determine styling based on status
+                let badgeText = "";
+                let badgeClass = "";
+                let dotClass = "hidden";
+                let cardBorder = "border-gray-300 shadow-md";
+
+                if (game.status === "PREGAME") {
+                    badgeText = "PREGAME";
+                    badgeClass = "bg-yellow-500 text-black";
+                    cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
+                } else if (game.status === "HALF") {
+                    badgeText = "HALFTIME";
+                    badgeClass = "bg-yellow-600 text-black";
+                    dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                    cardBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                } else if (game.status === "FINAL") {
+                    badgeText = "FINAL";
+                    badgeClass = "bg-gray-800 text-white";
+                    cardBorder = "border-gray-400 shadow-sm opacity-80"; // Dim finals slightly
+                } else {
+                    // It's LIVE
+                    badgeText = "QTR " + game.quarter;
+                    badgeClass = "bg-red-600 text-white animate-pulse";
+                    dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                    cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
+                }
+
+                // Fallback for missing logos
+                const homeLogoHtml = game.homeLogo 
+                    ? `<img src="${game.homeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
+                    : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
+                
+                const awayLogoHtml = game.awayLogo 
+                    ? `<img src="${game.awayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
+                    : `<span class="font-bold text-lg text-gray-500 uppercase">${game.away.substring(0,3)}</span>`;
+
+                // Calculate time since last update
+                let updatedText = "Unknown";
+                if (game.lastUpdated) {
+                    const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
+                    if (diffMins < 1) updatedText = "Just now";
+                    else if (diffMins === 1) updatedText = "1 min ago";
+                    else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
+                    else updatedText = "Over an hour ago";
+                }
+
+                // Build the Card HTML
+                const cardHTML = `
+                    <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="${dotClass}"></div>
+                                <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
+                                <span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center px-2 flex-grow">
+                            <div class="flex flex-col items-center w-5/12">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden">
+                                    ${homeLogoHtml}
+                                </div>
+                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2">${game.home}</span>
+                                <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
+                            </div>
+                            
+                            <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
+                            
+                            <div class="flex flex-col items-center w-5/12">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden">
+                                    ${awayLogoHtml}
+                                </div>
+                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2">${game.away}</span>
+                                <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1">
+                            <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
+                            </div>
+                            <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right">
+                                <i class="fa-regular fa-clock mr-1"></i> ${updatedText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += cardHTML;
+            });
+        });
+    </script>
+</body>
+</html>
