@@ -82,7 +82,12 @@
             </a>
             <h1 class="mini-header-title">PAHS Profile</h1>
         </div>
-        <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
+            <a href="https://pahsfootball.com" style="color: white; font-size: 24px; transition: 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='white'">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+        </div>
     </header>
 
     <div class="content-area">
@@ -122,9 +127,13 @@
                         <i class="fa-solid fa-screwdriver-wrench text-pahs-gold mr-2"></i>Manager Tools
                     </h3>
                     <p class="text-sm text-gray-600 mb-4 font-body">You have manager access. Update your team's Game Day page below.</p>
-                    <a href="controller.html" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24]" style="text-decoration: none;">
+                    <a href="controller.html" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24] mb-3" style="text-decoration: none;">
                         <i class="fa-solid fa-gear mr-2"></i> Open Game Day Controller
                     </a>
+                    
+                    <button type="button" id="relinquishAdminBtn" class="flex items-center justify-center w-full bg-white text-[#ef4444] font-bold font-head text-xl py-2 px-6 rounded-lg shadow-sm hover:bg-gray-100 transition-colors uppercase border border-[#ef4444] cursor-pointer">
+                        <i class="fa-solid fa-user-xmark mr-2"></i> Relinquish Manager Access
+                    </button>
                 </div>
 
                 <button type="submit" id="saveBtn" class="btn-primary">Update Profile</button>
@@ -170,7 +179,7 @@
         const statusMsg = document.getElementById('statusMsg');
 
         let currentUserUid = null;
-        let currentSavedUsername = ""; // Tracks initial username to prevent false collisions
+        let currentSavedUsername = ""; 
 
         function calculateBadge(points) {
             if (points >= 500) return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
@@ -190,7 +199,6 @@
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         
-                        // Set the input box and tracker variable
                         usernameInput.value = data.username || "";
                         currentSavedUsername = data.username || "";
                         
@@ -214,6 +222,17 @@
 
                         if (data.role === 'admin') {
                             document.getElementById('admin-controls').classList.remove('hidden');
+                            
+                            const relinquishBtn = document.getElementById('relinquishAdminBtn');
+                            const teamName = data.teamName || "Unknown Team"; // Change this if your DB field is different
+                            const userName = data.username || "Unknown User";
+                            const userEmail = user.email;
+                            
+                            relinquishBtn.addEventListener('click', () => {
+                                const subject = encodeURIComponent(`Admin Removal Request - ${teamName}`);
+                                const body = encodeURIComponent(`Please remove my manager access for the following team:\n\nTeam: ${teamName}\nUsername: ${userName}\nEmail: ${userEmail}\n\nThank you.`);
+                                window.location.href = `mailto:thepahsfootball@gmail.com?subject=${subject}&body=${body}`;
+                            });
                         }
                     }
                 } catch (error) {
@@ -235,7 +254,6 @@
             const requestedUsername = usernameInput.value.trim();
 
             try {
-                // Check if they are actually changing their username
                 if (requestedUsername !== currentSavedUsername) {
                     const usersRef = collection(db, "users");
                     const q = query(usersRef, where("username", "==", requestedUsername));
@@ -246,18 +264,16 @@
                         statusMsg.className = "status-msg status-error block";
                         saveBtn.innerText = "Update Profile";
                         saveBtn.disabled = false;
-                        return; // Halt save
+                        return; 
                     }
                 }
 
-                // If clear, proceed with update
                 const userRef = doc(db, "users", currentUserUid);
                 await updateDoc(userRef, {
                     username: requestedUsername,
                     aboutMe: aboutMeInput.value.trim()
                 });
                 
-                // Update tracker
                 currentSavedUsername = requestedUsername;
 
                 statusMsg.innerText = "Profile saved!";
