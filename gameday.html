@@ -287,7 +287,7 @@
 
         onAuthStateChanged(auth, async (user) => {
             const ctrlPanel = document.getElementById('fanControlPanel');
-            const loginPanel = document.getElementById('authActionPanel'); // Updated ID
+            const loginPanel = document.getElementById('authActionPanel'); 
 
             if (user) {
                 // User IS logged in
@@ -581,7 +581,7 @@
                 }
 
                 if(game.address) {
-                    // Corrected missing '$' in the string template literals below
+                    
                     document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
                     document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}`;
                     document.getElementById('btn-directions').style.display = 'flex';
