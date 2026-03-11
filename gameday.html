@@ -254,7 +254,7 @@
         const dbRealtime = getDatabase(app);     
         
         window.currentUserProfile = null;
-        window.currentMatchupData = null; // Stores Google Sheet data
+        window.currentMatchupData = null; 
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -293,10 +293,13 @@
             document.getElementById('lblHome').innerText = (isHome ? game.yourTeam : game.opponent) + " Score";
             document.getElementById('lblAway').innerText = (!isHome ? game.yourTeam : game.opponent) + " Score";
             
-            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            // UNIVERSAL GAME KEY GENERATION
+            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [homeName, awayName].sort().join('_');
             
             try {
-                const snapshot = await get(ref(dbRealtime, 'live_scores/' + teamKey));
+                const snapshot = await get(ref(dbRealtime, 'live_scores/' + gameKey));
                 const data = snapshot.val();
                 if (data) {
                     document.getElementById('inpHomeScore').value = data.homeScore || 0;
@@ -317,8 +320,12 @@
             btn.innerText = "Pushing..."; btn.disabled = true;
 
             const game = window.currentMatchupData;
-            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
             const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            
+            // UNIVERSAL GAME KEY GENERATION
+            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [homeName, awayName].sort().join('_');
             
             const qtr = document.getElementById('inpQuarter').value;
             let status = "LIVE";
@@ -342,7 +349,7 @@
                 lastUpdated: new Date().toISOString()
             };
 
-            update(ref(dbRealtime, 'live_scores/' + teamKey), updateData).then(() => {
+            update(ref(dbRealtime, 'live_scores/' + gameKey), updateData).then(() => {
                 window.closeScoreModal(); btn.innerText = "Push Live Update"; btn.disabled = false;
             }).catch(err => {
                 alert("Error updating score."); btn.innerText = "Push Live Update"; btn.disabled = false;
@@ -351,28 +358,41 @@
 
         // LIVE SCORE LISTENER
         function listenToLiveScore(game) {
-            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
             const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            
+            // UNIVERSAL GAME KEY GENERATION
+            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [homeName, awayName].sort().join('_');
+            
             const sbCard = document.getElementById('basicScoreboardCard');
             const statusBadge = document.getElementById('sb-status');
             const liveDot = document.getElementById('sb-live-dot');
             const updaterText = document.getElementById('sb-updated-by');
 
-            onValue(ref(dbRealtime, 'live_scores/' + teamKey), (snapshot) => {
+            onValue(ref(dbRealtime, 'live_scores/' + gameKey), (snapshot) => {
                 // Static Default Info
                 document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
                 document.getElementById('sb-away-name').innerText = !isHome ? game.yourTeam : game.opponent;
+                
+                // Static Default Logos
                 const hLogo = document.getElementById('sb-home-logo'); const aLogo = document.getElementById('sb-away-logo');
-                let hUrl = isHome ? game.yourTeamLogo : game.oppLogo; let aUrl = !isHome ? game.yourTeamLogo : game.oppLogo;
-                if(hUrl) { hLogo.src = hUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
-                if(aUrl) { aLogo.src = aUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
+                let hUrl = isHome ? game.yourTeamLogo : game.oppLogo; 
+                let aUrl = !isHome ? game.yourTeamLogo : game.oppLogo;
+                if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
+                if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
 
                 const data = snapshot.val();
                 if (data) {
+                    // Update scores/time from DB
                     document.getElementById('sb-home-score').innerText = data.homeScore || 0;
                     document.getElementById('sb-away-score').innerText = data.awayScore || 0;
                     document.getElementById('sb-clock').innerText = data.clock || "12:00";
                     updaterText.innerText = data.updatedBy ? `@${data.updatedBy}` : "System";
+
+                    // Also pull the latest DB logos in case the opponent side updated them
+                    if(data.homeLogo && data.homeLogo.trim() !== "") { hLogo.src = data.homeLogo; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
+                    if(data.awayLogo && data.awayLogo.trim() !== "") { aLogo.src = data.awayLogo; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
 
                     const qtr = data.quarter || "PREGAME";
                     if (qtr === "PREGAME" || data.status === "UPCOMING") {
@@ -426,19 +446,40 @@
 
                 let weekNum = game.week ? game.week.replace(/week/i, '').trim() : "default";
                 document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
+                
+                // --- YOUR TEAM LOGO FIX ---
                 document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
                 document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
                 document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
                 
-                if(game.yourTeamLogo) { document.getElementById('ui-your-logo').src = game.yourTeamLogo; document.getElementById('ui-your-fallback').style.display='none'; }
-                else { document.getElementById('ui-your-logo').style.display='none'; document.getElementById('ui-your-fallback').style.display='block'; document.getElementById('ui-your-fallback').innerText = game.yourTeam.substring(0,3).toUpperCase(); }
+                const yourLogoEl = document.getElementById('ui-your-logo');
+                const yourFallbackEl = document.getElementById('ui-your-fallback');
+                if(game.yourTeamLogo && game.yourTeamLogo.trim() !== "") { 
+                    yourLogoEl.src = game.yourTeamLogo; 
+                    yourLogoEl.style.display = 'block'; 
+                    yourFallbackEl.style.display = 'none'; 
+                } else { 
+                    yourLogoEl.style.display = 'none'; 
+                    yourFallbackEl.style.display = 'block'; 
+                    yourFallbackEl.innerText = game.yourTeam ? game.yourTeam.substring(0,3).toUpperCase() : "TEA"; 
+                }
 
+                // --- OPPONENT LOGO FIX ---
                 document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
                 document.getElementById('ui-opp-mascot').innerText = game.oppMascot || "";
                 document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : "";
                 
-                if(game.oppLogo) { document.getElementById('ui-opp-logo').src = game.oppLogo; document.getElementById('ui-opp-fallback').style.display='none'; }
-                else { document.getElementById('ui-opp-logo').style.display='none'; document.getElementById('ui-opp-fallback').style.display='block'; document.getElementById('ui-opp-fallback').innerText = game.opponent.substring(0,3).toUpperCase(); }
+                const oppLogoEl = document.getElementById('ui-opp-logo');
+                const oppFallbackEl = document.getElementById('ui-opp-fallback');
+                if(game.oppLogo && game.oppLogo.trim() !== "") { 
+                    oppLogoEl.src = game.oppLogo; 
+                    oppLogoEl.style.display = 'block'; 
+                    oppFallbackEl.style.display = 'none'; 
+                } else { 
+                    oppLogoEl.style.display = 'none'; 
+                    oppFallbackEl.style.display = 'block'; 
+                    oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
+                }
 
                 let isHome = (game.homeAway || "").toLowerCase().includes('home');
                 document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
