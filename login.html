@@ -103,6 +103,9 @@
                 <label>Last Name <span style="color:red">*</span></label>
                 <input type="text" id="lNameInput" placeholder="Doe">
 
+                <label>Username <span style="color:red">*</span></label>
+                <input type="text" id="usernameSignupInput" placeholder="superfan123">
+
                 <label>Date of Birth <span style="color:red">*</span></label>
                 <input type="date" id="dobInput">
 
@@ -126,7 +129,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -155,6 +158,7 @@
         const formSubtitle = document.getElementById('formSubtitle');
         const errorMsg = document.getElementById('errorMsg');
         const googleBtn = document.getElementById('googleBtn');
+        const usernameSignupInput = document.getElementById('usernameSignupInput');
 
         function showError(message) {
             errorMsg.innerText = message;
@@ -174,6 +178,7 @@
                 document.getElementById('fNameInput').required = true;
                 document.getElementById('lNameInput').required = true;
                 document.getElementById('dobInput').required = true;
+                usernameSignupInput.required = true;
             } else {
                 signUpFields.classList.add('hidden');
                 mainSubmitBtn.innerText = "Sign In";
@@ -183,6 +188,7 @@
                 document.getElementById('fNameInput').required = false;
                 document.getElementById('lNameInput').required = false;
                 document.getElementById('dobInput').required = false;
+                usernameSignupInput.required = false;
             }
         });
 
@@ -191,15 +197,28 @@
             signInWithPopup(auth, provider).then(async (result) => {
                 const user = result.user;
                 const nameParts = user.displayName ? user.displayName.split(" ") : ["", ""];
-                await setDoc(doc(db, "users", user.uid), {
-                    firstName: nameParts[0] || "",
-                    lastName: nameParts.slice(1).join(" ") || "",
-                    email: user.email,
-                    role: "fan",
-                    points: 0
-                }, { merge: true });
                 
-                window.location.href = "profile.html"; // <-- UPDATED
+                // Check if this is their first time logging in so we don't overwrite their existing username
+                const userDocRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userDocRef);
+                
+                if (!userSnap.exists()) {
+                    // Generate a safe unique fallback username for Google users
+                    const baseUser = user.email ? user.email.split('@')[0] : "fan";
+                    const randomSuffix = Math.floor(Math.random() * 10000);
+                    
+                    await setDoc(userDocRef, {
+                        firstName: nameParts[0] || "",
+                        lastName: nameParts.slice(1).join(" ") || "",
+                        email: user.email,
+                        username: baseUser + randomSuffix,
+                        role: "fan",
+                        points: 0,
+                        followedTeams: []
+                    });
+                }
+                
+                window.location.href = "profile.html"; 
             }).catch((error) => {
                 showError(error.message);
             });
@@ -208,37 +227,63 @@
         // Handle Form Submit
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            errorMsg.style.display = 'none';
+            mainSubmitBtn.disabled = true;
+            mainSubmitBtn.innerText = "Processing...";
             
             if (isSignUpMode) {
                 const fName = document.getElementById('fNameInput').value.trim();
                 const lName = document.getElementById('lNameInput').value.trim();
                 const dob = document.getElementById('dobInput').value;
                 const phone = document.getElementById('phoneInput').value.trim();
+                const requestedUsername = usernameSignupInput.value.trim();
 
                 try {
+                    // 1. UNIQUE USERNAME CHECK
+                    const usersRef = collection(db, "users");
+                    const q = query(usersRef, where("username", "==", requestedUsername));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        showError("That username is already taken. Please pick another one.");
+                        mainSubmitBtn.disabled = false;
+                        mainSubmitBtn.innerText = "Create Account";
+                        return; // Stop the signup process
+                    }
+
+                    // 2. CREATE ACCOUNT
                     const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                     const user = userCredential.user;
                     
+                    // 3. CREATE PROFILE
                     await setDoc(doc(db, "users", user.uid), {
                         firstName: fName,
                         lastName: lName,
+                        username: requestedUsername,
                         dob: dob,
                         phone: phone,
                         email: user.email,
                         role: "fan",
-                        points: 0
+                        points: 0,
+                        followedTeams: []
                     });
 
-                    window.location.href = "profile.html"; // <-- UPDATED
+                    window.location.href = "profile.html"; 
                 } catch (error) {
                     showError(error.message);
+                    mainSubmitBtn.disabled = false;
+                    mainSubmitBtn.innerText = "Create Account";
                 }
             } else {
                 signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
                     .then(() => { 
-                        window.location.href = "profile.html"; // <-- UPDATED
+                        window.location.href = "profile.html"; 
                     })
-                    .catch(() => { showError("Invalid email or password."); });
+                    .catch(() => { 
+                        showError("Invalid email or password.");
+                        mainSubmitBtn.disabled = false;
+                        mainSubmitBtn.innerText = "Sign In";
+                    });
             }
         });
     </script>
