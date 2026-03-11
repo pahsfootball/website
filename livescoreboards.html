@@ -38,61 +38,6 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
-
-        /* --- POPUP MODAL (Light Theme, matches index.html) --- */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: #f4f4f5;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            width: 100%; max-width: 450px;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            overflow: hidden;
-            animation: slideUp 0.3s ease-out;
-            position: relative;
-        }
-
-        .modal-content::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
-            background: #fbbf24;
-        }
-
-        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .modal-header h2 { margin: 0; font-family: 'Teko', sans-serif; font-size: 32px; color: #18181b; text-transform: uppercase; line-height: 1; }
-        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
-        .close-btn:hover { color: #ef4444; }
-        
-        .modal-body { padding: 24px; text-align: left; }
-
-        label { color: #18181b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
-        input, textarea { 
-            width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: #18181b; 
-            padding: 12px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; 
-            transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        input:focus, textarea:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
-
-        .submit-btn {
-            width: 100%; background: #fbbf24; color: black; font-family: 'Teko', sans-serif; font-size: 22px; 
-            padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
-            letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            margin-top: 12px;
-        }
-        .submit-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
-
-        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="antialiased">
@@ -113,44 +58,39 @@
         </div>
     </nav>
 
-    <main class="max-w-2xl mx-auto px-4 py-12">
+    <main class="max-w-4xl mx-auto px-4 py-12">
         
         <div class="text-center mb-8">
-            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 drop-shadow-sm">PAHS FOOTBALL GAMEDAY</h2>
-            <p class="text-gray-700 font-medium">Find Your Team Below and see their GameDay Information, Volunteer to update your team's info, or see live scores around PA below:</p>
+            <h2 class="font-head text-5xl uppercase tracking-wide text-gray-900 drop-shadow-sm">GAMEDAY CENTRAL</h2>
+            <p class="text-gray-700 font-medium max-w-2xl mx-auto mt-2">Find Your Team Below to see their GameDay Information, or view live scores from around the state.</p>
         </div>
 
         <div class="space-y-6">
 
             <div class="bg-[#18181b] text-white rounded-2xl p-6 text-center shadow-lg border-t-4 border-pahs-gold relative overflow-hidden">
                 <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-                <h4 class="font-bold font-head text-2xl text-pahs-gold uppercase tracking-wide mb-2 relative z-10">
-                    <i class="fa-solid fa-star mr-2 text-lg"></i> Participating Teams
+                <h4 class="font-bold font-head text-3xl text-pahs-gold uppercase tracking-wide mb-2 relative z-10">
+                    <i class="fa-solid fa-star mr-2 text-xl"></i> Participating Teams
                 </h4>
-                <p class="text-sm text-gray-300 relative z-10 font-medium">The links below represent the current individual teams participating in our GameDay Dashboard program.  This is usually updated by the public and not the teams themselves.  If any issues arise please contact us.</p>
+                <p class="text-sm text-gray-300 relative z-10 font-medium">The teams below are currently managed by verified fan admins. Click a team to view their Game Day dashboard, live scoreboard, and location details.</p>
             </div>
 
-            <a href="https://pahsfootball.com/gamedaysca.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                
-                <div class="flex flex-col items-center justify-center">
-                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-gray-300 group-hover:border-pahs-gold transition-colors shadow-md mx-auto mb-4 overflow-hidden">
-                        <img src="scasdgld.png" alt="SCA Logo" class="w-full h-full object-contain p-2" onerror="this.style.display='none'">
-                    </div>
-                    <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">GAMEDAY - SOUTHERN COLUMBIA (SCA)</h3>
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Game Tracker & Information.  Weather forecast, directions & much more!</p>
+            <div id="dynamic-teams-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="col-span-full text-center py-12 opacity-70">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-pahs-gold mb-4"></i>
+                    <p class="font-head text-2xl text-gray-800">Loading active teams...</p>
                 </div>
-            </a>
+            </div>
 
-            <button onclick="openModal()" class="w-full content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border-2 border-dashed border-gray-400 hover:border-pahs-gold">
+            <a href="padir.html" class="w-full content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group border-2 border-dashed border-gray-400 hover:border-pahs-gold mt-8">
                 <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 
                 <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-700 mx-auto mb-4 group-hover:text-pahs-gold group-hover:bg-gray-800 transition-colors shadow-inner">
                     <i class="fa-solid fa-handshake-angle"></i>
                 </div>
                 <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Don't see your team?</h3>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Get involved now! Volunteer and get your team added. Become Team Manager, and manager Your Team's Gameday Page directly from your PAHSFOOTBALL Profile!</p>
-            </button>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Go to the Team Directory to claim your school and unlock their Game Day page!</p>
+            </a>
 
             <div class="flex items-center justify-center py-6">
                 <div class="border-t border-gray-400 w-full"></div>
@@ -158,128 +98,22 @@
                 <div class="border-t border-gray-400 w-full"></div>
             </div>
 
-            <a href="ss.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+            <a href="all-scores.html" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
                 <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 
                 <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-700 mx-auto mb-4 group-hover:text-pahs-gold group-hover:bg-gray-800 transition-colors shadow-inner">
                     <i class="fa-solid fa-list-ol"></i>
                 </div>
                 <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Statewide Scoreboard</h3>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">External ScoreStream Widget</p>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">View all live Friday night action in one place</p>
             </a>
 
         </div>
     </main>
 
-    <div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Get in Touch</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="pahsForm">
-                    <label>Reason / Message <span style="color:red">*</span></label>
-                    <textarea name="entry.1967997366" rows="4" required placeholder="I'd like to volunteer my team..."></textarea>
-
-                    <label>First Name <span style="color:red">*</span></label>
-                    <input type="text" name="entry.1990515734" required placeholder="John">
-
-                    <label>Last Name <span style="color:red">*</span></label>
-                    <input type="text" name="entry.1429224270" required placeholder="Doe">
-
-                    <label>Phone (Optional)</label>
-                    <input type="tel" id="phoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
-
-                    <label>Email <span style="color:red">*</span></label>
-                    <input type="email" id="emailInput" name="entry.1778241553" required placeholder="email@example.com">
-
-                    <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
-                    <div id="statusMessage" class="status-message" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Modal Controls
-        function openModal() {
-            const modal = document.getElementById('contactModal');
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('contactModal').style.display = 'none';
-        }
-
-        function closeModalOutside(e) {
-            if (e.target.id === 'contactModal') {
-                closeModal();
-            }
-        }
-
-        // Form Logic
-        const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
-        const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
-
-        const phoneInput = document.getElementById('phoneInput');
-        if(phoneInput) {
-            phoneInput.addEventListener('input', function (e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 10) value = value.slice(0, 10);
-                if (value.length > 6) {
-                    value = value.slice(0,3) + '-' + value.slice(3,6) + '-' + value.slice(6);
-                } else if (value.length > 3) {
-                    value = value.slice(0,3) + '-' + value.slice(3);
-                }
-                e.target.value = value;
-            });
-        }
-
-        document.getElementById('pahsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const msg = document.getElementById('statusMessage');
-
-            const phoneVal = document.getElementById('phoneInput').value.trim();
-            const emailVal = document.getElementById('emailInput').value.trim();
-
-            if (!emailVal) {
-                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Please enter your Email address.'; return;
-            }
-            if (phoneVal !== "" && phoneVal.length < 12) {
-                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Incomplete phone number.'; return;
-            }
-
-            btn.innerText = 'Sending...';
-            btn.style.opacity = '0.7';
-            msg.style.display = 'none';
-
-            const formData = new FormData(this);
-            const params = new URLSearchParams();
-            for (const pair of formData.entries()) { params.append(pair[0], pair[1]); }
-
-            fetch(SUBMIT_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString()
-            }).then(() => {
-                 btn.style.display = 'none';
-                 msg.style.display = 'block'; msg.style.color = '#10b981'; msg.innerText = 'Message Sent Successfully!';
-                 setTimeout(() => {
-                     closeModal();
-                     document.getElementById('pahsForm').reset();
-                     btn.style.display = 'block'; btn.innerText = 'SEND MESSAGE'; btn.style.opacity = '1'; msg.style.display = 'none';
-                 }, 2000);
-            }).catch((err) => {
-                 btn.innerText = 'Try Again'; btn.style.opacity = '1';
-                 msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Error sending message.';
-            });
-        });
-    </script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // Your Firebase Config
     const firebaseConfig = {
@@ -288,38 +122,63 @@
         projectId: "pahs-football",
         storageBucket: "pahs-football.firebasestorage.app",
         messagingSenderId: "260294523190",
-        appId: "1:260294523190:web:b3963804702d2a03749b97",
-        measurementId: "G-2J69C1LS6D"
+        appId: "1:260294523190:web:b3963804702d2a03749b97"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // This listens for login state changes
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // User IS logged in
-            console.log("Welcome back, " + user.email);
-        } else {
-            // User is NOT logged in
-            console.log("No user is logged in.");
+    async function loadActiveTeams() {
+        const container = document.getElementById('dynamic-teams-container');
+        try {
+            const querySnapshot = await getDocs(collection(db, "team_pages"));
+            container.innerHTML = ''; // Clear loading spinner
+
+            if (querySnapshot.empty) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center p-8 bg-white rounded-xl border border-gray-300 shadow-sm">
+                        <i class="fa-solid fa-ghost text-4xl text-gray-400 mb-3"></i>
+                        <h3 class="font-head text-2xl text-gray-800 uppercase tracking-wide">No Teams Configured</h3>
+                        <p class="text-sm text-gray-500 mt-1">Be the first to claim a team in the directory!</p>
+                    </div>`;
+                return;
+            }
+
+            // Loop through all claimed teams in Firestore and build a card for each
+            querySnapshot.forEach((doc) => {
+                const teamData = doc.data();
+                const schoolName = teamData.schoolName || doc.id;
+                const encodedSchool = encodeURIComponent(schoolName);
+                
+                // Fallback text icon (first 3 letters of school name)
+                const shortName = schoolName.substring(0, 3).toUpperCase();
+
+                const cardHTML = `
+                    <a href="gameday.html?team=${encodedSchool}" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group bg-white">
+                        <div class="absolute inset-x-0 bottom-0 h-1.5 bg-pahs-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                        
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center border-2 border-gray-300 group-hover:border-pahs-gold transition-colors shadow-sm mx-auto mb-3 overflow-hidden text-gray-500 font-bold text-2xl font-head tracking-wider">
+                                ${shortName}
+                            </div>
+                            <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 leading-tight">${schoolName}</h3>
+                            <p class="text-[10px] font-bold text-pahs-gold uppercase tracking-widest mt-2 bg-[#18181b] px-2 py-0.5 rounded shadow-sm inline-block">
+                                <i class="fa-solid fa-bolt text-yellow-500 mr-1"></i> ACTIVE GAMEDAY
+                            </p>
+                        </div>
+                    </a>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        } catch (error) {
+            console.error("Error loading teams:", error);
+            container.innerHTML = '<div class="col-span-full text-center text-red-500 font-bold py-4">Error loading active teams. Please check your connection.</div>';
         }
-    });
-
-    // Optional: A function to log the user out if you add a logout button
-    window.logoutUser = function() {
-        signOut(auth).then(() => {
-            window.location.href = "login.html";
-        }).catch((error) => {
-            console.error("Logout Error", error);
-        });
     }
+
+    // Initialize the fetch when the page loads
+    document.addEventListener("DOMContentLoaded", loadActiveTeams);
 </script>
+
 </body>
 </html>
-
-
-
-
-
