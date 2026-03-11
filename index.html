@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
         :root {
@@ -213,7 +215,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    // --- ADDED RTDB FOR TICKER ---
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const firebaseConfig = {
@@ -232,47 +233,78 @@
     const db = getFirestore(app);
     const dbRealtime = getDatabase(app);
 
-    // --- NEW FIREBASE LIVE TICKER ---
-    onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
-        const data = snapshot.val();
-        const tickerEl = document.getElementById('matchupTicker');
-        let html = '';
-        
-        if (!data) {
-            html = '<div class="matchup-card"><span class="team-name text-gray-400">NO ACTIVE MATCHUPS</span></div>';
-        } else {
-            const games = Object.values(data);
-            games.forEach(game => {
-                if(!game.home || !game.away) return;
-                
-                let statusText = game.quarter === "PREGAME" ? "PREGAME" : (game.quarter === "FINAL" ? "FINAL" : `QTR ${game.quarter}`);
-                if(game.quarter === "HALF") statusText = "HALFTIME";
-                
-                let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
-                let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
+    // --- 1. FALLBACK LOGO DICTIONARY ---
+    const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
+    let teamLogoDictionary = {};
 
-                // Wraps the card in an anchor tag so clicking it takes them to the gameday page
-                html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
-                    <img src="${game.awayLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-                    <span class="team-name">${game.away}</span>
-                    <span class="vs">VS</span>
-                    <img src="${game.homeLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
-                    <span class="team-name">${game.home}</span>
-                    <div class="game-info">
-                        <span class="game-date" style="${statusColor}">${statusText}</span>
-                        <span class="game-time">${scoreText}</span>
-                    </div>
-                </a>`;
+    Papa.parse(MASTER_TEAMS_CSV, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+            results.data.forEach(row => {
+                const teamName = row['School'] || row['Team Name'] || row['Team'];
+                const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                
+                if (teamName && logoUrl) {
+                    teamLogoDictionary[teamName.trim()] = logoUrl.trim();
+                }
             });
-            
-            // If there are only a few games, multiply them so the scroll animation doesn't snap awkwardly empty
-            if(games.length > 0 && games.length < 8) {
-                html = html + html + html + html; 
-            }
+            startLiveTicker();
+        },
+        error: function(err) {
+            console.error("Could not load MasterTeams CSV. Starting ticker without fallbacks.");
+            startLiveTicker();
         }
-        tickerEl.innerHTML = html;
     });
 
+    // --- 2. LIVE FIREBASE TICKER ---
+    function startLiveTicker() {
+        onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
+            const data = snapshot.val();
+            const tickerEl = document.getElementById('matchupTicker');
+            let html = '';
+            
+            if (!data) {
+                html = '<div class="matchup-card"><span class="team-name text-gray-400">NO ACTIVE MATCHUPS</span></div>';
+            } else {
+                const games = Object.values(data);
+                games.forEach(game => {
+                    if(!game.home || !game.away) return;
+                    
+                    let statusText = game.quarter === "PREGAME" ? "PREGAME" : (game.quarter === "FINAL" ? "FINAL" : `QTR ${game.quarter}`);
+                    if(game.quarter === "HALF") statusText = "HALFTIME";
+                    
+                    let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
+                    let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
+
+                    // LOGIC: Use Admin URL -> If blank, use Master Sheet URL -> If blank, leave empty
+                    const finalHomeLogo = game.homeLogo || teamLogoDictionary[game.home] || '';
+                    const finalAwayLogo = game.awayLogo || teamLogoDictionary[game.away] || '';
+
+                    html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
+                        <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
+                        <span class="team-name">${game.away}</span>
+                        <span class="vs">VS</span>
+                        <img src="${finalHomeLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalHomeLogo ? '' : 'display:none;'}" alt="Logo">
+                        <span class="team-name">${game.home}</span>
+                        <div class="game-info">
+                            <span class="game-date" style="${statusColor}">${statusText}</span>
+                            <span class="game-time">${scoreText}</span>
+                        </div>
+                    </a>`;
+                });
+                
+                // Duplicate cards if there are only a few, so the marquee animation doesn't snap
+                if(games.length > 0 && games.length < 8) {
+                    html = html + html + html + html; 
+                }
+            }
+            tickerEl.innerHTML = html;
+        });
+    }
+
+    // --- 3. USER AUTHENTICATION LOGIC ---
     window.logoutUser = function(e) {
         if(e) e.preventDefault();
         signOut(auth).then(() => { window.location.reload(); });
