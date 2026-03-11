@@ -18,7 +18,6 @@
                     colors: { 
                         pahs: { 
                             dark: '#0f0f0f', 
-                            // Maps tailwind's pahs-gold to a CSS variable that we will dynamically change!
                             gold: 'var(--team-primary, #fbbf24)' 
                         } 
                     }, 
@@ -574,18 +573,18 @@
             }, 500);
         };
 
-        // --- WEATHER FETCH LOGIC ---
-        async function fetchWeather(address) {
+        // --- WEATHER FETCH LOGIC (DATE & TIME AWARE) ---
+        async function fetchWeather(address, gameDateObj) {
             const weatherEl = document.getElementById('ui-weather');
             if (!address || address.trim() === "Address TBA" || address.trim() === "") {
                 weatherEl.innerText = "Location needed for forecast";
                 return;
             }
 
-            weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-pahs-gold mr-1"></i> Checking...';
+            weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-pahs-gold mr-1"></i> Checking forecast...';
 
             try {
-                // Step 1: Geocode the address to get Latitude and Longitude (Free Nominatim API)
+                // Step 1: Geocode the address to get Latitude and Longitude
                 const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
                 const geoRes = await fetch(geoUrl, { headers: { 'User-Agent': 'PAHSFootballApp/1.0' } });
                 const geoData = await geoRes.json();
@@ -607,16 +606,49 @@
 
                 const forecastUrl = pointsData.properties.forecast;
 
-                // Step 3: Fetch the actual forecast
+                // Step 3: Fetch the actual 7-day forecast
                 const forecastRes = await fetch(forecastUrl);
                 const forecastData = await forecastRes.json();
 
                 if (forecastData.properties && forecastData.properties.periods && forecastData.properties.periods.length > 0) {
-                    const currentPeriod = forecastData.properties.periods[0]; // Gets the current/next active weather period
-                    const temp = currentPeriod.temperature;
-                    const desc = currentPeriod.shortForecast;
+                    let targetPeriod = null;
+                    let isTooFarOut = false;
+
+                    // If we have a valid game date/time, search the forecast for that exact window
+                    if (gameDateObj && !isNaN(gameDateObj)) {
+                        const gameTime = gameDateObj.getTime();
+                        const periods = forecastData.properties.periods;
+                        
+                        // Check if the game is beyond the 7-day forecast window
+                        const lastPeriodEnd = new Date(periods[periods.length - 1].endTime).getTime();
+                        
+                        if (gameTime > lastPeriodEnd) {
+                            isTooFarOut = true;
+                        } else {
+                            // Find the specific period the game kickoff falls into
+                            targetPeriod = periods.find(p => {
+                                const start = new Date(p.startTime).getTime();
+                                const end = new Date(p.endTime).getTime();
+                                return gameTime >= start && gameTime <= end;
+                            });
+                        }
+                    }
+
+                    // If game is > 7 days away
+                    if (isTooFarOut) {
+                        weatherEl.innerText = "Check back game week for forecast";
+                        return;
+                    }
+
+                    // If we found the exact period, use it. Otherwise fallback to the current weather right now
+                    const displayPeriod = targetPeriod || forecastData.properties.periods[0];
+                    const temp = displayPeriod.temperature;
+                    const desc = displayPeriod.shortForecast;
                     
-                    weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${desc}`;
+                    // If it's a future date, add the day name (e.g., "Friday Night: 65°F - Clear")
+                    const prefix = targetPeriod ? `${displayPeriod.name}: ` : "";
+                    
+                    weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${prefix}${desc}`;
                 } else {
                     weatherEl.innerText = "Forecast currently unavailable";
                 }
@@ -704,10 +736,13 @@
                 document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
                 document.getElementById('ui-address').innerText = game.address || "Address TBA";
 
+                let gameDateObj = null;
+
                 if (game.date && game.time) {
                     try {
                         let dObj = new Date(`${game.date} ${game.time}`);
                         if(!isNaN(dObj)) {
+                            gameDateObj = dObj;
                             document.getElementById('ui-datetime').innerText = `${dObj.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'})} • ${dObj.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}`;
                             startCountdown(dObj.getTime());
                         } else { throw new Error(); }
@@ -716,14 +751,13 @@
 
                 if(game.address) {
                     const encodedAddress = encodeURIComponent(game.address);
-                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
-                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
+                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&output=embed`;
+                    document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
                     document.getElementById('btn-directions').style.display = 'flex';
                     document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
                     document.getElementById('btn-copy-address').style.display = 'flex';
                     
-                    // Fetch the weather forecast for this address!
-                    fetchWeather(game.address);
+                    fetchWeather(game.address, gameDateObj);
                 }
                 
                 if(game.ticketLink) { document.getElementById('ui-ticket').href = game.ticketLink; document.getElementById('ui-ticket').style.display = 'block'; }
