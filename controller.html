@@ -15,16 +15,14 @@
 
     <div id="auth-check" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-xl text-center mt-20 border-t-4 border-pahs-gold">
         <i class="fa-solid fa-circle-notch fa-spin text-4xl text-pahs-gold mb-4"></i>
-        <h2 class="text-2xl font-bold font-head tracking-wide uppercase">Authenticating...</h2>
-        <p class="text-gray-500">Checking your admin permissions.</p>
+        <h2 class="text-2xl font-bold font-head tracking-wide uppercase" id="loading-title">Authenticating...</h2>
+        <p class="text-gray-500" id="loading-desc">Checking your admin permissions.</p>
     </div>
 
     <div id="admin-panel" class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-xl hidden border-t-4 border-pahs-gold">
         <div class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6 gap-4">
             <div class="flex items-center gap-3">
-                <a href="profile.html" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition">
-                    <i class="fa-solid fa-arrow-left"></i> Back
-                </a>
+                <a href="profile.html" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition"><i class="fa-solid fa-arrow-left"></i> Back</a>
                 <h1 class="text-3xl md:text-4xl font-bold font-head uppercase tracking-wide">Game Day Controller</h1>
             </div>
             <span id="team-badge" class="bg-pahs-dark text-pahs-gold px-4 py-1.5 rounded font-bold uppercase tracking-widest text-sm shadow-md border border-pahs-gold">
@@ -36,7 +34,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
                     <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-regular fa-calendar mr-2"></i> Game Info</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Week</label><input type="text" id="week" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="e.g., Week 1" required></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Week</label><input type="text" id="week" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" required></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Date & Time</label><input type="datetime-local" id="dateTime" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" required></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Home or Away?</label>
                         <select id="homeAway" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none">
@@ -48,12 +46,12 @@
 
                 <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
                     <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-solid fa-helmet-safety mr-2"></i> Opponent Info</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Name</label><input type="text" id="opponent" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="e.g., Mount Carmel" required></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Name</label><input type="text" id="opponent" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" required></div>
                     <div class="flex gap-4">
-                        <div class="flex-1"><label class="block text-sm font-bold text-gray-700 mb-1">Mascot</label><input type="text" id="oppMascot" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="Red Tornadoes"></div>
-                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Record</label><input type="text" id="oppRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="0-0"></div>
+                        <div class="flex-1"><label class="block text-sm font-bold text-gray-700 mb-1">Mascot</label><input type="text" id="oppMascot" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Record</label><input type="text" id="oppRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                     </div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Logo URL</label><input type="url" id="oppLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="https://..."></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Logo URL</label><input type="url" id="oppLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                 </div>
 
                 <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
@@ -61,17 +59,17 @@
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Your Team Name</label><input type="text" id="yourTeam" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" required></div>
                     <div class="flex gap-4">
                         <div class="flex-1"><label class="block text-sm font-bold text-gray-700 mb-1">Your Mascot</label><input type="text" id="yourTeamMascot" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Your Record</label><input type="text" id="yourTeamRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="0-0"></div>
+                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Your Record</label><input type="text" id="yourTeamRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                     </div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Your Logo URL</label><input type="url" id="yourTeamLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="https://..."></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Your Logo URL</label><input type="url" id="yourTeamLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                 </div>
 
                 <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
                     <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-solid fa-map-location-dot mr-2"></i> Logistics</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Stadium Name</label><input type="text" id="stadium" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="Tiger Stadium"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Full Address</label><input type="text" id="address" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="123 Main St, City, ST 12345"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Student Section Theme</label><input type="text" id="theme" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="e.g., White Out"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Buy Tickets Link</label><input type="url" id="ticketLink" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="https://..."></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Stadium Name</label><input type="text" id="stadium" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Full Address</label><input type="text" id="address" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Student Section Theme</label><input type="text" id="theme" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Buy Tickets Link</label><input type="url" id="ticketLink" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                 </div>
             </div>
 
@@ -102,14 +100,81 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- PASTE YOUR WEB APP URL HERE ---
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
+        // --- PASTE YOUR NEW DEPLOYED WEB APP URL HERE ---
+        const GOOGLE_SCRIPT_URL = "YOUR_NEW_WEB_APP_URL_HERE";
         
         let userTeam = "";
 
+        // Function to pull existing data from the Google Sheet
+        async function fetchExistingData(team) {
+            document.getElementById('loading-title').innerText = "Loading Data...";
+            document.getElementById('loading-desc').innerText = "Pulling current setup from Google Sheets.";
+            
+            try {
+                // Calls the doGet function in Apps Script
+                const response = await fetch(GOOGLE_SCRIPT_URL + "?team=" + encodeURIComponent(team));
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const d = result.data;
+                    
+                    document.getElementById('week').value = d.week || "";
+                    document.getElementById('yourTeam').value = d.yourTeam || "";
+                    document.getElementById('yourTeamLogo').value = d.yourTeamLogo || "";
+                    document.getElementById('yourTeamRecord').value = d.yourTeamRecord || "";
+                    document.getElementById('yourTeamMascot').value = d.yourTeamMascot || "";
+                    
+                    document.getElementById('opponent').value = d.opponent || "";
+                    document.getElementById('oppLogo').value = d.oppLogo || "";
+                    document.getElementById('oppRecord').value = d.oppRecord || "";
+                    document.getElementById('oppMascot').value = d.oppMascot || "";
+                    
+                    // Set Home/Away dropdown
+                    const haSelect = document.getElementById('homeAway');
+                    if (d.homeAway.toLowerCase().includes('away')) haSelect.value = "Away";
+                    else haSelect.value = "Home";
+
+                    document.getElementById('theme').value = d.theme || "";
+                    document.getElementById('stadium').value = d.stadium || "";
+                    document.getElementById('address').value = d.address || "";
+                    document.getElementById('ticketLink').value = d.ticketLink || "";
+
+                    // Combine Date & Time back into HTML datetime-local format (YYYY-MM-DDTHH:mm)
+                    if (d.date && d.time) {
+                        try {
+                            const dateParts = d.date.split('/'); // Expected: MM/DD/YYYY
+                            if (dateParts.length === 3) {
+                                const yyyy = dateParts[2];
+                                const mm = dateParts[0].padStart(2, '0');
+                                const dd = dateParts[1].padStart(2, '0');
+                                
+                                let timeMatch = d.time.match(/(\d+):(\d+)\s*(AM|PM)/i); // Expected: 7:00 PM
+                                let HH = "00"; let MM = "00";
+                                if (timeMatch) {
+                                    let hrs = parseInt(timeMatch[1]);
+                                    const mins = timeMatch[2];
+                                    const ampm = timeMatch[3].toUpperCase();
+                                    if (ampm === "PM" && hrs < 12) hrs += 12;
+                                    if (ampm === "AM" && hrs === 12) hrs = 0;
+                                    HH = hrs.toString().padStart(2, '0');
+                                    MM = mins;
+                                }
+                                document.getElementById('dateTime').value = `${yyyy}-${mm}-${dd}T${HH}:${MM}`;
+                            }
+                        } catch(e) { console.warn("Could not auto-format date/time", e); }
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load sheet data:", error);
+            }
+
+            // Hide loader, show form
+            document.getElementById('auth-check').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+        }
+
         onAuthStateChanged(auth, async (user) => {
             const authCheck = document.getElementById('auth-check');
-            const adminPanel = document.getElementById('admin-panel');
 
             if (user) {
                 try {
@@ -122,10 +187,10 @@
                         if (data.role === 'admin' && data.managedTeam) {
                             userTeam = data.managedTeam; 
                             document.getElementById('team-badge').innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Admin: ${userTeam}`;
-                            document.getElementById('yourTeam').value = userTeam;
+                            
+                            // Trigger the fetch function instead of showing the form immediately
+                            fetchExistingData(userTeam);
 
-                            authCheck.classList.add('hidden');
-                            adminPanel.classList.remove('hidden');
                         } else {
                             authCheck.innerHTML = `<i class="fa-solid fa-ban text-red-600 text-5xl mb-4"></i><h2 class="text-2xl font-bold font-head uppercase mb-2">Access Denied</h2><p class="text-gray-600">You do not have Game Day admin permissions.</p><a href="profile.html" class="inline-block mt-4 text-blue-600 underline">Return to Profile</a>`;
                         }
@@ -177,8 +242,6 @@
                 btn.disabled = false;
                 statusMsg.innerText = "Success! The Game Day page is now updated.";
                 statusMsg.className = "text-center font-bold mt-4 text-green-600 text-lg";
-                document.getElementById('gameDataForm').reset();
-                document.getElementById('yourTeam').value = userTeam;
                 setTimeout(() => { statusMsg.innerText = ""; }, 5000);
             }).catch(error => {
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Push to Game Day Live';
