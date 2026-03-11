@@ -239,7 +239,7 @@
                         <span id="followText">FOLLOW TEAM</span>
                     </button>
 
-                    <button id="claimTeamBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-blue-600 text-white">
+                    <button id="claimTeamBtn" class="hidden flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-blue-600 text-white">
                         <i class="fa-solid fa-hand-fist mr-2"></i>
                         <span id="claimText">REQUEST TEAM ADMIN</span>
                     </button>
@@ -516,27 +516,17 @@
 
         const aiQuery = `Overview and history of the ${d['School']} ${d['Team']} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
+
+        // DYNAMICALLY SET THE GAME DAY URL BASED ON THE TEAM'S NAME
         document.getElementById('modalGameDayLink').href = `gameday.html?team=${encodeURIComponent(d['School'])}`;
 
-        // RESET CLAIM BUTTON TO DEFAULT BEFORE CHECKING AUTH
-        els.claimBtn.disabled = false;
-        els.claimBtn.style.opacity = "1";
-        els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
-        els.claimText.innerText = "REQUEST TEAM ADMIN";
-        
-        // --- UPDATED CLAIM BUTTON LOGIC FOR NON-LOGGED IN USERS ---
-        els.claimBtn.onclick = () => {
-            if(confirm("You must be logged in to request Team Admin. Go to login?")) {
-                window.location.href = "login.html";
-            }
-        };
-
+        // Check if user is logged in
         const user = auth.currentUser;
         if (user) {
             try {
                 // 1. Check Following Status
                 const userSnap = await getDoc(doc(db, "users", user.uid));
-                const userData = userSnap.data() || {}; 
+                const userData = userSnap.data();
                 
                 if (userSnap.exists()) {
                     const followed = userData.followedTeams || [];
@@ -545,8 +535,12 @@
 
                     // 2. Check Claiming Status
                     const teamSnap = await getDoc(doc(db, "team_pages", currentTeam));
+                    
+                    els.claimBtn.classList.remove('hidden');
+                    els.claimBtn.disabled = false;
+                    els.claimBtn.style.opacity = "1";
 
-                    // User already admins THIS team
+                    // User already admins THIS team - (CORRECTED LINE)
                     if (userData.managedTeam === currentTeam) {
                         els.claimText.innerText = "GO TO MY PROFILE";
                         els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
@@ -559,7 +553,7 @@
                         els.claimBtn.style.opacity = "0.5";
                         els.claimBtn.onclick = null;
                     }
-                    // User already admins a DIFFERENT team
+                    // User already admins a DIFFERENT team - (CORRECTED LINE)
                     else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
                         els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
                         els.claimBtn.disabled = true;
@@ -569,13 +563,15 @@
                     // Team is free and user is available
                     else {
                         els.claimText.innerText = "REQUEST TEAM ADMIN";
-                        els.claimBtn.onclick = () => handleClaimTeam(currentTeam, user, userData);
+                        els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                        els.claimBtn.onclick = () => handleClaimTeam(currentTeam);
                     }
                 }
             } catch (err) { console.error("Error checking user status:", err); }
         } else {
             isFollowing = false;
             updateFollowBtnUI();
+            els.claimBtn.classList.add('hidden');
         }
 
         els.modalOverlay.classList.remove('hidden');
@@ -624,20 +620,18 @@
         finally { els.followBtn.disabled = false; }
     });
 
-    // --- UPDATED EMAIL CLAIM LOGIC ---
-    function handleClaimTeam(school, user, userData) {
+    function handleClaimTeam(school) {
+        const user = auth.currentUser;
         if (!user) return;
 
+        // Formats a pre-filled email to you
         const adminEmail = "thepahsfootball@gmail.com";
         const subject = encodeURIComponent(`Admin Request for ${school}`);
-        
-        // Pulls username if available, otherwise falls back to "User"
-        const displayName = userData.username || "User"; 
-
         const body = encodeURIComponent(
-            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
+            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy PAHSFootball account email is: ${user.email}\n\nThank you!`
         );
 
+        // Opens their default mail app (Outlook, Apple Mail, Gmail, etc.)
         window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
     }
 
@@ -653,7 +647,7 @@
 
     window.openMapModal = function(loc) {
         els.mapModalOverlay.classList.remove('hidden');
-        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=14&ie=UTF8&iwloc=&output=embed`;
+        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=13&ie=UTF8&iwloc=&output=embed`;
     };
 
     function closeMapModal() {
