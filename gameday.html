@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Day Central | Team Template</title>
+    <title>GameDay | PAHSFOOTBALL.com</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,7 +104,7 @@
                     <i class="fa-solid fa-arrow-left"></i>
                     <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
                 </a>
-                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Game Day Central</h1>
+                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">GameDay</h1>
             </div>
             <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
                 <i class="fa-solid fa-football text-pahs-gold"></i>
@@ -367,7 +367,11 @@
 
             const usernameToSave = window.currentUserProfile ? window.currentUserProfile.username : "Unknown Fan";
 
-            const updateData = {
+         const updateData = {
+                home: isHome ? game.YourTeam : game.Opponent,
+                away: !isHome ? game.YourTeam : game.Opponent,
+                homeLogo: isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
+                awayLogo: !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
                 homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
                 awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
                 quarter: qtr,
