@@ -224,7 +224,7 @@
                             document.getElementById('admin-controls').classList.remove('hidden');
                             
                             const relinquishBtn = document.getElementById('relinquishAdminBtn');
-                            const teamName = data.teamName || "Unknown Team"; // Change this if your DB field is different
+                            const teamName = data.managedTeam || "Unknown Team"; 
                             const userName = data.username || "Unknown User";
                             const userEmail = user.email;
                             
@@ -239,7 +239,7 @@
                     console.error("Load error:", error);
                 }
             } else {
-                window.location.href = "login.html";
+                window.location.href = "login.html"; // Ensure login.html is your actual login page
             }
         });
 
