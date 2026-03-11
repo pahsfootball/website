@@ -526,7 +526,6 @@
                     const qtr = data.quarter || "PREGAME";
                     if (qtr === "PREGAME" || data.status === "UPCOMING") {
                         statusBadge.innerText = "PREGAME"; 
-                        // Updated to use dynamic CSS variable colors
                         statusBadge.className = "bg-pahs-gold text-[color:var(--team-text,#000)] text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-pahs-gold"; 
                         sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg";
@@ -574,6 +573,59 @@
                 }
             }, 500);
         };
+
+        // --- WEATHER FETCH LOGIC ---
+        async function fetchWeather(address) {
+            const weatherEl = document.getElementById('ui-weather');
+            if (!address || address.trim() === "Address TBA" || address.trim() === "") {
+                weatherEl.innerText = "Location needed for forecast";
+                return;
+            }
+
+            weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-pahs-gold mr-1"></i> Checking...';
+
+            try {
+                // Step 1: Geocode the address to get Latitude and Longitude (Free Nominatim API)
+                const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+                const geoRes = await fetch(geoUrl, { headers: { 'User-Agent': 'PAHSFootballApp/1.0' } });
+                const geoData = await geoRes.json();
+
+                if (!geoData || geoData.length === 0) {
+                    weatherEl.innerText = "Forecast unavailable for this location";
+                    return;
+                }
+
+                const lat = geoData[0].lat;
+                const lon = geoData[0].lon;
+
+                // Step 2: Use NWS API to get the forecast URL for those coordinates
+                const nwsPointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
+                const pointsRes = await fetch(nwsPointsUrl);
+                const pointsData = await pointsRes.json();
+                
+                if(!pointsData.properties || !pointsData.properties.forecast) throw new Error("No forecast endpoint found");
+
+                const forecastUrl = pointsData.properties.forecast;
+
+                // Step 3: Fetch the actual forecast
+                const forecastRes = await fetch(forecastUrl);
+                const forecastData = await forecastRes.json();
+
+                if (forecastData.properties && forecastData.properties.periods && forecastData.properties.periods.length > 0) {
+                    const currentPeriod = forecastData.properties.periods[0]; // Gets the current/next active weather period
+                    const temp = currentPeriod.temperature;
+                    const desc = currentPeriod.shortForecast;
+                    
+                    weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${desc}`;
+                } else {
+                    weatherEl.innerText = "Forecast currently unavailable";
+                }
+
+            } catch (error) {
+                console.error("Weather fetch failed:", error);
+                weatherEl.innerText = "Check local forecast";
+            }
+        }
 
         // UNIVERSAL LOADER
         document.addEventListener("DOMContentLoaded", async () => {
@@ -664,11 +716,14 @@
 
                 if(game.address) {
                     const encodedAddress = encodeURIComponent(game.address);
-                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=...?q=${encodedAddress}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
-                    document.getElementById('btn-directions').href = `https://maps.google.com/?q=${encodedAddress}`;
+                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
+                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
                     document.getElementById('btn-directions').style.display = 'flex';
                     document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
                     document.getElementById('btn-copy-address').style.display = 'flex';
+                    
+                    // Fetch the weather forecast for this address!
+                    fetchWeather(game.address);
                 }
                 
                 if(game.ticketLink) { document.getElementById('ui-ticket').href = game.ticketLink; document.getElementById('ui-ticket').style.display = 'block'; }
