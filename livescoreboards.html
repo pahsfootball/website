@@ -151,12 +151,15 @@
                 const encodedSchool = encodeURIComponent(schoolName);
                 const shortName = schoolName.substring(0, 3).toUpperCase();
 
-                // Check if a logoUrl exists in the Firestore document
-                let logoContent = shortName;
-                if (teamData.logoUrl && teamData.logoUrl.trim() !== "") {
-                    // Try to load the image. If it fails, fallback to the text span.
+                // BULLETPROOF LOGO CHECK: Checks for every possible capitalization typo in Firestore
+                const dbLogoUrl = teamData.logoUrl || teamData.LogoUrl || teamData.logoURL || teamData.LogoURL;
+                
+                let logoContent = `<span class="w-full h-full flex items-center justify-center">${shortName}</span>`; // Default text
+                
+                if (dbLogoUrl && dbLogoUrl.trim() !== "") {
+                    // Try to load the image. If the URL is broken (e.g. 404 error), it hides the image and shows the span.
                     logoContent = `
-                        <img src="${teamData.logoUrl}" alt="${schoolName} Logo" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="${dbLogoUrl.trim()}" alt="${schoolName} Logo" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <span class="w-full h-full items-center justify-center hidden">${shortName}</span>
                     `;
                 }
