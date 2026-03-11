@@ -540,8 +540,8 @@
                     els.claimBtn.disabled = false;
                     els.claimBtn.style.opacity = "1";
 
-                    // User already admins THIS team
-                    if (userData.adminOf === currentTeam) {
+                    // User already admins THIS team - (CORRECTED LINE)
+                    if (userData.managedTeam === currentTeam) {
                         els.claimText.innerText = "GO TO MY PROFILE";
                         els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
                         els.claimBtn.onclick = () => window.location.href = "profile.html"; 
@@ -553,9 +553,9 @@
                         els.claimBtn.style.opacity = "0.5";
                         els.claimBtn.onclick = null;
                     }
-                    // User already admins a DIFFERENT team
-                    else if (userData.adminOf && userData.adminOf !== currentTeam) {
-                        els.claimText.innerText = `ADMIN OF ${userData.adminOf.toUpperCase()}`;
+                    // User already admins a DIFFERENT team - (CORRECTED LINE)
+                    else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
+                        els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
                         els.claimBtn.disabled = true;
                         els.claimBtn.style.opacity = "0.5";
                         els.claimBtn.onclick = null;
