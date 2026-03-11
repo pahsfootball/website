@@ -493,7 +493,7 @@
             });
         }
 
-        // Add handler for Email claim
+        // Add handler for Email claim WITH DESKTOP FALLBACK
         window.handleClaimTeamGameDay = function(school) {
             const user = auth.currentUser;
             if (!user) {
@@ -511,7 +511,17 @@
                 `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
             );
 
+            // Attempt to open default mail client
             window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+
+            // Fallback for Desktop users without a default mail client configured
+            setTimeout(() => {
+                if(confirm("If your email app didn't open automatically, click 'OK' to copy our email address to your clipboard so you can email us manually.")) {
+                    navigator.clipboard.writeText(adminEmail).then(() => {
+                        alert("Copied " + adminEmail + " to clipboard!\n\nPlease email us with the subject: Admin Request for " + school);
+                    });
+                }
+            }, 500);
         };
 
         // UNIVERSAL LOADER
