@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -29,6 +27,26 @@
         .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+
+        /* --- NEW: SCORE UPDATE ANIMATIONS --- */
+        @keyframes scoreUpdateAnim {
+            0% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
+            15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
+            50% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
+            100% { transform: scale(1); } /* Returns to normal defined by the card */
+        }
+        .anim-score-update {
+            animation: scoreUpdateAnim 3.5s ease-out forwards;
+            z-index: 40;
+        }
+        
+        @keyframes fadeOutDelayed {
+            0%, 60% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        .animate-fade-out-delayed {
+            animation: fadeOutDelayed 3s forwards;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -63,6 +81,15 @@
             </div>
         </div>
 
+        <div class="mt-16 pt-10 border-t-4 border-pahs-gold max-w-4xl mx-auto">
+            <div class="text-center mb-6">
+                <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 drop-shadow-sm">Other Regional Scores</h2>
+                <p class="text-gray-700 font-medium">Powered by ScoreStream</p>
+            </div>
+            <div class="scorestream-widget-container bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" data-ss_widget_type="vertScoreboard" style="height:600px;" data-user-widget-id="58320"></div>
+            <script async="async" type="text/javascript" src="https://scorestream.com/apiJsCdn/widgets/embed.js"></script>
+        </div>
+
     </main>
 
     <script type="module">
@@ -89,7 +116,9 @@
         const container = document.getElementById('scoreboards-container');
         const loadingState = document.getElementById('loading-state');
         
-        let baseScheduleGames = {}; // Will hold all games from the CSV as defaults
+        let baseScheduleGames = {}; 
+        let previousScores = {}; // Tracks scores to trigger animations
+        let isFirstLoad = true;  // Prevents animations from firing on initial page load
 
         // Function to format team names into URLs
         const formatTeamUrl = (teamName) => {
@@ -108,12 +137,10 @@
                 games.forEach(game => {
                     if (!game.HomeTeam || !game.AwayTeam) return;
 
-                    // Generate universal game key to match Firebase
                     const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
                     const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
                     const gameKey = [homeNameStr, awayNameStr].sort().join('_');
 
-                    // Create a default PREGAME template for every scheduled matchup
                     baseScheduleGames[gameKey] = {
                         id: gameKey,
                         home: game.HomeTeam,
@@ -126,16 +153,15 @@
                         quarter: "PREGAME",
                         clock: game.Time || "12:00",
                         updatedBy: "Schedule",
-                        lastUpdated: new Date(0).toISOString() // Set to old date so it sits at bottom naturally
+                        lastUpdated: new Date(0).toISOString() 
                     };
                 });
 
-                // Once schedule is loaded, start listening to Firebase for live overlays
                 startFirebaseListener();
             },
             error: function(err) {
                 console.error("Error loading schedule CSV", err);
-                startFirebaseListener(); // Fallback: Just load Firebase if CSV fails
+                startFirebaseListener(); 
             }
         });
 
@@ -145,15 +171,12 @@
                 const liveData = snapshot.val() || {};
                 const mergedGamesArray = [];
 
-                // Copy our base schedule so we don't mutate the original data
                 const tempGamesMap = { ...baseScheduleGames };
 
-                // Overlay any live data from Firebase
+                // Merge Live DB over Schedule DB
                 for (let teamKey in liveData) {
                     const liveGame = liveData[teamKey];
                     if (liveGame.home && liveGame.away) {
-                        // If it exists in schedule, merge the live updates into it. 
-                        // If it's totally new, just add it.
                         tempGamesMap[teamKey] = { 
                             ...tempGamesMap[teamKey], 
                             ...liveGame, 
@@ -162,13 +185,26 @@
                     }
                 }
 
-                // Convert Map to Array for sorting
+                // Check for updates & convert Map to Array
                 for (let key in tempGamesMap) {
-                    mergedGamesArray.push(tempGamesMap[key]);
+                    const game = tempGamesMap[key];
+                    
+                    // --- ANIMATION CHECK LOGIC ---
+                    game.justUpdated = false;
+                    if (!isFirstLoad && previousScores[key]) {
+                        if (previousScores[key].homeScore !== game.homeScore || previousScores[key].awayScore !== game.awayScore) {
+                            game.justUpdated = true;
+                        }
+                    }
+                    // Save to memory for the NEXT update check
+                    previousScores[key] = { homeScore: game.homeScore, awayScore: game.awayScore };
+
+                    mergedGamesArray.push(game);
                 }
 
                 if (mergedGamesArray.length === 0) {
                     container.innerHTML = `<div class="col-span-full text-center py-12"><i class="fa-solid fa-ghost text-5xl text-gray-500 mb-4"></i><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3><p class="text-gray-500">Wait for kickoff!</p></div>`;
+                    isFirstLoad = false;
                     return;
                 }
 
@@ -176,7 +212,7 @@
                 mergedGamesArray.sort((a, b) => {
                     const getWeight = (status) => {
                         const s = (status || "").toUpperCase();
-                        if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; // Any Qtr
+                        if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; 
                         if (s === 'HALF') return 2;
                         if (s === 'PREGAME' || s === 'UPCOMING') return 3;
                         if (s === 'FINAL') return 4;
@@ -187,12 +223,10 @@
                     const weightB = getWeight(b.status);
 
                     if (weightA !== weightB) return weightA - weightB;
-                    
-                    // If they have the same status, sort by newest update
                     return new Date(b.lastUpdated) - new Date(a.lastUpdated);
                 });
 
-                // Clear container and render
+                // Render
                 loadingState.style.display = 'none';
                 container.innerHTML = ''; 
 
@@ -241,15 +275,26 @@
                         else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
                         else updatedText = "Over an hour ago";
                     } else {
-                        updatedText = "Scheduled"; // Identifies un-started schedule games
+                        updatedText = "Scheduled"; 
                     }
 
                     const homeUrl = formatTeamUrl(game.home);
                     const awayUrl = formatTeamUrl(game.away);
 
+                    // Insert animation classes and HTML conditionally
+                    let updateAnimClass = game.justUpdated ? "anim-score-update" : "";
+                    let updateOverlayHtml = game.justUpdated ? `
+                        <div class="absolute inset-0 bg-white/95 z-50 flex items-center justify-center rounded-2xl font-head text-4xl text-red-600 animate-fade-out-delayed pointer-events-none border-4 border-pahs-gold shadow-2xl">
+                            <i class="fa-solid fa-bolt text-yellow-500 mr-3 animate-pulse"></i> SCORE UPDATE
+                        </div>
+                    ` : "";
+
                     const cardHTML = `
-                        <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white">
-                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                        <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white transition-all duration-300 ${updateAnimClass}">
+                            
+                            ${updateOverlayHtml}
+
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
                                 <div class="flex items-center gap-2">
                                     <div class="${dotClass}"></div>
                                     <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
@@ -260,7 +305,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex justify-between items-center px-2 flex-grow">
+                            <div class="flex justify-between items-center px-2 flex-grow relative z-10">
                                 <a href="${homeUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
                                     <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
                                         ${homeLogoHtml}
@@ -280,7 +325,7 @@
                                 </a>
                             </div>
 
-                            <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1">
+                            <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
                                 <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
                                     <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
                                 </div>
@@ -293,6 +338,9 @@
                     
                     container.innerHTML += cardHTML;
                 });
+
+                // Flag the first load as complete so future updates can trigger animations
+                isFirstLoad = false;
             });
         }
     </script>
