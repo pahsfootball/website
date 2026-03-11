@@ -229,7 +229,12 @@
                 </a>
 
                 <div class="grid grid-cols-1 gap-3">
-                    <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-pahs-gold text-black">
+                    <a id="modalGameDayLink" href="#" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-pahs-gold tracking-wide bg-pahs-gold text-black">
+                        <i class="fa-solid fa-football mr-2"></i>
+                        <span>VIEW GAME DAY PAGE</span>
+                    </a>
+
+                    <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-[#27272a] text-white">
                         <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
                         <span id="followText">FOLLOW TEAM</span>
                     </button>
@@ -512,6 +517,9 @@
         const aiQuery = `Overview and history of the ${d['School']} ${d['Team']} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
 
+        // DYNAMICALLY SET THE GAME DAY URL BASED ON THE TEAM'S NAME
+        document.getElementById('modalGameDayLink').href = `gameday.html?team=${encodeURIComponent(d['School'])}`;
+
         // Check if user is logged in
         const user = auth.currentUser;
         if (user) {
@@ -577,13 +585,13 @@
 
     function updateFollowBtnUI() {
         if (isFollowing) {
-            els.followBtn.classList.replace('bg-pahs-gold', 'bg-red-600');
+            els.followBtn.classList.replace('bg-[#27272a]', 'bg-red-600');
             els.followBtn.classList.add('text-white');
             els.followText.innerText = "UNFOLLOW TEAM";
             els.followIcon.classList.replace('fa-star', 'fa-trash');
         } else {
-            els.followBtn.classList.replace('bg-red-600', 'bg-pahs-gold');
-            els.followBtn.classList.remove('text-white');
+            els.followBtn.classList.replace('bg-red-600', 'bg-[#27272a]');
+            els.followBtn.classList.add('text-white');
             els.followText.innerText = "FOLLOW TEAM";
             els.followIcon.classList.replace('fa-trash', 'fa-star');
         }
