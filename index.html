@@ -278,9 +278,9 @@
                     let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
                     let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
 
-                    // LOGIC: Use Admin URL -> If blank, use Master Sheet URL -> If blank, leave empty
-                    const finalHomeLogo = game.homeLogo || teamLogoDictionary[game.home] || '';
-                    const finalAwayLogo = game.awayLogo || teamLogoDictionary[game.away] || '';
+                    // --- UPDATED LOGO LOGIC (Master Dictionary first, then Admin URL) ---
+                    const finalHomeLogo = teamLogoDictionary[(game.home || '').trim()] || game.homeLogo || '';
+                    const finalAwayLogo = teamLogoDictionary[(game.away || '').trim()] || game.awayLogo || '';
 
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
