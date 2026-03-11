@@ -9,9 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <script>
         tailwind.config = { theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } }, fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] } } } }
     </script>
@@ -245,7 +242,7 @@
                 </div>
             </div>
 
-            <div id="loginPromptPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
+            <div id="authActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
                 <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> Join the Action</h3>
                 <p class="text-sm text-gray-600 mb-4 font-medium">Scoreboard not updated or inaccurate? Log in or create an account today and submit scoring updates!</p>
                 <a href="login.html" class="inline-block bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 px-8 rounded-xl hover:bg-gray-800 transition-colors shadow-lg">
@@ -268,7 +265,6 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // PASTE YOUR ACTUAL CONTROLLER WEB APP URL HERE!
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
 
         const firebaseConfig = {
@@ -291,7 +287,7 @@
 
         onAuthStateChanged(auth, async (user) => {
             const ctrlPanel = document.getElementById('fanControlPanel');
-            const loginPanel = document.getElementById('loginPromptPanel');
+            const loginPanel = document.getElementById('authActionPanel'); // Updated ID
 
             if (user) {
                 // User IS logged in
@@ -302,15 +298,27 @@
                 } catch(e) { window.currentUserProfile = { username: "Fan" }; }
 
                 // Show the updater, hide the login prompt
-                if (ctrlPanel) ctrlPanel.classList.remove('hidden');
-                if (loginPanel) loginPanel.classList.add('hidden');
+                if (ctrlPanel) {
+                    ctrlPanel.classList.remove('hidden');
+                    ctrlPanel.style.display = 'block';
+                }
+                if (loginPanel) {
+                    loginPanel.classList.add('hidden');
+                    loginPanel.style.display = 'none';
+                }
             } else {
                 // User is NOT logged in
                 window.currentUserProfile = null;
                 
                 // Show the login prompt, hide the updater
-                if (ctrlPanel) ctrlPanel.classList.add('hidden');
-                if (loginPanel) loginPanel.classList.remove('hidden');
+                if (ctrlPanel) {
+                    ctrlPanel.classList.add('hidden');
+                    ctrlPanel.style.display = 'none';
+                }
+                if (loginPanel) {
+                    loginPanel.classList.remove('hidden');
+                    loginPanel.style.display = 'block';
+                }
             }
         });
 
@@ -396,7 +404,7 @@
                 awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
                 quarter: qtr,
                 clock: document.getElementById('inpTime').value || "00:00",
-                possession: document.getElementById('inpPossession').value, // SAVES POSSESSION
+                possession: document.getElementById('inpPossession').value, 
                 status: status,
                 updatedBy: usernameToSave,
                 lastUpdated: new Date().toISOString()
@@ -485,7 +493,7 @@
             });
         }
 
-        // UNIVERSAL LOADER (Reads URL ?team=NAME, fetches Apps Script)
+        // UNIVERSAL LOADER
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const teamParam = urlParams.get('team');
@@ -573,8 +581,9 @@
                 }
 
                 if(game.address) {
-                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=$${encodeURIComponent(game.address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
-                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=$${encodeURIComponent(game.address)}`;
+                    // Corrected missing '$' in the string template literals below
+                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
+                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}`;
                     document.getElementById('btn-directions').style.display = 'flex';
                     document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
                     document.getElementById('btn-copy-address').style.display = 'flex';
