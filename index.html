@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
         :root {
@@ -23,8 +21,8 @@
             --border-light: rgba(0, 0, 0, 0.1);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
-            --green-active: #10b981; /* Tailwind emerald-500 */
-            --green-hover: #059669;  /* Tailwind emerald-600 */
+            --green-active: #10b981; 
+            --green-hover: #059669;  
         }
 
         body { margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
@@ -41,17 +39,18 @@
         /* --- TICKER STYLES --- */
         .ticker-title-bar { background-color: var(--dark-header); color: var(--gold-base); text-align: center; font-family: var(--font-head); font-size: 18px; letter-spacing: 2px; padding: 6px 0 0 0; border-top: 3px solid var(--gold-base); }
         .ticker-container { width: 100%; background: var(--dark-header); border-bottom: 3px solid var(--gold-base); overflow: hidden; white-space: nowrap; padding: 8px 0 12px 0; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .ticker-wrapper { display: inline-block; animation: ticker 15s linear infinite; will-change: transform; }
-        @keyframes ticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-        .matchup-card { display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px 14px; margin: 0 8px; transition: 0.2s; }
+        .ticker-wrapper { display: inline-block; animation: ticker 25s linear infinite; will-change: transform; padding-left: 100vw; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        
+        .matchup-card { display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px 14px; margin: 0 8px; transition: 0.2s; text-decoration: none; cursor: pointer; }
         .ticker-container:hover .ticker-wrapper { animation-play-state: paused; }
-        .matchup-card:hover { border-color: var(--gold-base); background: rgba(251, 191, 36, 0.1); }
+        .matchup-card:hover { border-color: var(--gold-base); background: rgba(251, 191, 36, 0.1); transform: scale(1.02); }
         .team-logo { width: 24px; height: 24px; background: white; border-radius: 50%; margin-right: 8px; object-fit: contain; border: 1px solid #ccc; padding: 2px; }
         .team-name { font-family: var(--font-head); font-size: 20px; letter-spacing: 0.5px; color: #fff; text-transform: uppercase; }
         .vs { font-family: var(--font-head); color: var(--gold-base); margin: 0 10px; font-size: 16px; font-weight: bold; }
         .game-info { display: flex; flex-direction: column; justify-content: center; margin-left: 12px; border-left: 1px solid #555; padding-left: 12px; line-height: 1.1; }
-        .game-date { font-family: var(--font-body); font-size: 10px; color: #ddd; text-transform: uppercase; font-weight: 700; }
-        .game-time { font-family: var(--font-body); font-size: 10px; color: var(--gold-base); font-weight: bold; }
+        .game-date { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; font-weight: 700; }
+        .game-time { font-family: var(--font-body); font-size: 11px; color: var(--gold-base); font-weight: bold; }
 
         /* --- CONTENT AREA & CARDS --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; display: grid; gap: 16px; animation: fadeIn 0.8s ease-out; }
@@ -111,10 +110,10 @@
     </div>
 </header>
 
-<div class="ticker-title-bar"><i class="fa-solid fa-bolt" style="margin-right: 5px;"></i> THIS WEEK'S FEATURED MATCHUPS</div>
+<div class="ticker-title-bar"><i class="fa-solid fa-bolt" style="margin-right: 5px;"></i> LIVE ACTION & FEATURED MATCHUPS</div>
 <div class="ticker-container">
     <div class="ticker-wrapper" id="matchupTicker">
-        <div class="matchup-card"><span class="team-name text-gray-400">Loading Featured Matchups...</span></div>
+        <div class="matchup-card"><span class="team-name text-gray-400">Loading Active Matchups...</span></div>
     </div>
 </div>
 
@@ -187,23 +186,6 @@
 </div>
 
 <script>
-    // --- TICKER LOGIC ---
-    const TICKER_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv"; 
-    function loadTickerData() {
-        Papa.parse(TICKER_CSV_URL, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
-                const games = results.data; const ticker = document.getElementById('matchupTicker'); let html = '';
-                if (!games || games.length === 0) { html = '<div class="matchup-card"><span class="team-name">NO MATCHUPS SCHEDULED</span></div>'; } else {
-                    games.forEach(game => {
-                        html += `<div class="matchup-card"><img src="${game.AwayLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo"><span class="team-name">${game.AwayTeam || 'TBA'}</span><span class="vs">VS</span><img src="${game.HomeLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo"><span class="team-name">${game.HomeTeam || 'TBA'}</span><div class="game-info"><span class="game-date">${game.Date || 'TBD'}</span><span class="game-time">${game.Time || 'TBD'}</span></div></div>`;
-                    });
-                }
-                ticker.innerHTML = html;
-            }
-        });
-    }
-
     function openModal() { document.getElementById('contactModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
     function closeModalOutside(e) { if (e.target.id === 'contactModal') closeModal(); }
@@ -225,19 +207,19 @@
              setTimeout(() => { closeModal(); document.getElementById('pahsForm').reset(); btn.style.display = 'block'; btn.innerText = 'SEND MESSAGE'; btn.style.opacity = '1'; msg.style.display = 'none'; }, 2000);
         }).catch(() => { btn.innerText = 'Try Again'; btn.style.opacity = '1'; msg.style.display = 'block'; msg.style.color = '#ef4444'; msg.innerText = 'Error sending message.'; });
     });
-
-    document.addEventListener("DOMContentLoaded", () => { loadTickerData(); });
 </script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    // Import Firestore here to fetch user profile
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    // --- ADDED RTDB FOR TICKER ---
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
         authDomain: "pahs-football.firebaseapp.com",
+        databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/",
         projectId: "pahs-football",
         storageBucket: "pahs-football.firebasestorage.app",
         messagingSenderId: "260294523190",
@@ -248,6 +230,48 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const dbRealtime = getDatabase(app);
+
+    // --- NEW FIREBASE LIVE TICKER ---
+    onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
+        const data = snapshot.val();
+        const tickerEl = document.getElementById('matchupTicker');
+        let html = '';
+        
+        if (!data) {
+            html = '<div class="matchup-card"><span class="team-name text-gray-400">NO ACTIVE MATCHUPS</span></div>';
+        } else {
+            const games = Object.values(data);
+            games.forEach(game => {
+                if(!game.home || !game.away) return;
+                
+                let statusText = game.quarter === "PREGAME" ? "PREGAME" : (game.quarter === "FINAL" ? "FINAL" : `QTR ${game.quarter}`);
+                if(game.quarter === "HALF") statusText = "HALFTIME";
+                
+                let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
+                let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
+
+                // Wraps the card in an anchor tag so clicking it takes them to the gameday page
+                html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
+                    <img src="${game.awayLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                    <span class="team-name">${game.away}</span>
+                    <span class="vs">VS</span>
+                    <img src="${game.homeLogo || 'logo_placeholder.png'}" onerror="this.style.display='none'" class="team-logo" alt="Logo">
+                    <span class="team-name">${game.home}</span>
+                    <div class="game-info">
+                        <span class="game-date" style="${statusColor}">${statusText}</span>
+                        <span class="game-time">${scoreText}</span>
+                    </div>
+                </a>`;
+            });
+            
+            // If there are only a few games, multiply them so the scroll animation doesn't snap awkwardly empty
+            if(games.length > 0 && games.length < 8) {
+                html = html + html + html + html; 
+            }
+        }
+        tickerEl.innerHTML = html;
+    });
 
     window.logoutUser = function(e) {
         if(e) e.preventDefault();
@@ -260,36 +284,30 @@
         const authSub = document.getElementById("authNavSub");
 
        if (user) {
-            // 1. Update the Button UI to the green state and link to Profile
             if(authBtn) {
                 authBtn.classList.add("logged-in-state");
-                authBtn.href = "profile.html"; // <-- CHANGED to point to profile
-                authBtn.onclick = null; // <-- CHANGED so it doesn't log them out
+                authBtn.href = "profile.html"; 
+                authBtn.onclick = null; 
                 authTitle.innerText = "My Profile";
                 authSub.innerText = "Manage your account & stats";
             }
 
-            // 2. Fetch User Data from Firestore to Autofill Contact Form
             try {
                 const docRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    
                     document.getElementById('contactFirstName').value = userData.firstName || "";
                     document.getElementById('contactLastName').value = userData.lastName || "";
                     document.getElementById('contactPhoneInput').value = userData.phone || "";
                 }
-                // Email is always available from the 'user' object directly
                 document.getElementById('contactEmailInput').value = user.email || "";
-
             } catch (error) {
                 console.error("Error fetching user data:", error);
             }
 
         } else {
-            // User is NOT logged in - Revert everything
             if(authBtn) {
                 authBtn.classList.remove("logged-in-state");
                 authBtn.href = "login.html"; 
