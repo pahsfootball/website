@@ -115,7 +115,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Your Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
         authDomain: "pahs-football.firebaseapp.com",
@@ -134,7 +133,7 @@
         const container = document.getElementById('dynamic-teams-container');
         try {
             const querySnapshot = await getDocs(collection(db, "team_pages"));
-            container.innerHTML = ''; // Clear loading spinner
+            container.innerHTML = ''; 
 
             if (querySnapshot.empty) {
                 container.innerHTML = `
@@ -146,14 +145,21 @@
                 return;
             }
 
-            // Loop through all claimed teams in Firestore and build a card for each
             querySnapshot.forEach((doc) => {
                 const teamData = doc.data();
                 const schoolName = teamData.schoolName || doc.id;
                 const encodedSchool = encodeURIComponent(schoolName);
-                
-                // Fallback text icon (first 3 letters of school name)
                 const shortName = schoolName.substring(0, 3).toUpperCase();
+
+                // Check if a logoUrl exists in the Firestore document
+                let logoContent = shortName;
+                if (teamData.logoUrl && teamData.logoUrl.trim() !== "") {
+                    // Try to load the image. If it fails, fallback to the text span.
+                    logoContent = `
+                        <img src="${teamData.logoUrl}" alt="${schoolName} Logo" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="w-full h-full items-center justify-center hidden">${shortName}</span>
+                    `;
+                }
 
                 const cardHTML = `
                     <a href="gameday.html?team=${encodedSchool}" class="content-card block rounded-2xl p-6 text-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group bg-white">
@@ -161,7 +167,7 @@
                         
                         <div class="flex flex-col items-center justify-center h-full">
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center border-2 border-gray-300 group-hover:border-pahs-gold transition-colors shadow-sm mx-auto mb-3 overflow-hidden text-gray-500 font-bold text-2xl font-head tracking-wider">
-                                ${shortName}
+                                ${logoContent}
                             </div>
                             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 leading-tight">${schoolName}</h3>
                             <p class="text-[10px] font-bold text-pahs-gold uppercase tracking-widest mt-2 bg-[#18181b] px-2 py-0.5 rounded shadow-sm inline-block">
@@ -178,10 +184,8 @@
         }
     }
 
-    // Initialize the fetch when the page loads
     document.addEventListener("DOMContentLoaded", loadActiveTeams);
 </script>
 
 </body>
 </html>
-
