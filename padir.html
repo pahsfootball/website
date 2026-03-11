@@ -620,19 +620,29 @@
         finally { els.followBtn.disabled = false; }
     });
 
-    function handleClaimTeam(school) {
-        const user = auth.currentUser;
+    // --- UPDATED EMAIL CLAIM LOGIC WITH DESKTOP FALLBACK ---
+    function handleClaimTeam(school, user, userData) {
         if (!user) return;
 
-        // Formats a pre-filled email to you
         const adminEmail = "thepahsfootball@gmail.com";
         const subject = encodeURIComponent(`Admin Request for ${school}`);
+        const displayName = userData.username || "User"; 
+
         const body = encodeURIComponent(
-            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy PAHSFootball account email is: ${user.email}\n\nThank you!`
+            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
         );
 
-        // Opens their default mail app (Outlook, Apple Mail, Gmail, etc.)
+        // Attempt to open default mail client
         window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+
+        // Fallback for Desktop users without a default mail client configured
+        setTimeout(() => {
+            if(confirm("If your email app didn't open automatically, click 'OK' to copy our email address to your clipboard so you can email us manually.")) {
+                navigator.clipboard.writeText(adminEmail).then(() => {
+                    alert("Copied " + adminEmail + " to clipboard!\n\nPlease email us with the subject: Admin Request for " + school);
+                });
+            }
+        }, 500);
     }
 
     function closeModal() {
@@ -658,3 +668,4 @@
 
 </body>
 </html>
+
