@@ -35,7 +35,13 @@
 
         /* --- PROFILE CONTAINER --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
-        .profile-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); overflow: hidden; border-top: 5px solid var(--gold-base); padding: 30px; box-sizing: border-box; margin-bottom: 20px; }
+        
+        /* Added position: relative here for the close button */
+        .profile-card { position: relative; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); overflow: hidden; border-top: 5px solid var(--gold-base); padding: 30px; box-sizing: border-box; margin-bottom: 20px; }
+
+        /* Custom Close Button for the Card */
+        .close-profile-btn { position: absolute; top: 12px; right: 16px; font-size: 24px; color: #a1a1aa; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; z-index: 10; }
+        .close-profile-btn:hover { color: #ef4444; transform: scale(1.1); }
 
         /* --- STATS & BADGE ROW --- */
         .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); }
@@ -82,17 +88,16 @@
             </a>
             <h1 class="mini-header-title">PAHS Profile</h1>
         </div>
-        <div style="display:flex; align-items:center; gap:15px;">
-            <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
-            <a href="https://pahsfootball.com" style="color: white; font-size: 24px; transition: 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='white'">
-                <i class="fa-solid fa-xmark"></i>
-            </a>
-        </div>
+        <img src="pahsfootballlogo.png" alt="Logo" class="mini-header-logo" onerror="this.style.display='none'">
     </header>
 
     <div class="content-area">
         <div class="profile-card">
             
+            <a href="https://pahsfootball.com" class="close-profile-btn" title="Close Profile">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+
             <div class="stats-row">
                 <div class="badge-container">
                     <div class="badge-icon" id="userBadgeIcon"><i class="fa-solid fa-shield-halved"></i></div>
