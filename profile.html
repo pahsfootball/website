@@ -63,26 +63,8 @@
         .btn-logout:hover { background-color: #dc2626; }
 
         /* TEAM BADGE STYLING */
-        .team-link {
-            display: inline-flex;
-            align-items: center;
-            background: #e4e4e7;
-            padding: 8px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 20px;
-            margin: 4px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #18181b;
-            text-decoration: none;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .team-link:hover {
-            background: #ffffff;
-            border-color: var(--gold-base);
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+        .team-link { display: inline-flex; align-items: center; background: #e4e4e7; padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 20px; margin: 4px; font-size: 12px; font-weight: 700; color: #18181b; text-decoration: none; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .team-link:hover { background: #ffffff; border-color: var(--gold-base); transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
         .status-msg { text-align: center; font-size: 14px; font-weight: bold; margin-top: 15px; display: none; }
         .status-success { color: #10b981; }
@@ -159,7 +141,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -188,6 +170,7 @@
         const statusMsg = document.getElementById('statusMsg');
 
         let currentUserUid = null;
+        let currentSavedUsername = ""; // Tracks initial username to prevent false collisions
 
         function calculateBadge(points) {
             if (points >= 500) return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
@@ -206,7 +189,11 @@
 
                     if (docSnap.exists()) {
                         const data = docSnap.data();
+                        
+                        // Set the input box and tracker variable
                         usernameInput.value = data.username || "";
+                        currentSavedUsername = data.username || "";
+                        
                         aboutMeInput.value = data.aboutMe || "";
                         userPoints.innerText = data.points || 0;
                         
@@ -214,7 +201,6 @@
                         userBadgeTitle.innerText = badgeInfo.title;
                         userBadgeIcon.innerHTML = badgeInfo.icon;
 
-                        // RENDER CLICKABLE FOLLOWED TEAMS
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
@@ -226,7 +212,6 @@
                             followedTeamsList.innerHTML = '<span class="text-xs text-gray-500">Not following any teams yet. Head over to the Directory to add some!</span>';
                         }
 
-                        // ADMIN CHECK: UNHIDE ADMIN TOOLS IF APPLICABLE
                         if (data.role === 'admin') {
                             document.getElementById('admin-controls').classList.remove('hidden');
                         }
@@ -242,21 +227,50 @@
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUserUid) return;
-            saveBtn.innerText = "Saving...";
+            
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+            saveBtn.disabled = true;
+            statusMsg.style.display = 'none';
+
+            const requestedUsername = usernameInput.value.trim();
+
             try {
+                // Check if they are actually changing their username
+                if (requestedUsername !== currentSavedUsername) {
+                    const usersRef = collection(db, "users");
+                    const q = query(usersRef, where("username", "==", requestedUsername));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        statusMsg.innerText = "Username is already taken. Please choose another.";
+                        statusMsg.className = "status-msg status-error block";
+                        saveBtn.innerText = "Update Profile";
+                        saveBtn.disabled = false;
+                        return; // Halt save
+                    }
+                }
+
+                // If clear, proceed with update
                 const userRef = doc(db, "users", currentUserUid);
                 await updateDoc(userRef, {
-                    username: usernameInput.value.trim(),
+                    username: requestedUsername,
                     aboutMe: aboutMeInput.value.trim()
                 });
+                
+                // Update tracker
+                currentSavedUsername = requestedUsername;
+
                 statusMsg.innerText = "Profile saved!";
                 statusMsg.className = "status-msg status-success block";
                 saveBtn.innerText = "Update Profile";
+                saveBtn.disabled = false;
                 setTimeout(() => statusMsg.style.display = 'none', 3000);
             } catch (error) {
+                console.error("Save Error:", error);
                 statusMsg.innerText = "Error saving. Try again.";
                 statusMsg.className = "status-msg status-error block";
                 saveBtn.innerText = "Update Profile";
+                saveBtn.disabled = false;
             }
         });
 
