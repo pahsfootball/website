@@ -3,23 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameDay | PAHSFOOTBALL.com</title>
+    <title>Game Day Central | PAHSFootball</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } },
-                    fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } }, fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] } } } }
     </script>
 
     <style>
@@ -27,20 +21,10 @@
         .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
         .countdown-box { background: #18181b; color: white; border-bottom: 3px solid #fbbf24; }
         #loading-overlay { position: fixed; inset: 0; background: #adadad; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* --- POPUP MODAL --- */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); z-index: 150; backdrop-filter: blur(5px);
-            align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-content {
-            background: white; width: 100%; max-width: 450px; border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden;
-            animation: slideUp 0.3s ease-out; position: relative; border-top: 4px solid #fbbf24;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 150; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; border-top: 4px solid #fbbf24; }
+        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
     </style>
@@ -49,7 +33,26 @@
 
     <div id="loading-overlay">
         <i class="fa-solid fa-football fa-spin text-4xl text-pahs-gold mb-4"></i>
-        <h2 class="font-head text-2xl text-gray-800">Loading Matchup...</h2>
+        <h2 class="font-head text-2xl text-gray-800" id="loading-text">Loading Game Day...</h2>
+    </div>
+
+    <div id="claim-team-prompt" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="content-card rounded-2xl p-8 max-w-lg w-full text-center border-t-8 border-pahs-gold shadow-2xl bg-white">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl text-gray-400">
+                <i class="fa-solid fa-clipboard-question"></i>
+            </div>
+            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">Page Not Configured</h2>
+            <p class="text-gray-600 mb-8" id="claim-team-desc">There is no official Game Day data for this team yet.</p>
+            
+            <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
+                <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-crown text-pahs-gold mr-1"></i> Claim Your Team</h3>
+                <p class="text-sm text-gray-500 mb-4">Are you a super fan? Request admin access to manage this team's page, post live updates, and keep your community informed.</p>
+                <a id="claim-email-btn" href="#" class="inline-block bg-pahs-dark text-pahs-gold font-bold font-head text-xl py-3 px-6 rounded-lg uppercase tracking-wide hover:bg-gray-800 transition shadow-md w-full">
+                    Request Admin Access
+                </a>
+            </div>
+            <a href="all-scores.html" class="text-blue-600 font-bold text-sm hover:underline"><i class="fa-solid fa-arrow-left"></i> Back to Statewide Scores</a>
+        </div>
     </div>
 
     <div id="scoreUpdateModal" class="modal-overlay">
@@ -97,164 +100,134 @@
         </div>
     </div>
 
-    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
-                </a>
-                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">GameDay</h1>
+    <div id="main-app" class="hidden">
+        <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+            <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Scores</span>
+                    </a>
+                    <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Game Day Central</h1>
+                </div>
+                <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                    <i class="fa-solid fa-football text-pahs-gold"></i>
+                    <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
+                </div>
             </div>
-            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
-                <i class="fa-solid fa-football text-pahs-gold"></i>
-                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
-            </div>
-        </div>
-    </nav>
+        </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        
-        <div class="content-card rounded-2xl overflow-hidden mb-6 relative">
-            <div class="bg-[#18181b] p-6 text-center relative overflow-hidden border-b-4 border-pahs-gold">
-                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-                
-                <button onclick="sharePage()" class="absolute top-4 right-4 z-20 bg-white/10 hover:bg-pahs-gold text-white hover:text-black border border-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg" title="Share Page">
-                    <i class="fa-solid fa-share-nodes"></i>
-                </button>
+        <main class="max-w-4xl mx-auto px-4 py-8">
+            <div class="content-card rounded-2xl overflow-hidden mb-6 relative">
+                <div class="bg-[#18181b] p-6 text-center relative overflow-hidden border-b-4 border-pahs-gold">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+                    <button onclick="sharePage()" class="absolute top-4 right-4 z-20 bg-white/10 hover:bg-pahs-gold text-white hover:text-black border border-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"><i class="fa-solid fa-share-nodes"></i></button>
 
-                <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading Matchup...</h2>
-                
-                <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
-                    <div class="text-center flex-1 flex flex-col items-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative">
-                            <img id="ui-your-logo" src="" alt="Team Logo" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='block';">
-                            <span id="ui-your-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute" style="display:none;">TEA</span>
-                        </div>
-                        <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
-                            <span id="ui-your-record" class="text-pahs-gold text-xs font-bold"></span>
-                        </div>
-                    </div>
+                    <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10">Loading...</h2>
                     
-                    <div class="flex flex-col items-center px-2 md:px-4">
-                        <div class="text-3xl md:text-5xl font-black font-head text-white italic opacity-90 drop-shadow-md">VS</div>
-                    </div>
-                    
-                    <div class="text-center flex-1 flex flex-col items-center">
-                        <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative">
-                            <img id="ui-opp-logo" src="" alt="Opponent" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='block';">
-                            <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
+                    <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
+                        <div class="text-center flex-1 flex flex-col items-center">
+                            <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative">
+                                <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='block';">
+                                <span id="ui-your-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute" style="display:none;">TEA</span>
+                            </div>
+                            <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
+                            <div class="flex items-center justify-center gap-2 mt-2">
+                                <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
+                                <span id="ui-your-record" class="text-pahs-gold text-xs font-bold"></span>
+                            </div>
                         </div>
-                        <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase">Mascot</p>
-                            <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                        
+                        <div class="flex flex-col items-center px-2 md:px-4"><div class="text-3xl md:text-5xl font-black font-head text-white italic opacity-90 drop-shadow-md">VS</div></div>
+                        
+                        <div class="text-center flex-1 flex flex-col items-center">
+                            <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative">
+                                <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='block';">
+                                <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
+                            </div>
+                            <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
+                            <div class="flex items-center justify-center gap-2 mt-2">
+                                <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
+                                <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-6 text-center">
-                <p id="countdown-label" class="text-gray-500 font-bold uppercase tracking-wider mb-4 text-sm">Kickoff Countdown</p>
-                <div class="flex justify-center gap-3 md:gap-6" id="countdown-container">
-                    <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-days">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Days</div></div>
-                    <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-hours">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Hours</div></div>
-                    <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-mins">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Mins</div></div>
-                    <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold text-pahs-gold" id="cd-secs">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Secs</div></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="content-card rounded-2xl p-6 flex flex-col justify-between">
-                <div>
-                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
-                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
-                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
-                        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Loading...</p></div></div>
+                <div class="p-6 text-center">
+                    <p id="countdown-label" class="text-gray-500 font-bold uppercase tracking-wider mb-4 text-sm">Kickoff Countdown</p>
+                    <div class="flex justify-center gap-3 md:gap-6" id="countdown-container">
+                        <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-days">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Days</div></div>
+                        <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-hours">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Hours</div></div>
+                        <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold" id="cd-mins">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Mins</div></div>
+                        <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold text-pahs-gold" id="cd-secs">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Secs</div></div>
                     </div>
                 </div>
-                <a id="ui-ticket" href="#" target="_blank" class="block text-center w-full mt-6 bg-pahs-gold text-black font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:bg-yellow-300 transition-colors uppercase border border-yellow-500"><i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online</a>
             </div>
 
-            <div class="content-card rounded-2xl p-6 flex flex-col">
-                <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Location</h3>
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-xl text-red-600"><i class="fa-solid fa-location-dot"></i></div>
-                    <div><p id="ui-stadium" class="font-bold text-gray-900">Loading...</p><p id="ui-address" class="text-sm text-gray-600">Loading...</p></div>
-                </div>
-                <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 min-h-[200px] bg-gray-200">
-                    <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
-                </div>
-                <div class="mt-4 flex items-center justify-between gap-3">
-                    <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-solid fa-location-arrow"></i> Directions</a>
-                    <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-regular fa-copy"></i> Copy Address</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="basicScoreboardCard" class="content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
-                <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
-                    <span id="sb-live-dot" class="w-3 h-3 rounded-full bg-yellow-500"></span> Live Scoreboard
-                </h3>
-                <div class="flex items-center gap-3">
-                    <span id="sb-status" class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span>
-                    <span id="sb-clock" class="font-mono font-bold text-gray-700">12:00</span>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center px-4">
-                <div class="flex flex-col items-center w-1/3">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden">
-                        <img id="sb-home-logo" src="" alt="Home" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; document.getElementById('sb-home-fall').style.display='block';">
-                        <span id="sb-home-fall" class="font-bold text-xl hidden">HOM</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="content-card rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Student Section Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Check game week</p></div></div>
+                        </div>
                     </div>
-                    <span id="sb-home-name" class="font-head text-2xl uppercase text-center leading-tight">Home</span>
-                    <span id="sb-home-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
+                    <a id="ui-ticket" href="#" target="_blank" class="block text-center w-full mt-6 bg-pahs-gold text-black font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:bg-yellow-300 transition-colors uppercase border border-yellow-500"><i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online</a>
                 </div>
-                
-                <div class="text-4xl font-black text-gray-300">-</div>
-                
-                <div class="flex flex-col items-center w-1/3">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden">
-                        <img id="sb-away-logo" src="" alt="Away" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; document.getElementById('sb-away-fall').style.display='block';">
-                        <span id="sb-away-fall" class="font-bold text-xl hidden">AWY</span>
+
+                <div class="content-card rounded-2xl p-6 flex flex-col">
+                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Location</h3>
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-xl text-red-600"><i class="fa-solid fa-location-dot"></i></div>
+                        <div><p id="ui-stadium" class="font-bold text-gray-900">Loading...</p><p id="ui-address" class="text-sm text-gray-600">Loading...</p></div>
                     </div>
-                    <span id="sb-away-name" class="font-head text-2xl uppercase text-center leading-tight">Away</span>
-                    <span id="sb-away-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
+                    <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 min-h-[200px] bg-gray-200">
+                        <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between gap-3">
+                        <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-solid fa-location-arrow"></i> Directions</a>
+                        <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-regular fa-copy"></i> Copy Address</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="text-center mt-6 pt-4 border-t border-gray-200">
-                <p class="text-[11px] uppercase tracking-widest text-gray-500">
-                    <i class="fa-solid fa-user-pen mr-1"></i> Scoreboard last updated by: <span id="sb-updated-by" class="font-bold text-gray-800">Awaiting First Update</span>
-                </p>
+            <div id="basicScoreboardCard" class="content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><span id="sb-live-dot" class="w-3 h-3 rounded-full bg-yellow-500"></span> Live Scoreboard</h3>
+                    <div class="flex items-center gap-3"><span id="sb-status" class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span><span id="sb-clock" class="font-mono font-bold text-gray-700">12:00</span></div>
+                </div>
+
+                <div class="flex justify-between items-center px-4">
+                    <div class="flex flex-col items-center w-1/3">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden"><img id="sb-home-logo" src="" class="w-full h-full object-contain p-1"><span id="sb-home-fall" class="font-bold text-xl hidden">HOM</span></div>
+                        <span id="sb-home-name" class="font-head text-2xl uppercase text-center leading-tight">Home</span>
+                        <span id="sb-home-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
+                    </div>
+                    <div class="text-4xl font-black text-gray-300">-</div>
+                    <div class="flex flex-col items-center w-1/3">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden"><img id="sb-away-logo" src="" class="w-full h-full object-contain p-1"><span id="sb-away-fall" class="font-bold text-xl hidden">AWY</span></div>
+                        <span id="sb-away-name" class="font-head text-2xl uppercase text-center leading-tight">Away</span>
+                        <span id="sb-away-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-6 pt-4 border-t border-gray-200">
+                    <p class="text-[11px] uppercase tracking-widest text-gray-500"><i class="fa-solid fa-user-pen mr-1"></i> Scoreboard last updated by: <span id="sb-updated-by" class="font-bold text-gray-800">Awaiting First Update</span></p>
+                </div>
             </div>
-        </div>
 
-        <div id="fanControlPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-[0_0_15px_rgba(251,191,36,0.3)] relative overflow-hidden">
-            <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-            <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-tower-broadcast text-pahs-gold mr-2"></i> Live Score Reporter</h3>
-            <p class="text-sm text-gray-300 mb-4 font-medium relative z-10">You are signed in! Help keep the community updated by reporting the live score from the stands.</p>
-            <button onclick="openScoreModal()" class="relative z-10 bg-pahs-gold text-black font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:bg-yellow-300 transition-colors shadow-lg border border-yellow-500">Update Matchup Score</button>
-        </div>
-
-        <div class="content-card rounded-2xl p-6 mt-6">
-            <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4 flex items-center gap-2 text-gray-900">
-                <i class="fa-solid fa-list-ol text-gray-500"></i> Around The League
-            </h3>
-            <div class="scoreboard-container w-full rounded-xl overflow-hidden border border-gray-300 bg-white">
-                <div class="scorestream-widget-container" data-ss_widget_type="vertScoreboard" style="height:600px;" data-user-widget-id="58320"></div>
-                <script async="async" type="text/javascript" src="https://scorestream.com/apiJsCdn/widgets/embed.js"></script>
+            <div id="fanControlPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-[0_0_15px_rgba(251,191,36,0.3)] relative overflow-hidden">
+                <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+                <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-tower-broadcast text-pahs-gold mr-2"></i> Live Score Reporter</h3>
+                <p class="text-sm text-gray-300 mb-4 font-medium relative z-10">You are signed in! Help keep the community updated by reporting the live score from the stands.</p>
+                <button onclick="openScoreModal()" class="relative z-10 bg-pahs-gold text-black font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:bg-yellow-300 transition-colors shadow-lg border border-yellow-500">Update Matchup Score</button>
             </div>
-        </div>
-
-    </main>
+        </main>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -262,46 +235,40 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    // 1. Initialize Firebase
+        // PASTE YOUR ACTUAL CONTROLLER WEB APP URL HERE!
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
-            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/", // <--- PASTE IT RIGHT HERE
+            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/",
             projectId: "pahs-football",
             storageBucket: "pahs-football.firebasestorage.app",
             messagingSenderId: "260294523190",
-            appId: "1:260294523190:web:b3963804702d2a03749b97",
-            measurementId: "G-2J69C1LS6D"
+            appId: "1:260294523190:web:b3963804702d2a03749b97"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const dbFirestore = getFirestore(app);   // Used ONLY once to get the username (Saves reads)
-        const dbRealtime = getDatabase(app);     // Used for Live Scores (Unlimited free streaming)
+        const dbFirestore = getFirestore(app);   
+        const dbRealtime = getDatabase(app);     
         
         window.currentUserProfile = null;
+        window.currentMatchupData = null; // Stores Google Sheet data
 
-        // 2. Auth Check - Fetch username from Firestore
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
                     const userDoc = await getDoc(doc(dbFirestore, "users", user.uid));
-                    if (userDoc.exists()) {
-                        window.currentUserProfile = userDoc.data();
-                    } else {
-                        window.currentUserProfile = { username: "Anonymous Fan" };
-                    }
-                } catch(e) {
-                    window.currentUserProfile = { username: "Fan" };
-                }
+                    if (userDoc.exists()) window.currentUserProfile = userDoc.data();
+                    else window.currentUserProfile = { username: "Anonymous Fan" };
+                } catch(e) { window.currentUserProfile = { username: "Fan" }; }
 
-                // Show the reporter control panel
                 const ctrlPanel = document.getElementById('fanControlPanel');
                 if (ctrlPanel) ctrlPanel.classList.remove('hidden');
             }
         });
 
-        // 3. Expose Click Handlers to the Window
         window.sharePage = function() {
             if (navigator.share) navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
             else navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); });
@@ -309,27 +276,25 @@
         
         window.copyAddress = function() {
             const btn = document.getElementById('btn-copy-address');
-            const address = btn.getAttribute('data-address');
-            if (address) {
-                navigator.clipboard.writeText(address).then(() => {
+            if (btn.getAttribute('data-address')) {
+                navigator.clipboard.writeText(btn.getAttribute('data-address')).then(() => {
                     const orig = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-                    btn.classList.add('bg-green-500', 'text-white'); btn.classList.remove('bg-gray-200', 'text-gray-800');
-                    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-green-500', 'text-white'); btn.classList.add('bg-gray-200', 'text-gray-800'); }, 2000);
+                    btn.classList.replace('bg-gray-200', 'bg-green-500'); btn.classList.replace('text-gray-800', 'text-white');
+                    setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('bg-green-500', 'bg-gray-200'); btn.classList.replace('text-white', 'text-gray-800'); }, 2000);
                 });
             }
         };
 
         window.openScoreModal = async function() {
-            const game = window.currentLiveCsvGame;
-            if (!game || !game.YourTeam) return alert("Game data hasn't loaded yet. Please wait a moment.");
+            const game = window.currentMatchupData;
+            if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
             
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
-            document.getElementById('lblHome').innerText = (isHome ? game.YourTeam : game.Opponent) + " Score";
-            document.getElementById('lblAway').innerText = (!isHome ? game.YourTeam : game.Opponent) + " Score";
+            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            document.getElementById('lblHome').innerText = (isHome ? game.yourTeam : game.opponent) + " Score";
+            document.getElementById('lblAway').innerText = (!isHome ? game.yourTeam : game.opponent) + " Score";
             
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
             
-            // Read from Realtime DB before opening
             try {
                 const snapshot = await get(ref(dbRealtime, 'live_scores/' + teamKey));
                 const data = snapshot.val();
@@ -339,25 +304,21 @@
                     document.getElementById('inpQuarter').value = data.quarter || '1';
                     document.getElementById('inpTime').value = data.clock || '12:00';
                 }
-            } catch(e) { console.error("Error reading current score:", e); }
+            } catch(e) { console.error(e); }
             
             document.getElementById('scoreUpdateModal').style.display = 'flex';
         };
 
-        window.closeScoreModal = function() {
-            document.getElementById('scoreUpdateModal').style.display = 'none';
-        };
+        window.closeScoreModal = function() { document.getElementById('scoreUpdateModal').style.display = 'none'; };
 
-        // 4. Handle Form Submission to REALTIME DATABASE
         document.getElementById('scoreUpdateForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnPushScore');
-            btn.innerText = "Pushing...";
-            btn.disabled = true;
+            btn.innerText = "Pushing..."; btn.disabled = true;
 
-            const game = window.currentLiveCsvGame;
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
+            const game = window.currentMatchupData;
+            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            const isHome = (game.homeAway || "").toLowerCase().includes('home');
             
             const qtr = document.getElementById('inpQuarter').value;
             let status = "LIVE";
@@ -367,11 +328,11 @@
 
             const usernameToSave = window.currentUserProfile ? window.currentUserProfile.username : "Unknown Fan";
 
-         const updateData = {
-                home: isHome ? game.YourTeam : game.Opponent,
-                away: !isHome ? game.YourTeam : game.Opponent,
-                homeLogo: isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
-                awayLogo: !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl,
+            const updateData = {
+                home: isHome ? game.yourTeam : game.opponent,
+                away: !isHome ? game.yourTeam : game.opponent,
+                homeLogo: isHome ? game.yourTeamLogo : game.oppLogo,
+                awayLogo: !isHome ? game.yourTeamLogo : game.oppLogo,
                 homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
                 awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
                 quarter: qtr,
@@ -381,49 +342,33 @@
                 lastUpdated: new Date().toISOString()
             };
 
-            // Write to Realtime DB
             update(ref(dbRealtime, 'live_scores/' + teamKey), updateData).then(() => {
-                window.closeScoreModal();
-                btn.innerText = "Push Live Update";
-                btn.disabled = false;
+                window.closeScoreModal(); btn.innerText = "Push Live Update"; btn.disabled = false;
             }).catch(err => {
-                console.error(err);
-                alert("Error updating score. Are you logged in?");
-                btn.innerText = "Push Live Update";
-                btn.disabled = false;
+                alert("Error updating score."); btn.innerText = "Push Live Update"; btn.disabled = false;
             });
         });
 
-        // 5. Realtime Database Listener (Free bandwidth updates)
-        window.listenToLiveScore = function(game) {
-            if (!game.YourTeam) return;
-            const teamKey = game.YourTeam.replace(/[^a-zA-Z0-9]/g, '');
-            const isHome = (game.YourTeamHomeAway || "").toLowerCase().includes('home');
-            
+        // LIVE SCORE LISTENER
+        function listenToLiveScore(game) {
+            const teamKey = game.yourTeam.replace(/[^a-zA-Z0-9]/g, '');
+            const isHome = (game.homeAway || "").toLowerCase().includes('home');
             const sbCard = document.getElementById('basicScoreboardCard');
             const statusBadge = document.getElementById('sb-status');
             const liveDot = document.getElementById('sb-live-dot');
             const updaterText = document.getElementById('sb-updated-by');
 
-            // Listen to Realtime DB node
             onValue(ref(dbRealtime, 'live_scores/' + teamKey), (snapshot) => {
-                
-                // Static Info Setup (Always load names and logos from Google Sheet first)
-                document.getElementById('sb-home-name').innerText = isHome ? game.YourTeam : game.Opponent;
-                document.getElementById('sb-away-name').innerText = !isHome ? game.YourTeam : game.Opponent;
-
-                const hLogo = document.getElementById('sb-home-logo');
-                const aLogo = document.getElementById('sb-away-logo');
-                let homeLogoUrl = isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
-                let awayLogoUrl = !isHome ? game.YourTeamLogoUrl : game.OppLogoUrl;
-                
-                if(homeLogoUrl) { hLogo.src = homeLogoUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
-                if(awayLogoUrl) { aLogo.src = awayLogoUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
+                // Static Default Info
+                document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
+                document.getElementById('sb-away-name').innerText = !isHome ? game.yourTeam : game.opponent;
+                const hLogo = document.getElementById('sb-home-logo'); const aLogo = document.getElementById('sb-away-logo');
+                let hUrl = isHome ? game.yourTeamLogo : game.oppLogo; let aUrl = !isHome ? game.yourTeamLogo : game.oppLogo;
+                if(hUrl) { hLogo.src = hUrl; hLogo.style.display = 'block'; document.getElementById('sb-home-fall').style.display='none';}
+                if(aUrl) { aLogo.src = aUrl; aLogo.style.display = 'block'; document.getElementById('sb-away-fall').style.display='none';}
 
                 const data = snapshot.val();
-
                 if (data) {
-                    // Update Scores
                     document.getElementById('sb-home-score').innerText = data.homeScore || 0;
                     document.getElementById('sb-away-score').innerText = data.awayScore || 0;
                     document.getElementById('sb-clock').innerText = data.clock || "12:00";
@@ -431,145 +376,114 @@
 
                     const qtr = data.quarter || "PREGAME";
                     if (qtr === "PREGAME" || data.status === "UPCOMING") {
-                        statusBadge.innerText = "PREGAME";
-                        statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
+                        statusBadge.innerText = "PREGAME"; statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-yellow-500"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
                     } else if (qtr === "HALF") {
-                        statusBadge.innerText = "HALFTIME";
-                        statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                        statusBadge.innerText = "HALFTIME"; statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                     } else if (qtr === "FINAL" || data.status === "FINAL") {
-                        statusBadge.innerText = "FINAL";
-                        statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
+                        statusBadge.innerText = "FINAL"; statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
                     } else {
-                        statusBadge.innerText = "QTR " + qtr;
-                        statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live";
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                        statusBadge.innerText = "QTR " + qtr; statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                     }
-                } else {
-                    // Defaults if nothing in the database yet
-                    document.getElementById('sb-home-score').innerText = 0;
-                    document.getElementById('sb-away-score').innerText = 0;
-                    document.getElementById('sb-clock').innerText = "12:00";
-                    updaterText.innerText = "Awaiting First Update";
-                    
-                    statusBadge.innerText = "PREGAME";
-                    statusBadge.className = "bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                    liveDot.className = "w-3 h-3 rounded-full bg-yellow-500";
-                    sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]";
                 }
             });
         }
 
-        // 6. Init CSV Parsing 
-        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1581126650&single=true&output=csv";
-        let timerInterval;
+        // UNIVERSAL LOADER (Reads URL ?team=NAME, fetches Apps Script)
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const teamParam = urlParams.get('team');
 
-        document.addEventListener("DOMContentLoaded", () => {
-            Papa.parse(SHEET_CSV_URL, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    const games = results.data;
-                    window.currentLiveCsvGame = games.length > 0 ? games[games.length - 1] : {};
+            if (!teamParam) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('claim-team-desc').innerText = "Please select a team from the Statewide Scoreboard or Directory to view their Game Day page.";
+                document.getElementById('claim-email-btn').style.display = 'none';
+                document.getElementById('claim-team-prompt').classList.remove('hidden');
+                return;
+            }
 
-                    const now = new Date().getTime();
-                    for(let i = 0; i < games.length; i++) {
-                        let gameTime = new Date(`${games[i].Date} ${games[i].Time}`).getTime();
-                        if (gameTime + (1000 * 60 * 60 * 4) > now) {
-                            window.currentLiveCsvGame = games[i]; break;
-                        }
-                    }
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + "?team=" + encodeURIComponent(teamParam));
+                const result = await response.json();
 
-                    if(window.currentLiveCsvGame.Week) {
-                        updateUICsvData(window.currentLiveCsvGame);
-                        listenToLiveScore(window.currentLiveCsvGame); // Start listening to RTDB
-                    } else {
-                        document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>No Schedule Data Found</h2><p class='text-gray-600 mt-2'>Waiting for admin to push Game Day data.</p>";
-                    }
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                if (result.status === 'error' || !result.data || !result.data.yourTeam) {
+                    // Show "Claim this Team" prompt
+                    document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
+                    document.getElementById('claim-email-btn').href = `mailto:admin@pahsfootball.com?subject=Admin Request for ${teamParam}&body=I would like to apply to manage the Game Day page for ${teamParam}.`;
+                    document.getElementById('claim-team-prompt').classList.remove('hidden');
+                    return;
                 }
-            });
+
+                // IT WORKED! Load the UI.
+                window.currentMatchupData = result.data;
+                const game = result.data;
+                document.getElementById('main-app').classList.remove('hidden');
+
+                let weekNum = game.week ? game.week.replace(/week/i, '').trim() : "default";
+                document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
+                document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
+                document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
+                document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
+                
+                if(game.yourTeamLogo) { document.getElementById('ui-your-logo').src = game.yourTeamLogo; document.getElementById('ui-your-fallback').style.display='none'; }
+                else { document.getElementById('ui-your-logo').style.display='none'; document.getElementById('ui-your-fallback').style.display='block'; document.getElementById('ui-your-fallback').innerText = game.yourTeam.substring(0,3).toUpperCase(); }
+
+                document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
+                document.getElementById('ui-opp-mascot').innerText = game.oppMascot || "";
+                document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : "";
+                
+                if(game.oppLogo) { document.getElementById('ui-opp-logo').src = game.oppLogo; document.getElementById('ui-opp-fallback').style.display='none'; }
+                else { document.getElementById('ui-opp-logo').style.display='none'; document.getElementById('ui-opp-fallback').style.display='block'; document.getElementById('ui-opp-fallback').innerText = game.opponent.substring(0,3).toUpperCase(); }
+
+                let isHome = (game.homeAway || "").toLowerCase().includes('home');
+                document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
+                document.getElementById('ui-homeaway').className = isHome ? "font-bold bg-pahs-gold text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
+                
+                document.getElementById('ui-theme').innerText = game.theme || "No Theme";
+                document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
+                document.getElementById('ui-address').innerText = game.address || "Address TBA";
+
+                if (game.date && game.time) {
+                    try {
+                        let dObj = new Date(`${game.date} ${game.time}`);
+                        if(!isNaN(dObj)) {
+                            document.getElementById('ui-datetime').innerText = `${dObj.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'})} • ${dObj.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}`;
+                            startCountdown(dObj.getTime());
+                        } else { throw new Error(); }
+                    } catch(e) { document.getElementById('ui-datetime').innerText = `${game.date} • ${game.time}`; }
+                }
+
+                if(game.address) {
+                    document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
+                    document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodeURIComponent(game.address)}`;
+                    document.getElementById('btn-directions').style.display = 'flex';
+                    document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
+                    document.getElementById('btn-copy-address').style.display = 'flex';
+                }
+                
+                if(game.ticketLink) { document.getElementById('ui-ticket').href = game.ticketLink; document.getElementById('ui-ticket').style.display = 'block'; }
+                else { document.getElementById('ui-ticket').style.display = 'none'; }
+
+                listenToLiveScore(game);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>Connection Error</h2><p class='text-gray-600 mt-2'>Could not load data. Refresh the page.</p>";
+            }
         });
 
-        // Setup Matchup Header from CSV
-        function updateUICsvData(game) {
-            document.getElementById('loading-overlay').style.display = 'none';
-
-            let weekNum = game.Week ? game.Week.toString().replace(/week/i, '').trim() : "default";
-            document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
-            
-            document.getElementById('ui-your-name').innerText = game.YourTeam || "TBA";
-            document.getElementById('ui-your-mascot').innerText = game.YourTeamMascot || "";
-            document.getElementById('ui-your-record').innerText = game.YourTeamRecord ? `(${game.YourTeamRecord})` : "";
-            
-            const yourLogoEl = document.getElementById('ui-your-logo');
-            const yourFallbackEl = document.getElementById('ui-your-fallback');
-            if(game.YourTeamLogoUrl && game.YourTeamLogoUrl.trim() !== "") { 
-                yourLogoEl.src = game.YourTeamLogoUrl; yourLogoEl.style.display = 'block'; yourFallbackEl.style.display = 'none'; 
-            } else { 
-                yourLogoEl.style.display = 'none'; yourFallbackEl.style.display = 'block'; yourFallbackEl.innerText = game.YourTeam ? game.YourTeam.substring(0,3).toUpperCase() : "TEA"; 
-            }
-
-            document.getElementById('ui-opp-name').innerText = game.Opponent || "TBA";
-            document.getElementById('ui-opp-mascot').innerText = game.OppMascot || "";
-            document.getElementById('ui-opp-record').innerText = game.OppTeamRecord ? `(${game.OppTeamRecord})` : "";
-
-            const oppLogoEl = document.getElementById('ui-opp-logo');
-            const oppFallbackEl = document.getElementById('ui-opp-fallback');
-            if(game.OppLogoUrl && game.OppLogoUrl.trim() !== "") { 
-                oppLogoEl.src = game.OppLogoUrl; oppLogoEl.style.display = 'block'; oppFallbackEl.style.display = 'none'; 
-            } else { 
-                oppLogoEl.style.display = 'none'; oppFallbackEl.style.display = 'block'; oppFallbackEl.innerText = game.Opponent ? game.Opponent.substring(0,3).toUpperCase() : "OPP"; 
-            }
-
-            let isHome = game.YourTeamHomeAway && game.YourTeamHomeAway.toLowerCase().includes('home');
-            let homeAwayBadge = document.getElementById('ui-homeaway');
-            homeAwayBadge.innerText = game.YourTeamHomeAway || "TBA";
-            homeAwayBadge.className = isHome 
-                ? "font-bold bg-pahs-gold text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" 
-                : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-            
-            let dateObj = new Date(`${game.Date} ${game.Time}`);
-            if (!isNaN(dateObj)) {
-                let dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
-                let timeOptions = { hour: 'numeric', minute: '2-digit' };
-                document.getElementById('ui-datetime').innerText = `${dateObj.toLocaleDateString('en-US', dateOptions)} • ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
-                startCountdown(dateObj.getTime());
-            } else { 
-                document.getElementById('ui-datetime').innerText = "Date/Time TBA"; 
-                document.getElementById("countdown-container").innerHTML = "<div class='text-2xl font-head font-bold text-gray-500 uppercase py-4'>Time TBA</div>";
-            }
-            
-            document.getElementById('ui-theme').innerText = game.Theme || "No Theme";
-            document.getElementById('ui-stadium').innerText = game.StadiumName || "Stadium TBA";
-            document.getElementById('ui-address').innerText = game.Address || "Address TBA";
-
-            if(game.Address && game.Address.trim() !== "") {
-                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodeURIComponent(game.Address)}&t=m&z=13&ie=UTF8&iwloc=&output=embed`;
-                document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(game.Address)}`;
-                document.getElementById('btn-directions').style.display = 'flex';
-                document.getElementById('btn-copy-address').setAttribute('data-address', game.Address);
-                document.getElementById('btn-copy-address').style.display = 'flex';
-            }
-            
-            let ticketUrl = game.TicketLink;
-            if(ticketUrl && ticketUrl.trim() !== "") { 
-                document.getElementById('ui-ticket').href = ticketUrl; document.getElementById('ui-ticket').style.display = 'block'; 
-            } else { document.getElementById('ui-ticket').style.display = 'none'; }
-        }
-
+        let timerInterval;
         function startCountdown(kickoffTime) {
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(function() {
-                const now = new Date().getTime();
-                const distance = kickoffTime - now;
+                const distance = kickoffTime - new Date().getTime();
                 if (distance < 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById("countdown-label").style.display = 'none';
+                    clearInterval(timerInterval); document.getElementById("countdown-label").style.display = 'none';
                     document.getElementById("countdown-container").innerHTML = `<div class='flex flex-col items-center justify-center py-2 w-full'><div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div></div>`;
                     return;
                 }
@@ -579,9 +493,6 @@
                 document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
             }, 1000);
         }
-
-        // Removed the setInterval auto-refresh so it doesn't close the modal while a fan is typing!
-        // Realtime DB updates instantly anyway.
     </script>
 </body>
 </html>
