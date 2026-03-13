@@ -187,6 +187,30 @@
         </div>
     </div>
 
+    <div id="deleteModalOverlay" class="modal-overlay" onclick="closeDeleteModal(event)">
+        <div class="modal-content" style="border-top-color: #ef4444;">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Delete Post
+                </h2>
+                <button onclick="closeDeleteModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white text-center">
+                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">
+                    Are you sure you want to permanently delete this post? This action cannot be undone.
+                </p>
+                <div class="flex gap-3">
+                    <button onclick="closeDeleteModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <button id="confirmDeleteBtn" onclick="confirmDeletePost()" class="flex-1 bg-red-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-red-700 transition-all text-sm shadow">
+                        Yes, Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="reportModalOverlay" class="modal-overlay" onclick="closeReportModal(event)">
         <div class="modal-content" style="border-top-color: #dc2626;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -288,7 +312,9 @@
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
+        
         window.currentEditPostId = null;
+        window.currentDeletePostId = null;
 
         // *** COLOR PARSING LOGIC ***
         const colorNameMap = {
@@ -394,6 +420,7 @@
                     }
                 });
                 
+                // If posts loaded before the logos finished downloading, re-render
                 if(currentPosts.length > 0) window.renderFeed();
             }
         });
@@ -474,6 +501,7 @@
             }
 
             try {
+                // Add timestamp to force bypass browser cache
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
@@ -485,6 +513,7 @@
                         currentPosts = data.data;
                         window.renderFeed();
                         
+                        // Check if the user came here via a shared deep-link
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
                             const targetPost = urlParams.get('post');
@@ -533,6 +562,7 @@
             let tagHtml = '';
             let postColor = '#fbbf24'; 
 
+            // Handle Tagged Team UI (Logo and Color)
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -554,10 +584,11 @@
                 `;
             }
 
+            // Clean the text and find links
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             const safeContent = linkify(escapeHTML(post.content));
 
-            // Show Edit and Delete Buttons if Author
+            // Show Edit & Delete Button if Author
             let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
                 authorActionsHtml = `
@@ -641,19 +672,25 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // NEW POST GLOW LOGIC
+                // --- NEW POST GLOW LOGIC ---
                 const secondsOld = (now - postData.timestamp) / 1000;
                 
-                if (secondsOld < 60 && secondsOld >= -60) {
+                // Check if post is between 10 seconds old and -30 seconds (to account for clock lag)
+                if (secondsOld < 10 && secondsOld >= -30) {
                     postCard.classList.add('new-post-flash');
+                    
+                    const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
+                    
+                    // Remove the class after the 10 seconds total time elapses
                     setTimeout(() => { 
                         postCard.classList.remove('new-post-flash'); 
-                    }, (60 - secondsOld) * 1000);
+                    }, timeRemaining * 1000);
                 }
 
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
+                // Color border top based on team
                 if (post.taggedTeam) {
                     postCard.style.borderTopColor = postData.color;
                     postCard.style.borderLeft = `3px solid ${postData.color}`;
@@ -783,23 +820,50 @@
         });
 
         // *** DELETE POST LOGIC ***
-        window.deletePost = async function(e, postId) {
+        window.deletePost = function(e, postId) {
             if (e) e.stopPropagation();
             if (!currentUser) return;
             
             const post = currentPosts.find(p => p.postId === postId);
             if (!post || post.authorId !== currentUser.uid) return;
 
-            if (!confirm("Are you sure you want to permanently delete this post?")) return;
+            window.currentDeletePostId = postId;
 
+            // Close the post viewer modal if they clicked delete from inside it
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
-                window.closePostModal(null, true);
+                postOverlay.classList.remove('active');
+                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
             }
+
+            const overlay = document.getElementById('deleteModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeDeleteModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'deleteModalOverlay')) {
+                const overlay = document.getElementById('deleteModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                    window.currentDeletePostId = null;
+                }, 300);
+            }
+        };
+
+        window.confirmDeletePost = async function() {
+            if (!currentUser || !window.currentDeletePostId) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.innerText = "Deleting...";
+            btn.disabled = true;
 
             const payload = { 
                 action: "delete_post", 
-                postId: postId,
+                postId: window.currentDeletePostId,
                 userId: currentUser.uid
             };
 
@@ -813,13 +877,22 @@
                 try {
                     const data = JSON.parse(rawText);
                     if(data.status === "success") {
-                        window.loadPosts(true);
+                        window.closeDeleteModal(null, true);
+                        window.loadPosts(true); // Force reload the feed to remove the post
                     } else {
                         alert("Error: " + data.message);
+                        window.closeDeleteModal(null, true);
                     }
-                } catch(err) { alert("Permissions Error."); }
+                } catch(err) { 
+                    alert("Permissions Error."); 
+                    window.closeDeleteModal(null, true);
+                }
             } catch (error) {
                 alert("Failed to communicate with server.");
+                window.closeDeleteModal(null, true);
+            } finally {
+                btn.innerText = "Yes, Delete";
+                btn.disabled = false;
             }
         };
 
