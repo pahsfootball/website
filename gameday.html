@@ -18,6 +18,7 @@
                     colors: { 
                         pahs: { 
                             dark: '#0f0f0f', 
+                            // Maps tailwind's pahs-gold to a CSS variable that we will dynamically change!
                             gold: 'var(--team-primary, #fbbf24)' 
                         } 
                     }, 
@@ -60,7 +61,7 @@
             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl text-gray-400">
                 <i class="fa-solid fa-clipboard-question"></i>
             </div>
-            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">Team Not Found</h2>
+            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">Page Not Configured</h2>
             <p class="text-gray-600 mb-8" id="claim-team-desc">There is no official Game Day data for this team yet.</p>
             
             <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
@@ -278,12 +279,6 @@
                 <p class="text-sm text-gray-300 mb-4 font-medium relative z-10">You are signed in! Help keep the community updated by reporting the live score from the stands.</p>
                 <button onclick="openScoreModal()" class="relative z-10 bg-pahs-gold text-[color:var(--team-text,#000)] font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">Update Matchup Score</button>
             </div>
-
-            <div id="unclaimedTeamPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-blue-500 bg-blue-50 text-center shadow-md">
-                <h3 class="font-head text-3xl uppercase tracking-wide text-blue-900 mb-2"><i class="fa-solid fa-hand-fist text-blue-600 mr-2"></i> Claim This Team</h3>
-                <p class="text-sm text-blue-800 mb-4 font-medium">There is no official Game Day data or Manager for this team yet. Are you a super fan? Request admin access to post live updates!</p>
-                <button onclick="handleClaimTeamGameDay(new URLSearchParams(window.location.search).get('team'))" class="bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors shadow-lg border border-blue-700">Request Admin Access</button>
-            </div>
         </main>
     </div>
 
@@ -362,7 +357,6 @@
         onAuthStateChanged(auth, async (user) => {
             const ctrlPanel = document.getElementById('fanControlPanel');
             const loginPanel = document.getElementById('authActionPanel'); 
-            const unclaimedPanel = document.getElementById('unclaimedTeamPanel'); // Grab new panel
 
             if (user) {
                 try {
@@ -371,8 +365,7 @@
                     else window.currentUserProfile = { username: "Anonymous Fan" };
                 } catch(e) { window.currentUserProfile = { username: "Fan" }; }
 
-                // Only show the Updater if the unclaimed panel ISN'T already shown
-                if (ctrlPanel && unclaimedPanel.classList.contains('hidden')) {
+                if (ctrlPanel) {
                     ctrlPanel.classList.remove('hidden');
                     ctrlPanel.style.display = 'block';
                 }
@@ -386,8 +379,7 @@
                     ctrlPanel.classList.add('hidden');
                     ctrlPanel.style.display = 'none';
                 }
-                // Only show Login prompt if the unclaimed panel ISN'T already shown
-                if (loginPanel && unclaimedPanel.classList.contains('hidden')) {
+                if (loginPanel) {
                     loginPanel.classList.remove('hidden');
                     loginPanel.style.display = 'block';
                 }
@@ -681,72 +673,14 @@
 
                 document.getElementById('loading-overlay').style.display = 'none';
 
-                // --- SKELETON PAGE LOGIC: IF NO GAME IS SCHEDULED OR TEAM ISN'T IN BACKEND YET ---
                 if (result.status === 'error' || !result.data || !result.data.yourTeam) {
-                    
-                    // Build a "Skeleton" page using the Master CSV data
-                    Papa.parse(CSV_URL, {
-                        download: true,
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: function(csvResult) {
-                            const teamRow = csvResult.data.find(r => r['School'] === teamParam);
-                            
-                            if(teamRow) {
-                                // We found them in the Master List! Show the skeleton page.
-                                document.getElementById('main-app').classList.remove('hidden');
-                                document.getElementById('ui-week').innerText = "NO GAME SCHEDULED";
-                                
-                                // Set Home Team Info
-                                document.getElementById('ui-your-name').innerText = teamRow['School'];
-                                document.getElementById('ui-your-mascot').innerText = teamRow['Team'] || "";
-                                document.getElementById('ui-homeaway').innerText = "TBA";
-                                
-                                const logoUrl = teamRow['Logo'] || teamRow['Logo URL'] || teamRow['LogoUrl'];
-                                if(logoUrl) {
-                                    document.getElementById('ui-your-logo').src = logoUrl;
-                                    document.getElementById('ui-your-logo').style.display = 'block';
-                                    document.getElementById('ui-your-fallback').style.display = 'none';
-                                    document.getElementById('sb-home-logo').src = logoUrl;
-                                    document.getElementById('sb-home-logo').style.display = 'block';
-                                    document.getElementById('sb-home-fall').style.display = 'none';
-                                } else {
-                                    document.getElementById('ui-your-logo').style.display = 'none';
-                                    document.getElementById('ui-your-fallback').style.display = 'block';
-                                    document.getElementById('ui-your-fallback').innerText = teamRow['School'].substring(0,3).toUpperCase();
-                                }
-
-                                // Set Opponent to TBA
-                                document.getElementById('ui-opp-name').innerText = "TBA";
-                                document.getElementById('ui-opp-logo').style.display = 'none';
-                                document.getElementById('ui-opp-fallback').style.display = 'block';
-                                document.getElementById('ui-opp-fallback').innerText = "TBA";
-                                
-                                document.getElementById('ui-datetime').innerText = "Awaiting Schedule";
-                                
-                                document.getElementById('sb-home-name').innerText = teamRow['School'];
-                                document.getElementById('sb-away-name').innerText = "TBA";
-                                document.getElementById('sb-away-logo').style.display = 'none';
-                                document.getElementById('sb-away-fall').style.display = 'block';
-                                document.getElementById('sb-away-fall').innerText = "TBA";
-                                
-                                // Hide the normal fan score reporter and show the "Claim Admin" panel instead
-                                document.getElementById('fanControlPanel').classList.add('hidden');
-                                document.getElementById('authActionPanel').classList.add('hidden'); // Also hide login prompt
-                                document.getElementById('unclaimedTeamPanel').classList.remove('hidden');
-                            } else {
-                                // They aren't in the backend OR the master list. Show the hard error.
-                                document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
-                                const claimBtn = document.getElementById('claim-email-btn');
-                                claimBtn.onclick = () => window.handleClaimTeamGameDay(teamParam);
-                                document.getElementById('claim-team-prompt').classList.remove('hidden');
-                            }
-                        }
-                    });
-                    return; // Stop execution here since there's no data to process
+                    document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
+                    const claimBtn = document.getElementById('claim-email-btn');
+                    claimBtn.onclick = () => window.handleClaimTeamGameDay(teamParam);
+                    document.getElementById('claim-team-prompt').classList.remove('hidden');
+                    return;
                 }
 
-                // --- NORMAL PAGE LOAD LOGIC (If game data exists) ---
                 window.currentMatchupData = result.data;
                 const game = result.data;
                 document.getElementById('main-app').classList.remove('hidden');
