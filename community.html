@@ -67,7 +67,6 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
-        /* --- THE GLOW ANIMATION --- */
         @keyframes newPostGlow {
             0% { box-shadow: 0 0 0px #fbbf24; border-color: rgba(0, 0, 0, 0.1); }
             50% { box-shadow: 0 0 20px 4px #fbbf24; border-color: #fbbf24; }
@@ -79,34 +78,8 @@
             z-index: 10;
         }
         
-        /* Modal Styles */
-        .modal-overlay { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.8); 
-            z-index: 100; 
-            backdrop-filter: blur(5px); 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
-            opacity: 0; 
-            transition: opacity 0.3s; 
-        }
-        
-        .modal-content { 
-            background: white; 
-            width: 100%; 
-            max-width: 500px; 
-            border-radius: 16px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            overflow: hidden; 
-            transform: scale(0.95); 
-            transition: all 0.3s ease-out; 
-            position: relative; 
-            border-top: 5px solid #fbbf24; 
-        }
-        
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transform: scale(0.95); transition: all 0.3s ease-out; position: relative; border-top: 5px solid #fbbf24; }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
@@ -501,7 +474,6 @@
             }
 
             try {
-                // Add timestamp to force bypass browser cache
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
@@ -548,7 +520,10 @@
                 timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
 
-            const likeCount = post.likes.length;
+            const realLikes = post.likes.length;
+            const artificialLikes = post.artificialLikes || 0;
+            const totalLikes = realLikes + artificialLikes;
+            
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
             const iconClass = hasLiked ? 'liked' : 'text-gray-400';
             
@@ -582,7 +557,7 @@
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             const safeContent = linkify(escapeHTML(post.content));
 
-            // Show Edit & Delete Button if Author
+            // Show Edit and Delete Buttons if Author
             let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
                 authorActionsHtml = `
@@ -618,7 +593,7 @@
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
                             <i id="${heartId}" class="fa-solid fa-football like-icon ${iconClass} text-xl"></i>
-                            <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
+                            <span id="${countId}">${totalLikes > 0 ? totalLikes : 'Like'}</span>
                         </button>
                         
                         <div class="flex items-center gap-4">
@@ -648,8 +623,13 @@
             let postsToRender = [...currentPosts]; 
             const sortType = document.getElementById('feedSort').value;
             
+            // Sorting Logic (Includes Artificial Likes)
             if (sortType === 'top') {
-                postsToRender.sort((a, b) => b.likes.length - a.likes.length || new Date(b.timestamp) - new Date(a.timestamp));
+                postsToRender.sort((a, b) => {
+                    const aTotal = a.likes.length + (a.artificialLikes || 0);
+                    const bTotal = b.likes.length + (b.artificialLikes || 0);
+                    return bTotal - aTotal || new Date(b.timestamp) - new Date(a.timestamp);
+                });
             } else {
                 postsToRender.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             }
@@ -661,7 +641,7 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // --- NEW POST GLOW LOGIC (60 Seconds) ---
+                // NEW POST GLOW LOGIC
                 const secondsOld = (now - postData.timestamp) / 1000;
                 
                 if (secondsOld < 60 && secondsOld >= -60) {
@@ -812,7 +792,6 @@
 
             if (!confirm("Are you sure you want to permanently delete this post?")) return;
 
-            // Close the post viewer modal if they clicked delete from inside it
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 window.closePostModal(null, true);
@@ -834,7 +813,7 @@
                 try {
                     const data = JSON.parse(rawText);
                     if(data.status === "success") {
-                        window.loadPosts(true); // Force reload the feed to remove the post
+                        window.loadPosts(true);
                     } else {
                         alert("Error: " + data.message);
                     }
@@ -870,7 +849,9 @@
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
                 }
                 
-                const newCountText = post.likes.length > 0 ? post.likes.length : 'Like';
+                const totalLikes = post.likes.length + (post.artificialLikes || 0);
+                const newCountText = totalLikes > 0 ? totalLikes : 'Like';
+                
                 if(feedCount) feedCount.innerText = newCountText;
                 if(modalCount) modalCount.innerText = newCountText;
             }
