@@ -103,7 +103,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // *** YOUR GOOGLE APP SCRIPT URL ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxYGm57UKS4zIQlGDSTWtqnFBXBBwX0TZ3PJ06Qmtb9st5RbKUsqaRDNu6roaNR6RY/exec";
 
         const firebaseConfig = {
@@ -123,7 +122,6 @@
         let currentUserProfile = null;
         let currentPosts = []; 
 
-        // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -134,23 +132,16 @@
             return filteredText;
         }
 
-        // --- POPULATE TEAM DROPDOWN (WITH ASTERISK SCRUBBER) ---
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 const select = document.getElementById('teamTagSelect');
-                
-                // Step 1: Clean the asterisks out of the school names
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
                     return row;
                 });
-
-                // Step 2: Filter and sort alphabetically
                 const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
-                
-                // Step 3: Add to dropdown and prevent duplicates
                 const addedTeams = new Set();
                 teams.forEach(team => {
                     if(!addedTeams.has(team['School'])) {
@@ -161,7 +152,6 @@
             }
         });
 
-        // --- AUTH STATE ---
         onAuthStateChanged(auth, async (user) => {
             const createSec = document.getElementById('createPostSection');
             const loginPrompt = document.getElementById('loggedOutPrompt');
@@ -170,23 +160,19 @@
                 currentUser = user;
                 createSec.classList.remove('hidden');
                 loginPrompt.classList.add('hidden');
-                
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) currentUserProfile = userDoc.data();
-                } catch(e) { console.error(e); }
+                } catch(e) {}
             } else {
                 currentUser = null;
                 currentUserProfile = null;
                 createSec.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
-            
-            // Load feed regardless of login status
             window.loadPosts(); 
         });
 
-        // --- FETCH POSTS FROM GOOGLE SHEETS ---
         window.loadPosts = async function() {
             document.getElementById('feedLoading').style.display = 'block';
             document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
@@ -201,21 +187,16 @@
                         currentPosts = data.data;
                         renderFeed();
                     } else {
-                        console.error("Sheet Error:", data.message);
-                        document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}<br><span class="text-sm font-normal text-gray-700">Check your Google Sheet tab name. It must be named exactly "Posts".</span></p>`;
+                        document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
                 } catch (jsonErr) {
-                    console.error("Permissions Error:", rawText);
-                    document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.<br><span class="text-sm font-normal text-gray-700">Go to your Google Script > Deploy > Manage Deployments > Edit.<br>Set "Who has access" to "Anyone" and redeploy.</span></p>';
+                    document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
                 }
-
             } catch (error) {
-                console.error("Error fetching feed:", error);
-                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with Google Servers. Check your connection.</p>';
+                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers. Check your connection.</p>';
             }
         };
 
-        // --- RENDER FEED ---
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
             feedContainer.innerHTML = '';
@@ -265,10 +246,14 @@
                     
                     ${tagHtml}
 
-                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-start">
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike('${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors">
                             <i id="heart-${post.postId}" class="fa-heart ${heartClass} text-lg"></i>
                             <span id="count-${post.postId}">${likeCount > 0 ? likeCount : 'Like'}</span>
+                        </button>
+
+                        <button onclick="window.reportPost('${post.postId}')" class="text-[11px] text-gray-400 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-flag"></i> Report
                         </button>
                     </div>
                 `;
@@ -277,7 +262,6 @@
             });
         }
 
-        // --- SUBMIT POST (Send to Google Sheets) ---
         document.getElementById('submitPostBtn').addEventListener('click', async () => {
             if (!currentUser) return alert("You must be logged in to post.");
             
@@ -310,33 +294,24 @@
                 });
                 
                 const rawText = await response.text();
-
                 try {
                     const data = JSON.parse(rawText);
                     if(data.status === "success") {
                         contentBox.value = "";
                         document.getElementById('teamTagSelect').value = "";
                         window.loadPosts();
-                    } else {
-                        alert("Database Error: " + data.message);
-                    }
-                } catch(e) {
-                    alert("Permissions Error. Ensure Google Script is set to 'Anyone'.");
-                }
-
+                    } else alert("Database Error: " + data.message);
+                } catch(e) { alert("Permissions Error."); }
             } catch (error) {
-                console.error("Error adding post: ", error);
                 alert("Failed to communicate with server.");
             } finally {
                 btn.innerText = "Post"; btn.disabled = false;
             }
         });
 
-        // --- TOGGLE LIKE LOGIC ---
         window.toggleLike = async function(postId) {
             if (!currentUser) return alert("You must be logged in to like posts.");
 
-            // 1. Optimistic UI Update (Makes it feel instant)
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
             if (postIndex > -1) {
                 const post = currentPosts[postIndex];
@@ -345,19 +320,31 @@
                 const countText = document.getElementById(`count-${postId}`);
 
                 if (uidIndex > -1) {
-                    post.likes.splice(uidIndex, 1); // Remove
+                    post.likes.splice(uidIndex, 1);
                     heartIcon.className = "fa-heart fa-regular text-gray-500 text-lg";
                 } else {
-                    post.likes.push(currentUser.uid); // Add
+                    post.likes.push(currentUser.uid);
                     heartIcon.className = "fa-heart fa-solid liked text-lg";
                 }
-                
                 countText.innerText = post.likes.length > 0 ? post.likes.length : 'Like';
             }
 
-            // 2. Send Background Request to Google Sheets
+            const payload = { action: "toggle_like", postId: postId, userId: currentUser.uid };
+            try {
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload)
+                });
+            } catch(e) {}
+        };
+
+        // --- REPORT POST LOGIC ---
+        window.reportPost = async function(postId) {
+            if (!currentUser) return alert("You must be logged in to report posts.");
+            
+            if (!confirm("Are you sure you want to flag this post? It will be sent to the admin team for review.")) return;
+
             const payload = {
-                action: "toggle_like",
+                action: "report_post",
                 postId: postId,
                 userId: currentUser.uid
             };
@@ -368,12 +355,13 @@
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
+                alert("Post reported successfully. Thank you for helping keep the community safe!");
             } catch(e) {
-                console.error("Error saving like:", e);
+                console.error("Error reporting post:", e);
+                alert("There was an issue reporting this post. Please try again.");
             }
         };
 
-        // --- SECURITY HELPER ---
         function escapeHTML(str) {
             return str.replace(/[&<>'"]/g, tag => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
