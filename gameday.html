@@ -18,7 +18,6 @@
                     colors: { 
                         pahs: { 
                             dark: '#0f0f0f', 
-                            // Maps tailwind's pahs-gold to a CSS variable that we will dynamically change!
                             gold: 'var(--team-primary, #fbbf24)' 
                         } 
                     }, 
@@ -33,7 +32,6 @@
 
     <style>
         :root {
-            /* Default fallbacks */
             --team-primary: #fbbf24;
             --team-text: #000000;
         }
@@ -290,7 +288,7 @@
 
             <div id="authActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
                 <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> Join the Action</h3>
-                <p class="text-sm text-gray-600 mb-4 font-medium">Scoreboard not updated or inaccurate? Log in or create an account today and submit scoring updates!</p>
+                <p class="text-sm text-gray-600 mb-4 font-medium">Scoreboard not updated or inaccurate? Log in or create an account today to submit scoring updates and join the Fan Zone!</p>
                 <a href="login.html" class="inline-block bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">
                     Log In / Sign Up
                 </a>
@@ -298,9 +296,17 @@
 
             <div id="fanControlPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-lg relative overflow-hidden transition-colors duration-500">
                 <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-                <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-tower-broadcast text-pahs-gold mr-2 transition-colors duration-500"></i> Live Score Reporter</h3>
-                <p class="text-sm text-gray-300 mb-4 font-medium relative z-10">You are signed in! Help keep the community updated by reporting the live score from the stands.</p>
-                <button onclick="openScoreModal()" class="relative z-10 bg-pahs-gold text-[color:var(--team-text,#000)] font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">Update Matchup Score</button>
+                <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-tower-broadcast text-pahs-gold mr-2 transition-colors duration-500"></i> Fan Controls</h3>
+                <p class="text-sm text-gray-300 mb-5 font-medium relative z-10">You are signed in! Update the live score or join the conversation.</p>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+                    <button onclick="openScoreModal()" class="flex-1 bg-pahs-gold text-[color:var(--team-text,#000)] font-head font-bold text-2xl uppercase tracking-widest py-3 px-6 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i> Update Score
+                    </button>
+                    <a href="community.html" class="flex-1 bg-white/10 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 px-6 rounded-xl hover:bg-white/20 transition-all shadow-lg border border-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-comments mr-2"></i> Go to Fan Zone
+                    </a>
+                </div>
             </div>
         </main>
     </div>
@@ -518,7 +524,6 @@
                 const hLogo = document.getElementById('sb-home-logo'); const aLogo = document.getElementById('sb-away-logo');
                 const hFall = document.getElementById('sb-home-fall'); const aFall = document.getElementById('sb-away-fall');
                 
-                // Dynamically generate the 3-letter initials for the scoreboard fallbacks
                 hFall.innerText = (isHome ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
                 aFall.innerText = (!isHome ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
 
@@ -538,7 +543,6 @@
                     document.getElementById('sb-clock').innerText = data.clock || "12:00";
                     updaterText.innerText = data.updatedBy ? `@${data.updatedBy}` : "System";
 
-                    // Update fallbacks if live data somehow differs
                     hFall.innerText = (data.home || "HOM").substring(0,3).toUpperCase();
                     aFall.innerText = (data.away || "AWY").substring(0,3).toUpperCase();
 
