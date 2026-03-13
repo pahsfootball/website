@@ -32,9 +32,12 @@
         .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+        
+        /* Updated Like Button Styles */
         .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .like-btn.liked { color: #ef4444; }
-        .like-btn.liked i { transform: scale(1.1); font-weight: 900; }
+        .like-icon { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .like-icon.liked { color: #fbbf24; transform: scale(1.25) rotate(-15deg); }
+        
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
         
         /* Modal Styles */
@@ -111,8 +114,7 @@
         <div class="modal-content" id="postModalContentBlock">
             <button onclick="closePostModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
             
-            <div id="postModalBody" class="p-6">
-                </div>
+            <div id="postModalBody" class="p-6"></div>
 
             <div id="modalViralCTA" class="hidden bg-gray-100 border-t border-gray-200 p-5 text-center">
                 <h4 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-1"><i class="fa-solid fa-users text-pahs-gold mr-1"></i> Join the Fan Zone</h4>
@@ -192,7 +194,6 @@
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
 
-        // --- COLOR PARSING LOGIC ---
         const colorNameMap = {
             "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
             "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
@@ -217,7 +218,6 @@
             return { p: normalizeColor(p[0]) };
         };
 
-        // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -263,13 +263,12 @@
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
 
-                        // Save the team's primary color
                         const safeKey = team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const colorData = parseColors(team['Colors'] || team['Color'] || '');
                         if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
                     }
                 });
-                if(currentPosts.length > 0) renderFeed(); // Re-render if colors loaded after posts
+                if(currentPosts.length > 0) renderFeed(); 
             }
         });
 
@@ -345,19 +344,19 @@
 
             const likeCount = post.likes.length;
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
-            const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
             
+            // CHANGED FROM HEART TO FOOTBALL
+            const iconClass = hasLiked ? 'liked' : 'text-gray-400';
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
             let tagHtml = '';
-            let postColor = '#fbbf24'; // Default to gold
+            let postColor = '#fbbf24'; 
 
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
                 
-                // Grab color and determine text contrast
                 postColor = teamColorDictionary[safeKey] || '#fbbf24';
                 const contrastText = getContrast(postColor);
                 const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
@@ -395,8 +394,8 @@
                     ${tagHtml}
 
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                        <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors p-1">
-                            <i id="${heartId}" class="fa-heart ${heartClass} text-xl"></i>
+                        <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
+                            <i id="${heartId}" class="fa-solid fa-football like-icon ${iconClass} text-xl"></i>
                             <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
                         </button>
 
@@ -429,7 +428,6 @@
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
-                // Apply the custom team color to the card borders
                 if (post.taggedTeam) {
                     postCard.style.borderTopColor = postData.color;
                     postCard.style.borderLeft = `3px solid ${postData.color}`;
@@ -499,12 +497,12 @@
 
                 if (uidIndex > -1) {
                     post.likes.splice(uidIndex, 1); 
-                    if(feedIcon) feedIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
-                    if(modalIcon) modalIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
+                    if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
+                    if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
                 } else {
                     post.likes.push(currentUser.uid); 
-                    if(feedIcon) feedIcon.className = "fa-heart fa-solid liked text-xl";
-                    if(modalIcon) modalIcon.className = "fa-heart fa-solid liked text-xl";
+                    if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
+                    if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
                 }
                 
                 const newCountText = post.likes.length > 0 ? post.likes.length : 'Like';
@@ -575,7 +573,6 @@
             }
         };
 
-        // --- NEW REPORT MODAL LOGIC ---
         window.openReportModal = function(e, postId) {
             if (e) e.stopPropagation();
             if (!currentUser) return alert("You must be logged in to report posts.");
