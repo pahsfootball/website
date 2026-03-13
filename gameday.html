@@ -162,7 +162,7 @@
                         <i class="fa-solid fa-list-ol"></i>
                         <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Scores</span>
                     </a>
-                    <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2">GameDay Central</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2">Game Day Central</h1>
                 </div>
 
                 <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
@@ -902,6 +902,11 @@
                 
                 // TRIGGER EMBEDDED FAN ZONE
                 fetchEmbeddedPosts(game.yourTeam, game.opponent);
+                
+                // NEW: Silently update the feed every 60 seconds
+                setInterval(() => {
+                    fetchEmbeddedPosts(game.yourTeam, game.opponent);
+                }, 60000);
 
             } catch (error) {
                 console.error(error);
