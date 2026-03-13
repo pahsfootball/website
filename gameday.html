@@ -18,6 +18,7 @@
                     colors: { 
                         pahs: { 
                             dark: '#0f0f0f', 
+                            // Maps tailwind's pahs-gold to a CSS variable that we will dynamically change!
                             gold: 'var(--team-primary, #fbbf24)' 
                         } 
                     }, 
@@ -576,6 +577,13 @@
         // --- WEATHER FETCH LOGIC (DATE & TIME AWARE) ---
         async function fetchWeather(address, gameDateObj) {
             const weatherEl = document.getElementById('ui-weather');
+
+            // 1. Check if date is missing or invalid FIRST
+            if (!gameDateObj || isNaN(gameDateObj)) {
+                weatherEl.innerText = "Check back closer to game day";
+                return;
+            }
+
             if (!address || address.trim() === "Address TBA" || address.trim() === "") {
                 weatherEl.innerText = "Location needed for forecast";
                 return;
@@ -611,51 +619,35 @@
                 const forecastData = await forecastRes.json();
 
                 if (forecastData.properties && forecastData.properties.periods && forecastData.properties.periods.length > 0) {
-                    let targetPeriod = null;
-                    let isTooFarOut = false;
+                    const gameTime = gameDateObj.getTime();
+                    const periods = forecastData.properties.periods;
+                    
+                    // Find the specific period the game kickoff falls into
+                    const targetPeriod = periods.find(p => {
+                        const start = new Date(p.startTime).getTime();
+                        const end = new Date(p.endTime).getTime();
+                        return gameTime >= start && gameTime <= end;
+                    });
 
-                    // If we have a valid game date/time, search the forecast for that exact window
-                    if (gameDateObj && !isNaN(gameDateObj)) {
-                        const gameTime = gameDateObj.getTime();
-                        const periods = forecastData.properties.periods;
+                    if (targetPeriod) {
+                        // 3. We found a forecast specifically for the game date!
+                        const temp = targetPeriod.temperature;
+                        const desc = targetPeriod.shortForecast;
+                        const prefix = `${targetPeriod.name}: `;
                         
-                        // Check if the game is beyond the 7-day forecast window
-                        const lastPeriodEnd = new Date(periods[periods.length - 1].endTime).getTime();
-                        
-                        if (gameTime > lastPeriodEnd) {
-                            isTooFarOut = true;
-                        } else {
-                            // Find the specific period the game kickoff falls into
-                            targetPeriod = periods.find(p => {
-                                const start = new Date(p.startTime).getTime();
-                                const end = new Date(p.endTime).getTime();
-                                return gameTime >= start && gameTime <= end;
-                            });
-                        }
+                        weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${prefix}${desc}`;
+                    } else {
+                        // 2. Date is valid, but no forecast exists for that date (too far out)
+                        weatherEl.innerText = "Check back closer to game day for up-to-date forecast information";
                     }
 
-                    // If game is > 7 days away
-                    if (isTooFarOut) {
-                        weatherEl.innerText = "Check back game week for forecast";
-                        return;
-                    }
-
-                    // If we found the exact period, use it. Otherwise fallback to the current weather right now
-                    const displayPeriod = targetPeriod || forecastData.properties.periods[0];
-                    const temp = displayPeriod.temperature;
-                    const desc = displayPeriod.shortForecast;
-                    
-                    // If it's a future date, add the day name (e.g., "Friday Night: 65°F - Clear")
-                    const prefix = targetPeriod ? `${displayPeriod.name}: ` : "";
-                    
-                    weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${prefix}${desc}`;
                 } else {
                     weatherEl.innerText = "Forecast currently unavailable";
                 }
 
             } catch (error) {
                 console.error("Weather fetch failed:", error);
-                weatherEl.innerText = "Check local forecast";
+                weatherEl.innerText = "Check back closer to game day for up-to-date forecast information";
             }
         }
 
@@ -757,6 +749,7 @@
                     document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
                     document.getElementById('btn-copy-address').style.display = 'flex';
                     
+                    // Fetch the weather forecast for this address!
                     fetchWeather(game.address, gameDateObj);
                 }
                 
