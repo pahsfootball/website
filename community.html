@@ -122,12 +122,51 @@
         </div>
     </div>
 
+    <div id="reportModalOverlay" class="modal-overlay" onclick="closeReportModal(event)">
+        <div class="modal-content" style="border-top-color: #dc2626;">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-flag"></i> Report Post</h2>
+                <button onclick="closeReportModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.</p>
+                
+                <form id="reportForm">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
+                    <textarea id="reportReason" rows="3" required placeholder="Describe why this post violates community guidelines..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
+                            <input type="text" id="reportFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
+                            <input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+                        </div>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
+                    <input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+
+                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">Submit to Admins</button>
+                    <div id="reportStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
+        
+        // This is your standard Contact Us Google Form submission URL
+        const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
+        const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -147,7 +186,12 @@
         let currentPosts = []; 
         let validTeams = new Set();
         let teamLogoDictionary = {};
-        let initialDeepLinkChecked = false; // Prevents the modal from popping up every single auto-refresh
+        let initialDeepLinkChecked = false;
+
+        // Variables to hold data when the report modal opens
+        window.currentReportedPostId = null;
+        window.currentReportedPostContent = null;
+        window.currentReportedPostAuthor = null;
 
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
@@ -239,13 +283,10 @@
                         currentPosts = data.data;
                         renderFeed();
                         
-                        // Check for deep link on first load
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
                             const targetPost = urlParams.get('post');
-                            if (targetPost) {
-                                window.openPostModal(targetPost);
-                            }
+                            if (targetPost) window.openPostModal(targetPost);
                             initialDeepLinkChecked = true;
                         }
 
@@ -253,7 +294,7 @@
                         document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
                 } catch (jsonErr) {
-                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.</p>';
+                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
                 }
             } catch (error) {
                 if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
@@ -264,8 +305,6 @@
 
         setInterval(() => { window.loadPosts(false); }, 60000);
 
-        // --- HELPER: GENERATE POST HTML ---
-        // We put this in a function so we can draw it perfectly in the Feed AND in the Pop-out Modal
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
             if (post.timestamp) {
@@ -277,7 +316,6 @@
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
             const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
             
-            // Add a "modal-" prefix to the IDs if it's drawing inside the modal so JS doesn't get confused
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
@@ -297,7 +335,6 @@
                 `;
             }
 
-            // Larger text if it's the modal view
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
 
             return `
@@ -326,7 +363,7 @@
                         <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                             <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
                         </button>
-                        <button onclick="window.reportPost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                        <button onclick="window.openReportModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                             <i class="fa-solid fa-flag text-lg"></i> <span class="hidden sm:inline">Report</span>
                         </button>
                     </div>
@@ -346,7 +383,6 @@
             currentPosts.forEach((post) => {
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
-                // Make the whole card clickable to open the modal!
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = buildPostHTML(post, false);
                 feedContainer.appendChild(postCard);
@@ -396,9 +432,8 @@
             }
         });
 
-        // --- LIKE LOGIC ---
         window.toggleLike = async function(e, postId) {
-            if (e) e.stopPropagation(); // Stops the modal from opening when you click the like button
+            if (e) e.stopPropagation(); 
             if (!currentUser) return alert("You must be logged in to like posts.");
 
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
@@ -406,18 +441,17 @@
                 const post = currentPosts[postIndex];
                 const uidIndex = post.likes.indexOf(currentUser.uid);
 
-                // Determine if we need to update the main feed icon, the modal icon, or both
                 const feedIcon = document.getElementById(`heart-${postId}`);
                 const feedCount = document.getElementById(`count-${postId}`);
                 const modalIcon = document.getElementById(`modal-heart-${postId}`);
                 const modalCount = document.getElementById(`modal-count-${postId}`);
 
                 if (uidIndex > -1) {
-                    post.likes.splice(uidIndex, 1); // Unlike
+                    post.likes.splice(uidIndex, 1); 
                     if(feedIcon) feedIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
                     if(modalIcon) modalIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
                 } else {
-                    post.likes.push(currentUser.uid); // Like
+                    post.likes.push(currentUser.uid); 
                     if(feedIcon) feedIcon.className = "fa-heart fa-solid liked text-xl";
                     if(modalIcon) modalIcon.className = "fa-heart fa-solid liked text-xl";
                 }
@@ -431,52 +465,29 @@
             try { fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); } catch(err) {}
         };
 
-        // --- REPORT LOGIC ---
-        window.reportPost = async function(e, postId) {
-            if (e) e.stopPropagation();
-            if (!currentUser) return alert("You must be logged in to report posts.");
-            if (!confirm("Are you sure you want to flag this post? It will be sent to the admin team for review.")) return;
-
-            const payload = { action: "report_post", postId: postId, userId: currentUser.uid };
-            try {
-                await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-                alert("Post reported successfully. Thank you for keeping the community safe!");
-            } catch(err) { alert("There was an issue reporting this post."); }
-        };
-
-        // --- SHARE LOGIC ---
         window.sharePost = function(e, postId) {
             if (e) e.stopPropagation();
-            // Generate deep link
             const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
             
             if (navigator.share) {
-                navigator.share({
-                    title: 'PAHS Football Fan Zone',
-                    text: 'Check out this post from the PAHS Football community!',
-                    url: shareUrl
-                }).catch(console.error);
+                navigator.share({ title: 'PAHS Football Fan Zone', text: 'Check out this post from the PAHS Football community!', url: shareUrl }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard! Paste it anywhere to share."));
             }
         };
 
-        // --- POST MODAL LOGIC ---
         window.openPostModal = function(postId) {
             const post = currentPosts.find(p => p.postId === postId);
             if (!post) {
-                // If they have a link to a deleted post, remove the broken URL parameter
                 window.history.replaceState({}, document.title, window.location.pathname);
                 return;
             }
 
-            // Update URL bar to show deep link so they can easily copy from their browser
             const newUrl = window.location.pathname + "?post=" + postId;
             window.history.replaceState({}, document.title, newUrl);
 
             document.getElementById('postModalBody').innerHTML = buildPostHTML(post, true);
             
-            // Show viral CTA banner if they aren't logged in
             const ctaBanner = document.getElementById('modalViralCTA');
             if (!currentUser) ctaBanner.classList.remove('hidden');
             else ctaBanner.classList.add('hidden');
@@ -488,12 +499,10 @@
         };
 
         window.closePostModal = function(e, force = false) {
-            // Close if they click the X button OR if they click outside the white box
             if (force || (e && e.target.id === 'postModalOverlay')) {
                 const overlay = document.getElementById('postModalOverlay');
                 overlay.classList.remove('active');
                 
-                // Clear the deep link from the URL bar cleanly
                 window.history.replaceState({}, document.title, window.location.pathname);
 
                 setTimeout(() => {
@@ -502,6 +511,107 @@
                 }, 300);
             }
         };
+
+        // --- NEW REPORT MODAL LOGIC ---
+        window.openReportModal = function(e, postId) {
+            if (e) e.stopPropagation();
+            if (!currentUser) return alert("You must be logged in to report posts.");
+            
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post) return alert("Post not found.");
+
+            // Store post info to use during submission
+            window.currentReportedPostId = postId;
+            window.currentReportedPostContent = post.content;
+            window.currentReportedPostAuthor = post.authorUsername;
+
+            // Pre-fill user data
+            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
+            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
+            document.getElementById('reportEmail').value = currentUser.email || "N/A";
+
+            // If they click report while in the post modal, we need to hide the post modal first
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                postOverlay.classList.remove('active');
+                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
+            }
+
+            const overlay = document.getElementById('reportModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeReportModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'reportModalOverlay')) {
+                const overlay = document.getElementById('reportModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                    document.getElementById('reportForm').reset();
+                    document.getElementById('reportStatusMessage').classList.add('hidden');
+                    document.getElementById('submitReportBtn').style.display = 'block';
+                }, 300);
+            }
+        };
+
+        // Form Submit Handler
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitReportBtn'); 
+            const msg = document.getElementById('reportStatusMessage');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true;
+            btn.style.opacity = '0.7'; 
+            
+            const reason = document.getElementById('reportReason').value;
+            const postId = window.currentReportedPostId;
+            const postContent = window.currentReportedPostContent || "N/A";
+            const postAuthor = window.currentReportedPostAuthor || "N/A";
+            const reporterId = currentUser ? currentUser.uid : "Unknown";
+            const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+
+            // Compile everything into a massive string to send to the Google Form "Reason" box
+            const combinedMessage = `*** POST REPORT ***\n` +
+                                    `Reason: ${reason}\n\n` +
+                                    `*** POST INFO ***\n` +
+                                    `Author: @${postAuthor}\n` +
+                                    `Content: "${postContent}"\n` +
+                                    `Post ID: ${postId}\n` +
+                                    `Link: ${postUrl}\n\n` +
+                                    `*** REPORTER ID ***\n` +
+                                    `${reporterId}`;
+
+            const params = new URLSearchParams();
+            params.append("entry.1967997366", combinedMessage); // Reason / Message
+            params.append("entry.1990515734", document.getElementById('reportFirstName').value); // First Name
+            params.append("entry.1429224270", document.getElementById('reportLastName').value); // Last Name
+            params.append("entry.1778241553", document.getElementById('reportEmail').value); // Email
+
+            fetch(REPORT_SUBMIT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Report Submitted Successfully!';
+                 setTimeout(() => { window.closeReportModal(null, true); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false;
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending report.'; 
+            });
+        });
 
         function escapeHTML(str) {
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
