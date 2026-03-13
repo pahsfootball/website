@@ -105,7 +105,8 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxYGm57UKS4zIQlGDSTWtqnFBXBBwX0TZ3PJ06Qmtb9st5RbKUsqaRDNu6roaNR6RY/exec";
+        // *** NEW GOOGLE SHEET API URL ***
+        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -191,7 +192,7 @@
             try {
                 // The ?t= timestamp guarantees the browser won't use a cached version
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
-                const response = await fetch(cacheBusterUrl);
+                const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
                 
                 try {
