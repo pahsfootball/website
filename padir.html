@@ -288,7 +288,7 @@
     let allData = [], filteredData = [];
     let currentTeam = "";
     let isFollowing = false;
-    let teamLogoDictionary = {}; // Will hold all the logos from the second sheet!
+    let teamLogoDictionary = {}; 
 
     const colorNameMap = {
         "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
@@ -373,7 +373,7 @@
             },
             error: function(err) {
                 console.error("Could not load MasterTeams CSV. Proceeding without logos.", err);
-                fetchDirectoryData(); // Proceed anyway so the site doesn't break
+                fetchDirectoryData(); 
             }
         });
     }
@@ -461,7 +461,7 @@
             const { p } = parseColors(row['Colors']||row['Color']||'');
             const primaryColor = p || '#a1a1aa';
             
-            // GRAB THE LOGO FROM THE DICTIONARY WE BUILT IN STEP 1
+            // GRAB THE LOGO FROM THE DICTIONARY
             const logoUrl = teamLogoDictionary[row['School']] || '';
 
             const card = document.createElement('div');
@@ -532,7 +532,6 @@
         document.getElementById('modalConference').innerText = d['Conference/League'] || 'N/A';
         document.getElementById('modalChamps').innerText = d['State Championships'] || 'None';
 
-        // CHECK DICTIONARY FOR MODAL LOGO
         const logoUrl = teamLogoDictionary[d['School']] || '';
         const modalLogoContainer = document.getElementById('modalLogoContainer');
         const modalLogo = document.getElementById('modalLogo');
@@ -567,10 +566,12 @@
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
         document.getElementById('modalGameDayLink').href = `gameday.html?team=${encodeURIComponent(d['School'])}`;
 
+        // RESET BUTTON BEFORE CHECKING AUTH
         els.claimBtn.disabled = false;
         els.claimBtn.style.opacity = "1";
         els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
         els.claimText.innerText = "REQUEST TEAM ADMIN";
+        els.claimBtn.classList.remove('hidden'); // UN-HIDE THE BUTTON HERE
         
         els.claimBtn.onclick = () => {
             if(confirm("You must be logged in to request Team Admin. Go to login?")) {
