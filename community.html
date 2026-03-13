@@ -62,7 +62,7 @@
                     <i class="fa-solid fa-pen-to-square text-pahs-gold"></i> Create a Post
                 </h2>
                 
-                <textarea id="postContent" rows="3" placeholder="What's on your mind? Hype up your team! PLEASE BE RESPECTFUL! 😊" class="input-box w-full p-3 rounded-xl text-gray-800 mb-3 resize-none font-body text-sm"></textarea>
+                <textarea id="postContent" rows="3" placeholder="What's on your mind? Hype up your team!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-3 resize-none font-body text-sm"></textarea>
                 
                 <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
                     <div class="w-full sm:w-2/3">
@@ -86,7 +86,9 @@
 
         <div class="flex items-center justify-between mb-4 border-b border-gray-400 pb-2">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
-            <button onclick="loadPosts()" class="text-gray-600 hover:text-pahs-gold transition-colors" title="Refresh Feed"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
+                <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
+            </button>
         </div>
 
         <div id="feedContainer" class="space-y-5">
@@ -103,7 +105,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // *** YOUR GOOGLE APP SCRIPT URL ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxYGm57UKS4zIQlGDSTWtqnFBXBBwX0TZ3PJ06Qmtb9st5RbKUsqaRDNu6roaNR6RY/exec";
 
         const firebaseConfig = {
@@ -153,6 +154,11 @@
             }
         });
 
+        // Event listener for the refresh button
+        document.getElementById('refreshFeedBtn').addEventListener('click', () => {
+            window.loadPosts(true);
+        });
+
         onAuthStateChanged(auth, async (user) => {
             const createSec = document.getElementById('createPostSection');
             const loginPrompt = document.getElementById('loggedOutPrompt');
@@ -171,15 +177,19 @@
                 createSec.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
-            window.loadPosts(); 
+            window.loadPosts(true); 
         });
 
-        window.loadPosts = async function() {
-            document.getElementById('feedLoading').style.display = 'block';
-            document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
+        window.loadPosts = async function(showLoader = true) {
+            const refreshIcon = document.getElementById('refreshIcon');
+            
+            if (showLoader) {
+                if(refreshIcon) refreshIcon.classList.add('fa-spin');
+                document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
+            }
 
             try {
-                // CACHE BUSTER INSTALLED HERE to bypass PC browser caching
+                // The ?t= timestamp guarantees the browser won't use a cached version
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl);
                 const rawText = await response.text(); 
@@ -189,16 +199,23 @@
                     if (data.status === "success") {
                         currentPosts = data.data;
                         renderFeed();
-                    } else {
+                    } else if (showLoader) {
                         document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
                 } catch (jsonErr) {
-                    document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
+                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
                 }
             } catch (error) {
-                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers. Check your connection.</p>';
+                if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers. Check your connection.</p>';
+            } finally {
+                if (showLoader && refreshIcon) refreshIcon.classList.remove('fa-spin');
             }
         };
+
+        // AUTO-REFRESH EVERY 60 SECONDS (Silent Background Refresh)
+        setInterval(() => {
+            window.loadPosts(false);
+        }, 60000);
 
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
@@ -302,7 +319,7 @@
                     if(data.status === "success") {
                         contentBox.value = "";
                         document.getElementById('teamTagSelect').value = "";
-                        window.loadPosts();
+                        window.loadPosts(true);
                     } else alert("Database Error: " + data.message);
                 } catch(e) { alert("Permissions Error."); }
             } catch (error) {
@@ -340,7 +357,6 @@
             } catch(e) {}
         };
 
-        // --- REPORT POST LOGIC ---
         window.reportPost = async function(postId) {
             if (!currentUser) return alert("You must be logged in to report posts.");
             
