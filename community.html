@@ -421,7 +421,6 @@
                     }
                 });
                 
-                // If posts loaded before the logos finished downloading, re-render
                 if(currentPosts.length > 0) window.renderFeed();
             }
         });
@@ -514,7 +513,6 @@
                         currentPosts = data.data;
                         window.renderFeed();
                         
-                        // Check if the user came here via a shared deep-link
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
                             const targetPost = urlParams.get('post');
@@ -560,7 +558,6 @@
             let tagHtml = '';
             let postColor = '#fbbf24'; 
 
-            // Handle Tagged Team UI (Logo and Color)
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -582,16 +579,18 @@
                 `;
             }
 
-            // Clean the text and find links
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             const safeContent = linkify(escapeHTML(post.content));
 
-            // Show Edit Button if Author
-            let editBtnHtml = '';
+            // Show Edit & Delete Button if Author
+            let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
-                editBtnHtml = `
+                authorActionsHtml = `
                     <button onclick="window.openEditModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-pahs-gold font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                         <i class="fa-solid fa-pen text-lg"></i> <span class="hidden sm:inline">Edit</span>
+                    </button>
+                    <button onclick="window.deletePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                        <i class="fa-solid fa-trash text-lg"></i> <span class="hidden sm:inline">Delete</span>
                     </button>
                 `;
             }
@@ -623,7 +622,7 @@
                         </button>
                         
                         <div class="flex items-center gap-4">
-                            ${editBtnHtml}
+                            ${authorActionsHtml}
                             <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                                 <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
                             </button>
@@ -649,7 +648,6 @@
             let postsToRender = [...currentPosts]; 
             const sortType = document.getElementById('feedSort').value;
             
-            // Sorting Logic
             if (sortType === 'top') {
                 postsToRender.sort((a, b) => b.likes.length - a.likes.length || new Date(b.timestamp) - new Date(a.timestamp));
             } else {
@@ -663,14 +661,11 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // --- NEW POST GLOW LOGIC ---
-                // Calculate age in seconds. Increased to 60 seconds to prevent Server vs PC time sync bugs!
+                // --- NEW POST GLOW LOGIC (60 Seconds) ---
                 const secondsOld = (now - postData.timestamp) / 1000;
                 
                 if (secondsOld < 60 && secondsOld >= -60) {
                     postCard.classList.add('new-post-flash');
-                    
-                    // Remove the class after the 60 seconds total time elapses
                     setTimeout(() => { 
                         postCard.classList.remove('new-post-flash'); 
                     }, (60 - secondsOld) * 1000);
@@ -679,7 +674,6 @@
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
-                // Color border top based on team
                 if (post.taggedTeam) {
                     postCard.style.borderTopColor = postData.color;
                     postCard.style.borderLeft = `3px solid ${postData.color}`;
@@ -808,6 +802,48 @@
             }
         });
 
+        // *** DELETE POST LOGIC ***
+        window.deletePost = async function(e, postId) {
+            if (e) e.stopPropagation();
+            if (!currentUser) return;
+            
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post || post.authorId !== currentUser.uid) return;
+
+            if (!confirm("Are you sure you want to permanently delete this post?")) return;
+
+            // Close the post viewer modal if they clicked delete from inside it
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                window.closePostModal(null, true);
+            }
+
+            const payload = { 
+                action: "delete_post", 
+                postId: postId,
+                userId: currentUser.uid
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload) 
+                });
+                const rawText = await response.text();
+                try {
+                    const data = JSON.parse(rawText);
+                    if(data.status === "success") {
+                        window.loadPosts(true); // Force reload the feed to remove the post
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                } catch(err) { alert("Permissions Error."); }
+            } catch (error) {
+                alert("Failed to communicate with server.");
+            }
+        };
+
         // *** TOGGLE LIKE ***
         window.toggleLike = async function(e, postId) {
             if (e) e.stopPropagation(); 
@@ -825,12 +861,10 @@
                 const modalCount = document.getElementById(`modal-count-${postId}`);
                 
                 if (uidIndex > -1) {
-                    // Unlike
                     post.likes.splice(uidIndex, 1); 
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
                 } else {
-                    // Like
                     post.likes.push(currentUser.uid); 
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
