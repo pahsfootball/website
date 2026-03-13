@@ -28,7 +28,7 @@
 
     <style>
         body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; }
+        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; position: relative; }
         .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
@@ -38,6 +38,18 @@
         .like-icon.liked { color: #fbbf24; transform: scale(1.25) rotate(-15deg); }
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+
+        /* --- NEW POST GLOW ANIMATION --- */
+        @keyframes newPostGlow {
+            0% { box-shadow: 0 0 5px #fbbf24; }
+            50% { box-shadow: 0 0 20px #fbbf24; }
+            100% { box-shadow: 0 0 5px #fbbf24; }
+        }
+        .new-post-flash {
+            animation: newPostGlow 2s ease-in-out infinite;
+            border-color: #fbbf24 !important;
+            z-index: 10;
+        }
         
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transform: scale(0.95); transition: all 0.3s ease-out; position: relative; border-top: 5px solid #fbbf24; }
@@ -154,7 +166,6 @@
                 <form id="reportForm">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
                     <textarea id="reportReason" rows="3" required placeholder="Describe why this post violates community guidelines..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label><input type="text" id="reportFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly></div>
                         <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label><input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly></div>
@@ -217,7 +228,6 @@
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
-        
         window.currentEditPostId = null;
 
         const colorNameMap = {
@@ -256,42 +266,18 @@
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
-                
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
                     return `<div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
                                 <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                             </div>`;
                 }
-
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
                 return `<span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
                         </span>`;
             });
         }
-
-        window.openExternalLink = function(e, url) {
-            if (e) e.stopPropagation(); 
-            document.getElementById('warningUrlText').innerText = url;
-            document.getElementById('continueLinkBtn').href = url;
-            
-            const overlay = document.getElementById('linkWarningModal');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeLinkWarning = function(e, force = false) {
-            if (force || (e && e.target.id === 'linkWarningModal')) {
-                const overlay = document.getElementById('linkWarningModal');
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 300);
-            }
-        };
 
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
         Papa.parse(MASTER_TEAMS_CSV, {
@@ -320,14 +306,12 @@
                     return row;
                 });
                 const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
-                
                 teams.forEach(team => {
                     if(!validTeams.has(team['School'])) {
                         const option = document.createElement('option');
                         option.value = team['School'];
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
-
                         const safeKey = team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const colorData = parseColors(team['Colors'] || team['Color'] || '');
                         if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
@@ -342,7 +326,6 @@
         onAuthStateChanged(auth, async (user) => {
             const createSec = document.getElementById('createPostSection');
             const loginPrompt = document.getElementById('loggedOutPrompt');
-
             if (user) {
                 currentUser = user;
                 createSec.classList.remove('hidden');
@@ -366,30 +349,26 @@
                 if(refreshIcon) refreshIcon.classList.add('fa-spin');
                 document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
             }
-
             try {
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
-                
                 try {
                     const data = JSON.parse(rawText);
                     if (data.status === "success") {
                         currentPosts = data.data;
                         window.renderFeed();
-                        
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
                             const targetPost = urlParams.get('post');
                             if (targetPost) window.openPostModal(targetPost);
                             initialDeepLinkChecked = true;
                         }
-
                     } else if (showLoader) {
                         document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
                 } catch (jsonErr) {
-                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
+                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.</p>';
                 }
             } catch (error) {
                 if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
@@ -402,14 +381,14 @@
 
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
-            if (post.timestamp) {
+            const postTime = post.timestamp ? new Date(post.timestamp).getTime() : 0;
+            if (postTime > 0) {
                 const date = new Date(post.timestamp);
                 timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
 
             const likeCount = post.likes.length;
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
-            
             const iconClass = hasLiked ? 'liked' : 'text-gray-400';
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
@@ -420,15 +399,12 @@
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
-                
                 postColor = teamColorDictionary[safeKey] || '#fbbf24';
                 const contrastText = getContrast(postColor);
                 const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
-
                 const iconHtml = logoUrl 
                     ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
                     : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrastText}"></i>`;
-
                 const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
                 tagHtml = `
                     <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
@@ -438,10 +414,8 @@
             }
 
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
-
             const safeContent = linkify(escapeHTML(post.content));
 
-            // EDIT BUTTON (Only visible to author)
             let editBtnHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
                 editBtnHtml = `
@@ -453,6 +427,7 @@
 
             return {
                 color: postColor,
+                timestamp: postTime,
                 html: `
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2">
@@ -465,16 +440,13 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="${textClass}">${safeContent}</div>
                     ${tagHtml}
-
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
                             <i id="${heartId}" class="fa-solid fa-football like-icon ${iconClass} text-xl"></i>
                             <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
                         </button>
-
                         <div class="flex items-center gap-4">
                             ${editBtnHtml}
                             <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
@@ -492,63 +464,61 @@
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
             feedContainer.innerHTML = '';
-
             if (currentPosts.length === 0) {
                 feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`;
                 return;
             }
-
             let postsToRender = [...currentPosts]; 
             const sortType = document.getElementById('feedSort').value;
-
             if (sortType === 'top') {
                 postsToRender.sort((a, b) => b.likes.length - a.likes.length || new Date(b.timestamp) - new Date(a.timestamp));
             } else {
                 postsToRender.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             }
 
+            const now = new Date().getTime();
+
             postsToRender.forEach((post) => {
                 const postData = buildPostHTML(post, false);
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
+                
+                // GLOW LOGIC: If less than 10 seconds old
+                const secondsOld = (now - postData.timestamp) / 1000;
+                if (secondsOld < 10 && secondsOld >= 0) {
+                    postCard.classList.add('new-post-flash');
+                    setTimeout(() => { postCard.classList.remove('new-post-flash'); }, (10 - secondsOld) * 1000);
+                }
+
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
-                
                 if (post.taggedTeam) {
                     postCard.style.borderTopColor = postData.color;
                     postCard.style.borderLeft = `3px solid ${postData.color}`;
                     postCard.style.borderRight = `3px solid ${postData.color}`;
                 }
-
                 feedContainer.appendChild(postCard);
             });
         }
 
         document.getElementById('submitPostBtn').addEventListener('click', async () => {
             if (!currentUser) return alert("You must be logged in to post.");
-            
             const contentBox = document.getElementById('postContent');
             const teamTagInput = document.getElementById('teamTagInput').value.trim();
             let rawContent = contentBox.value.trim();
-
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
-
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
                 if (matchedTeam) finalTeamTag = matchedTeam;
                 else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
-
             const btn = document.getElementById('submitPostBtn');
             btn.innerText = "Posting..."; btn.disabled = true;
-
             const cleanContent = filterProfanity(rawContent);
             const username = currentUserProfile ? currentUserProfile.username : "Fan";
-
             const payload = { action: "add_post", authorId: currentUser.uid, authorUsername: username, content: cleanContent, taggedTeam: finalTeamTag };
-
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
                 const rawText = await response.text();
@@ -560,75 +530,47 @@
                         window.loadPosts(true);
                     } else alert("Database Error: " + data.message);
                 } catch(e) { alert("Permissions Error."); }
-            } catch (error) {
-                alert("Failed to communicate with server.");
-            } finally {
-                btn.innerText = "Post"; btn.disabled = false;
-            }
+            } catch (error) { alert("Failed to communicate with server."); } finally { btn.innerText = "Post"; btn.disabled = false; }
         });
 
-        // --- NEW EDIT POST SUBMISSION LOGIC ---
         document.getElementById('submitEditBtn').addEventListener('click', async () => {
             if (!currentUser || !window.currentEditPostId) return;
-            
             const contentBox = document.getElementById('editPostContent');
             const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
             let rawContent = contentBox.value.trim();
-
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
-
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
                 if (matchedTeam) finalTeamTag = matchedTeam;
                 else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
-
             const btn = document.getElementById('submitEditBtn');
             btn.innerText = "Saving..."; btn.disabled = true;
-
             const cleanContent = filterProfanity(rawContent);
-
-            const payload = { 
-                action: "edit_post", 
-                postId: window.currentEditPostId,
-                userId: currentUser.uid, 
-                newContent: cleanContent, 
-                newTaggedTeam: finalTeamTag 
-            };
-
+            const payload = { action: "edit_post", postId: window.currentEditPostId, userId: currentUser.uid, newContent: cleanContent, newTaggedTeam: finalTeamTag };
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
                 const rawText = await response.text();
                 try {
                     const data = JSON.parse(rawText);
-                    if(data.status === "success") {
-                        window.closeEditModal(null, true);
-                        window.loadPosts(true); // Force reload
-                    } else alert("Error: " + data.message);
+                    if(data.status === "success") { window.closeEditModal(null, true); window.loadPosts(true); } else alert("Error: " + data.message);
                 } catch(e) { alert("Permissions Error."); }
-            } catch (error) {
-                alert("Failed to communicate with server.");
-            } finally {
-                btn.innerText = "Save Changes"; btn.disabled = false;
-            }
+            } catch (error) { alert("Failed to communicate with server."); } finally { btn.innerText = "Save Changes"; btn.disabled = false; }
         });
 
         window.toggleLike = async function(e, postId) {
             if (e) e.stopPropagation(); 
             if (!currentUser) return alert("You must be logged in to like posts.");
-
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
             if (postIndex > -1) {
                 const post = currentPosts[postIndex];
                 const uidIndex = post.likes.indexOf(currentUser.uid);
-
                 const feedIcon = document.getElementById(`heart-${postId}`);
                 const feedCount = document.getElementById(`count-${postId}`);
                 const modalIcon = document.getElementById(`modal-heart-${postId}`);
                 const modalCount = document.getElementById(`modal-count-${postId}`);
-
                 if (uidIndex > -1) {
                     post.likes.splice(uidIndex, 1); 
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
@@ -638,12 +580,10 @@
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
                 }
-                
                 const newCountText = post.likes.length > 0 ? post.likes.length : 'Like';
                 if(feedCount) feedCount.innerText = newCountText;
                 if(modalCount) modalCount.innerText = newCountText;
             }
-
             const payload = { action: "toggle_like", postId: postId, userId: currentUser.uid };
             try { fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); } catch(err) {}
         };
@@ -651,7 +591,6 @@
         window.sharePost = function(e, postId) {
             if (e) e.stopPropagation();
             const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
-            
             if (navigator.share) {
                 navigator.share({ title: 'PAHS Football Fan Zone', text: 'Check out this post from the PAHS Football community!', url: shareUrl }).catch(console.error);
             } else {
@@ -661,32 +600,21 @@
 
         window.openPostModal = function(postId) {
             const post = currentPosts.find(p => p.postId === postId);
-            if (!post) {
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return;
-            }
-
+            if (!post) { window.history.replaceState({}, document.title, window.location.pathname); return; }
             const newUrl = window.location.pathname + "?post=" + postId;
             window.history.replaceState({}, document.title, newUrl);
-
             const postData = buildPostHTML(post, true);
             document.getElementById('postModalBody').innerHTML = postData.html;
-            
             const modalBlock = document.getElementById('postModalContentBlock');
             if (post.taggedTeam) {
                 modalBlock.style.borderTopColor = postData.color;
                 modalBlock.style.borderLeft = `4px solid ${postData.color}`;
                 modalBlock.style.borderRight = `4px solid ${postData.color}`;
             } else {
-                modalBlock.style.borderTopColor = "#fbbf24";
-                modalBlock.style.borderLeft = "none";
-                modalBlock.style.borderRight = "none";
+                modalBlock.style.borderTopColor = "#fbbf24"; modalBlock.style.borderLeft = "none"; modalBlock.style.borderRight = "none";
             }
-            
             const ctaBanner = document.getElementById('modalViralCTA');
-            if (!currentUser) ctaBanner.classList.remove('hidden');
-            else ctaBanner.classList.add('hidden');
-
+            if (!currentUser) ctaBanner.classList.remove('hidden'); else ctaBanner.classList.add('hidden');
             const overlay = document.getElementById('postModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -697,36 +625,23 @@
             if (force || (e && e.target.id === 'postModalOverlay')) {
                 const overlay = document.getElementById('postModalOverlay');
                 overlay.classList.remove('active');
-                
                 window.history.replaceState({}, document.title, window.location.pathname);
-
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
-        // --- NEW EDIT MODAL LOGIC ---
         window.openEditModal = function(e, postId) {
             if (e) e.stopPropagation();
-            
             const post = currentPosts.find(p => p.postId === postId);
             if (!post || !currentUser || post.authorId !== currentUser.uid) return;
-
             window.currentEditPostId = postId;
-            
-            // Pre-fill the edit form with their existing content
             document.getElementById('editPostContent').value = post.content;
             document.getElementById('editTeamTagInput').value = post.taggedTeam || "";
-
-            // Close the post viewer modal if they clicked edit from inside it
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
                 setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
             }
-
             const overlay = document.getElementById('editModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -737,34 +652,26 @@
             if (force || (e && e.target.id === 'editModalOverlay')) {
                 const overlay = document.getElementById('editModalOverlay');
                 overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
         window.openReportModal = function(e, postId) {
             if (e) e.stopPropagation();
             if (!currentUser) return alert("You must be logged in to report posts.");
-            
             const post = currentPosts.find(p => p.postId === postId);
             if (!post) return alert("Post not found.");
-
             window.currentReportedPostId = postId;
             window.currentReportedPostContent = post.content;
             window.currentReportedPostAuthor = post.authorUsername;
-
             document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
             document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
             document.getElementById('reportEmail').value = currentUser.email || "N/A";
-
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
                 setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
             }
-
             const overlay = document.getElementById('reportModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -776,8 +683,7 @@
                 const overlay = document.getElementById('reportModalOverlay');
                 overlay.classList.remove('active');
                 setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.body.style.overflow = '';
+                    overlay.style.display = 'none'; document.body.style.overflow = '';
                     document.getElementById('reportForm').reset();
                     document.getElementById('reportStatusMessage').classList.add('hidden');
                     document.getElementById('submitReportBtn').style.display = 'block';
@@ -790,54 +696,24 @@
             e.preventDefault();
             const btn = document.getElementById('submitReportBtn'); 
             const msg = document.getElementById('reportStatusMessage');
-            
-            btn.innerText = 'Submitting...'; 
-            btn.disabled = true;
-            btn.style.opacity = '0.7'; 
-            
+            btn.innerText = 'Submitting...'; btn.disabled = true; btn.style.opacity = '0.7'; 
             const reason = document.getElementById('reportReason').value;
             const postId = window.currentReportedPostId;
             const postContent = window.currentReportedPostContent || "N/A";
             const postAuthor = window.currentReportedPostAuthor || "N/A";
             const reporterId = currentUser ? currentUser.uid : "Unknown";
             const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
-
-            const combinedMessage = `*** POST REPORT ***\n` +
-                                    `Reason: ${reason}\n\n` +
-                                    `*** POST INFO ***\n` +
-                                    `Author: @${postAuthor}\n` +
-                                    `Content: "${postContent}"\n` +
-                                    `Post ID: ${postId}\n` +
-                                    `Link: ${postUrl}\n\n` +
-                                    `*** REPORTER ID ***\n` +
-                                    `${reporterId}`;
-
+            const combinedMessage = `*** POST REPORT ***\nReason: ${reason}\n\n*** POST INFO ***\nAuthor: @${postAuthor}\nContent: "${postContent}"\nPost ID: ${postId}\nLink: ${postUrl}\n\n*** REPORTER ID ***\n${reporterId}`;
             const params = new URLSearchParams();
             params.append("entry.1967997366", combinedMessage); 
             params.append("entry.1990515734", document.getElementById('reportFirstName').value); 
             params.append("entry.1429224270", document.getElementById('reportLastName').value); 
             params.append("entry.1778241553", document.getElementById('reportEmail').value); 
-
-            fetch(REPORT_SUBMIT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                body: params.toString() 
-            })
+            fetch(REPORT_SUBMIT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() })
             .then(() => {
-                 btn.style.display = 'none'; 
-                 msg.classList.remove('hidden'); 
-                 msg.style.color = '#10b981'; 
-                 msg.innerText = 'Report Submitted Successfully!';
+                 btn.style.display = 'none'; msg.classList.remove('hidden'); msg.style.color = '#10b981'; msg.innerText = 'Report Submitted Successfully!';
                  setTimeout(() => { window.closeReportModal(null, true); }, 2000);
-            }).catch(() => { 
-                btn.innerText = 'Try Again'; 
-                btn.disabled = false;
-                btn.style.opacity = '1'; 
-                msg.classList.remove('hidden'); 
-                msg.style.color = '#ef4444'; 
-                msg.innerText = 'Error sending report.'; 
-            });
+            }).catch(() => { btn.innerText = 'Try Again'; btn.disabled = false; btn.style.opacity = '1'; msg.classList.remove('hidden'); msg.style.color = '#ef4444'; msg.innerText = 'Error sending report.'; });
         });
 
         function escapeHTML(str) {
