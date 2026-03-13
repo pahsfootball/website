@@ -536,8 +536,8 @@
             }
         };
 
-        // Auto-refresh every 60 seconds silently
-        setInterval(() => { window.loadPosts(false); }, 60000);
+        // Auto-refresh every 30 seconds silently
+        setInterval(() => { window.loadPosts(false); }, 30000);
 
         // *** HTML TEMPLATE GENERATOR FOR POSTS ***
         function buildPostHTML(post, isModal = false) {
