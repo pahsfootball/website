@@ -27,11 +27,39 @@
     </script>
 
     <style>
-        body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; position: relative; }
-        .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-        .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
-        .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+        body { 
+            background-color: #adadad; 
+            color: #18181b; 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh; 
+        }
+        
+        .post-card { 
+            background: #f4f4f5; 
+            border: 1px solid rgba(0, 0, 0, 0.1); 
+            border-top: 4px solid #fbbf24; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
+            cursor: pointer; 
+            position: relative; 
+        }
+        
+        .post-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
+        }
+        
+        .input-box { 
+            background: #ffffff; 
+            border: 2px solid #d1d5db; 
+            transition: all 0.3s ease; 
+        }
+        
+        .input-box:focus { 
+            border-color: #fbbf24; 
+            outline: none; 
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); 
+        }
         
         .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .like-icon { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -39,20 +67,46 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
-        /* --- NEW POST GLOW ANIMATION --- */
+        /* --- THE GLOW ANIMATION --- */
         @keyframes newPostGlow {
-            0% { box-shadow: 0 0 5px #fbbf24; }
-            50% { box-shadow: 0 0 20px #fbbf24; }
-            100% { box-shadow: 0 0 5px #fbbf24; }
+            0% { box-shadow: 0 0 0px #fbbf24; border-color: rgba(0, 0, 0, 0.1); }
+            50% { box-shadow: 0 0 20px 4px #fbbf24; border-color: #fbbf24; }
+            100% { box-shadow: 0 0 0px #fbbf24; border-color: rgba(0, 0, 0, 0.1); }
         }
+        
         .new-post-flash {
             animation: newPostGlow 2s ease-in-out infinite;
-            border-color: #fbbf24 !important;
             z-index: 10;
         }
         
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
-        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transform: scale(0.95); transition: all 0.3s ease-out; position: relative; border-top: 5px solid #fbbf24; }
+        /* Modal Styles */
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.8); 
+            z-index: 100; 
+            backdrop-filter: blur(5px); 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            opacity: 0; 
+            transition: opacity 0.3s; 
+        }
+        
+        .modal-content { 
+            background: white; 
+            width: 100%; 
+            max-width: 500px; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            overflow: hidden; 
+            transform: scale(0.95); 
+            transition: all 0.3s ease-out; 
+            position: relative; 
+            border-top: 5px solid #fbbf24; 
+        }
+        
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
@@ -130,6 +184,7 @@
         <div class="modal-content" id="postModalContentBlock">
             <button onclick="closePostModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
             <div id="postModalBody" class="p-6"></div>
+            
             <div id="modalViralCTA" class="hidden bg-gray-100 border-t border-gray-200 p-5 text-center">
                 <h4 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-1"><i class="fa-solid fa-users text-pahs-gold mr-1"></i> Join the Fan Zone</h4>
                 <p class="text-sm text-gray-600 mb-4 font-body">Create a free account to like posts, support your team, and join the conversation!</p>
@@ -141,7 +196,9 @@
     <div id="editModalOverlay" class="modal-overlay" onclick="closeEditModal(event)">
         <div class="modal-content">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
-                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-pen"></i> Edit Post</h2>
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-pen"></i> Edit Post
+                </h2>
                 <button onclick="closeEditModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
@@ -150,7 +207,9 @@
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
                     <input type="text" id="editTeamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
                 </div>
-                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">Save Changes</button>
+                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">
+                    Save Changes
+                </button>
             </div>
         </div>
     </div>
@@ -158,20 +217,36 @@
     <div id="reportModalOverlay" class="modal-overlay" onclick="closeReportModal(event)">
         <div class="modal-content" style="border-top-color: #dc2626;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
-                <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-flag"></i> Report Post</h2>
+                <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-flag"></i> Report Post
+                </h2>
                 <button onclick="closeReportModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
-                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.</p>
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.
+                </p>
                 <form id="reportForm">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
                     <textarea id="reportReason" rows="3" required placeholder="Describe why this post violates community guidelines..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label><input type="text" id="reportFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly></div>
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label><input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly></div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
+                            <input type="text" id="reportFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
+                            <input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+                        </div>
                     </div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label><input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
-                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">Submit to Admins</button>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
+                    <input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
+                    
+                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">
+                        Submit to Admins
+                    </button>
                     <div id="reportStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
                 </form>
             </div>
@@ -181,15 +256,23 @@
     <div id="linkWarningModal" class="modal-overlay" onclick="closeLinkWarning(event)">
         <div class="modal-content" style="border-top-color: #f59e0b;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
-                <h2 class="font-head text-3xl uppercase tracking-wide text-yellow-600 m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> External Link</h2>
+                <h2 class="font-head text-3xl uppercase tracking-wide text-yellow-600 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> External Link
+                </h2>
                 <button onclick="closeLinkWarning(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white text-center">
-                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.</p>
+                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">
+                    You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.
+                </p>
                 <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 break-all text-xs text-gray-800 font-mono mb-6" id="warningUrlText"></div>
                 <div class="flex gap-3">
-                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
-                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">Continue to Site</a>
+                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">
+                        Continue to Site
+                    </a>
                 </div>
             </div>
         </div>
@@ -200,10 +283,12 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // *** YOUR GOOGLE SCRIPT URLS ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
         const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
         const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
+        // *** FIREBASE CONFIGURATION ***
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
@@ -217,6 +302,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // *** GLOBAL VARIABLES ***
         let currentUser = null;
         let currentUserProfile = null;
         let currentPosts = []; 
@@ -225,11 +311,13 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
 
+        // Variables for Modals
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
         window.currentEditPostId = null;
 
+        // *** COLOR PARSING LOGIC ***
         const colorNameMap = {
             "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
             "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
@@ -239,6 +327,7 @@
         };
 
         const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
+        
         const getContrast = hex => {
             if(!hex) return 'black';
             let h = normalizeColor(hex).replace('#','');
@@ -247,11 +336,13 @@
             const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
             return (isNaN(r)) ? 'black' : (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white');
         };
+        
         const parseColors = str => {
             const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
             return { p: normalizeColor(p[0]) };
         };
 
+        // *** PROFANITY FILTER ***
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -262,70 +353,119 @@
             return filteredText;
         }
 
+        // *** LINKIFY LOGIC (URLs and YouTube) ***
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
+                
+                // Detect YouTube
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
-                    return `<div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
-                                <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            </div>`;
+                    return `
+                        <div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
+                            <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>`;
                 }
+
+                // Standard External Link
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
-                return `<span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
-                        </span>`;
+                return `
+                    <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
+                    </span>`;
             });
         }
 
+        // *** EXTERNAL LINK MODAL CONTROLS ***
+        window.openExternalLink = function(e, url) {
+            if (e) e.stopPropagation(); 
+            
+            document.getElementById('warningUrlText').innerText = url;
+            document.getElementById('continueLinkBtn').href = url;
+            
+            const overlay = document.getElementById('linkWarningModal');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeLinkWarning = function(e, force = false) {
+            if (force || (e && e.target.id === 'linkWarningModal')) {
+                const overlay = document.getElementById('linkWarningModal');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                }, 300);
+            }
+        };
+
+        // *** LOAD MASTER TEAM LOGOS ***
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
         Papa.parse(MASTER_TEAMS_CSV, {
-            download: true, header: true, skipEmptyLines: true,
-            transformHeader: function(header) { return header.toLowerCase().replace(/[^a-z0-9]/g, ''); },
+            download: true, 
+            header: true, 
+            skipEmptyLines: true,
+            transformHeader: function(header) { 
+                return header.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+            },
             complete: function(logoRes) {
                 logoRes.data.forEach(row => {
                     const teamName = row['school'] || row['teamname'] || row['team'];
                     const logoUrl = row['logourl'] || row['logo'];
+                    
                     if (teamName && logoUrl) {
                         const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                         teamLogoDictionary[safeKey] = logoUrl.trim();
                     }
                 });
+                
+                // If posts loaded before the logos finished downloading, re-render
                 if(currentPosts.length > 0) window.renderFeed();
             }
         });
 
+        // *** LOAD TEAM DIRECTORY (DROPDOWN & COLORS) ***
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
-            download: true, header: true, skipEmptyLines: true,
+            download: true, 
+            header: true, 
+            skipEmptyLines: true,
             complete: function(results) {
                 const datalist = document.getElementById('teamTagList');
+                
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
                     return row;
                 });
+                
                 const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
+                
                 teams.forEach(team => {
                     if(!validTeams.has(team['School'])) {
+                        // Populate Dropdown
                         const option = document.createElement('option');
                         option.value = team['School'];
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
+
+                        // Grab Team Color
                         const safeKey = team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const colorData = parseColors(team['Colors'] || team['Color'] || '');
                         if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
                     }
                 });
+                
                 if(currentPosts.length > 0) window.renderFeed(); 
             }
         });
 
-        document.getElementById('refreshFeedBtn').addEventListener('click', () => window.loadPosts(true));
-
+        // *** AUTHENTICATION LISTENER ***
         onAuthStateChanged(auth, async (user) => {
             const createSec = document.getElementById('createPostSection');
             const loginPrompt = document.getElementById('loggedOutPrompt');
+            
             if (user) {
                 currentUser = user;
                 createSec.classList.remove('hidden');
@@ -343,27 +483,47 @@
             window.loadPosts(true); 
         });
 
+        // *** REFRESH BUTTON LISTENER ***
+        document.getElementById('refreshFeedBtn').addEventListener('click', () => {
+            window.loadPosts(true);
+        });
+
+        // *** FETCH POSTS FROM GOOGLE SCRIPT ***
         window.loadPosts = async function(showLoader = true) {
             const refreshIcon = document.getElementById('refreshIcon');
+            
             if (showLoader) {
                 if(refreshIcon) refreshIcon.classList.add('fa-spin');
-                document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
+                document.getElementById('feedContainer').innerHTML = `
+                    <div id="feedLoading" class="text-center py-12">
+                        <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
+                        <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
+                    </div>`;
             }
+
             try {
+                // Add timestamp to force bypass browser cache
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
+                
                 try {
                     const data = JSON.parse(rawText);
+                    
                     if (data.status === "success") {
                         currentPosts = data.data;
                         window.renderFeed();
+                        
+                        // Check if the user came here via a shared deep-link
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
                             const targetPost = urlParams.get('post');
-                            if (targetPost) window.openPostModal(targetPost);
+                            if (targetPost) {
+                                window.openPostModal(targetPost);
+                            }
                             initialDeepLinkChecked = true;
                         }
+
                     } else if (showLoader) {
                         document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
@@ -377,11 +537,14 @@
             }
         };
 
+        // Auto-refresh every 60 seconds silently
         setInterval(() => { window.loadPosts(false); }, 60000);
 
+        // *** HTML TEMPLATE GENERATOR FOR POSTS ***
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
             const postTime = post.timestamp ? new Date(post.timestamp).getTime() : 0;
+            
             if (postTime > 0) {
                 const date = new Date(post.timestamp);
                 timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -390,22 +553,28 @@
             const likeCount = post.likes.length;
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
             const iconClass = hasLiked ? 'liked' : 'text-gray-400';
+            
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
             let tagHtml = '';
             let postColor = '#fbbf24'; 
 
+            // Handle Tagged Team UI (Logo and Color)
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
+                
                 postColor = teamColorDictionary[safeKey] || '#fbbf24';
                 const contrastText = getContrast(postColor);
                 const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
+                
                 const iconHtml = logoUrl 
                     ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
                     : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrastText}"></i>`;
+                    
                 const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
+                
                 tagHtml = `
                     <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
                         ${iconHtml} View ${post.taggedTeam}
@@ -413,9 +582,11 @@
                 `;
             }
 
+            // Clean the text and find links
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             const safeContent = linkify(escapeHTML(post.content));
 
+            // Show Edit Button if Author
             let editBtnHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
                 editBtnHtml = `
@@ -440,13 +611,17 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="${textClass}">${safeContent}</div>
+                    
                     ${tagHtml}
+                    
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
                             <i id="${heartId}" class="fa-solid fa-football like-icon ${iconClass} text-xl"></i>
                             <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
                         </button>
+                        
                         <div class="flex items-center gap-4">
                             ${editBtnHtml}
                             <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
@@ -461,15 +636,20 @@
             };
         }
 
+        // *** RENDER POSTS TO SCREEN ***
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
             feedContainer.innerHTML = '';
+            
             if (currentPosts.length === 0) {
                 feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`;
                 return;
             }
+            
             let postsToRender = [...currentPosts]; 
             const sortType = document.getElementById('feedSort').value;
+            
+            // Sorting Logic
             if (sortType === 'top') {
                 postsToRender.sort((a, b) => b.likes.length - a.likes.length || new Date(b.timestamp) - new Date(a.timestamp));
             } else {
@@ -483,44 +663,74 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // GLOW LOGIC: If less than 10 seconds old
+                // --- NEW POST GLOW LOGIC ---
+                // Calculate age in seconds. Increased to 60 seconds to prevent Server vs PC time sync bugs!
                 const secondsOld = (now - postData.timestamp) / 1000;
-                if (secondsOld < 10 && secondsOld >= 0) {
+                
+                if (secondsOld < 60 && secondsOld >= -60) {
                     postCard.classList.add('new-post-flash');
-                    setTimeout(() => { postCard.classList.remove('new-post-flash'); }, (10 - secondsOld) * 1000);
+                    
+                    // Remove the class after the 60 seconds total time elapses
+                    setTimeout(() => { 
+                        postCard.classList.remove('new-post-flash'); 
+                    }, (60 - secondsOld) * 1000);
                 }
 
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
+                
+                // Color border top based on team
                 if (post.taggedTeam) {
                     postCard.style.borderTopColor = postData.color;
                     postCard.style.borderLeft = `3px solid ${postData.color}`;
                     postCard.style.borderRight = `3px solid ${postData.color}`;
                 }
+                
                 feedContainer.appendChild(postCard);
             });
         }
 
+        // *** CREATE POST SUBMISSION ***
         document.getElementById('submitPostBtn').addEventListener('click', async () => {
             if (!currentUser) return alert("You must be logged in to post.");
+            
             const contentBox = document.getElementById('postContent');
             const teamTagInput = document.getElementById('teamTagInput').value.trim();
             let rawContent = contentBox.value.trim();
+            
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                if (matchedTeam) {
+                    finalTeamTag = matchedTeam;
+                } else {
+                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                }
             }
+            
             const btn = document.getElementById('submitPostBtn');
-            btn.innerText = "Posting..."; btn.disabled = true;
+            btn.innerText = "Posting..."; 
+            btn.disabled = true;
+            
             const cleanContent = filterProfanity(rawContent);
             const username = currentUserProfile ? currentUserProfile.username : "Fan";
-            const payload = { action: "add_post", authorId: currentUser.uid, authorUsername: username, content: cleanContent, taggedTeam: finalTeamTag };
+            const payload = { 
+                action: "add_post", 
+                authorId: currentUser.uid, 
+                authorUsername: username, 
+                content: cleanContent, 
+                taggedTeam: finalTeamTag 
+            };
+            
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+                const response = await fetch(GOOGLE_SHEET_API_URL, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload) 
+                });
                 const rawText = await response.text();
                 try {
                     const data = JSON.parse(rawText);
@@ -528,93 +738,164 @@
                         contentBox.value = "";
                         document.getElementById('teamTagInput').value = "";
                         window.loadPosts(true);
-                    } else alert("Database Error: " + data.message);
+                    } else {
+                        alert("Database Error: " + data.message);
+                    }
                 } catch(e) { alert("Permissions Error."); }
-            } catch (error) { alert("Failed to communicate with server."); } finally { btn.innerText = "Post"; btn.disabled = false; }
+            } catch (error) { 
+                alert("Failed to communicate with server."); 
+            } finally { 
+                btn.innerText = "Post"; 
+                btn.disabled = false; 
+            }
         });
 
+        // *** EDIT POST SUBMISSION ***
         document.getElementById('submitEditBtn').addEventListener('click', async () => {
             if (!currentUser || !window.currentEditPostId) return;
+            
             const contentBox = document.getElementById('editPostContent');
             const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
             let rawContent = contentBox.value.trim();
+            
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                if (matchedTeam) {
+                    finalTeamTag = matchedTeam;
+                } else {
+                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                }
             }
+            
             const btn = document.getElementById('submitEditBtn');
-            btn.innerText = "Saving..."; btn.disabled = true;
+            btn.innerText = "Saving..."; 
+            btn.disabled = true;
+            
             const cleanContent = filterProfanity(rawContent);
-            const payload = { action: "edit_post", postId: window.currentEditPostId, userId: currentUser.uid, newContent: cleanContent, newTaggedTeam: finalTeamTag };
+            const payload = { 
+                action: "edit_post", 
+                postId: window.currentEditPostId, 
+                userId: currentUser.uid, 
+                newContent: cleanContent, 
+                newTaggedTeam: finalTeamTag 
+            };
+            
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+                const response = await fetch(GOOGLE_SHEET_API_URL, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload) 
+                });
                 const rawText = await response.text();
                 try {
                     const data = JSON.parse(rawText);
-                    if(data.status === "success") { window.closeEditModal(null, true); window.loadPosts(true); } else alert("Error: " + data.message);
+                    if(data.status === "success") { 
+                        window.closeEditModal(null, true); 
+                        window.loadPosts(true); 
+                    } else {
+                        alert("Error: " + data.message);
+                    }
                 } catch(e) { alert("Permissions Error."); }
-            } catch (error) { alert("Failed to communicate with server."); } finally { btn.innerText = "Save Changes"; btn.disabled = false; }
+            } catch (error) { 
+                alert("Failed to communicate with server."); 
+            } finally { 
+                btn.innerText = "Save Changes"; 
+                btn.disabled = false; 
+            }
         });
 
+        // *** TOGGLE LIKE ***
         window.toggleLike = async function(e, postId) {
             if (e) e.stopPropagation(); 
             if (!currentUser) return alert("You must be logged in to like posts.");
+            
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
+            
             if (postIndex > -1) {
                 const post = currentPosts[postIndex];
                 const uidIndex = post.likes.indexOf(currentUser.uid);
+                
                 const feedIcon = document.getElementById(`heart-${postId}`);
                 const feedCount = document.getElementById(`count-${postId}`);
                 const modalIcon = document.getElementById(`modal-heart-${postId}`);
                 const modalCount = document.getElementById(`modal-count-${postId}`);
+                
                 if (uidIndex > -1) {
+                    // Unlike
                     post.likes.splice(uidIndex, 1); 
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
                 } else {
+                    // Like
                     post.likes.push(currentUser.uid); 
                     if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
                     if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
                 }
+                
                 const newCountText = post.likes.length > 0 ? post.likes.length : 'Like';
                 if(feedCount) feedCount.innerText = newCountText;
                 if(modalCount) modalCount.innerText = newCountText;
             }
+            
             const payload = { action: "toggle_like", postId: postId, userId: currentUser.uid };
-            try { fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); } catch(err) {}
+            try { 
+                fetch(GOOGLE_SHEET_API_URL, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload) 
+                }); 
+            } catch(err) {}
         };
 
+        // *** SHARE POST NATIVE ***
         window.sharePost = function(e, postId) {
             if (e) e.stopPropagation();
             const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+            
             if (navigator.share) {
-                navigator.share({ title: 'PAHS Football Fan Zone', text: 'Check out this post from the PAHS Football community!', url: shareUrl }).catch(console.error);
+                navigator.share({ 
+                    title: 'PAHS Football Fan Zone', 
+                    text: 'Check out this post from the PAHS Football community!', 
+                    url: shareUrl 
+                }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard! Paste it anywhere to share."));
             }
         };
 
+        // *** POST MODAL CONTROLS ***
         window.openPostModal = function(postId) {
             const post = currentPosts.find(p => p.postId === postId);
-            if (!post) { window.history.replaceState({}, document.title, window.location.pathname); return; }
+            if (!post) { 
+                window.history.replaceState({}, document.title, window.location.pathname); 
+                return; 
+            }
+            
             const newUrl = window.location.pathname + "?post=" + postId;
             window.history.replaceState({}, document.title, newUrl);
+            
             const postData = buildPostHTML(post, true);
             document.getElementById('postModalBody').innerHTML = postData.html;
+            
             const modalBlock = document.getElementById('postModalContentBlock');
             if (post.taggedTeam) {
                 modalBlock.style.borderTopColor = postData.color;
                 modalBlock.style.borderLeft = `4px solid ${postData.color}`;
                 modalBlock.style.borderRight = `4px solid ${postData.color}`;
             } else {
-                modalBlock.style.borderTopColor = "#fbbf24"; modalBlock.style.borderLeft = "none"; modalBlock.style.borderRight = "none";
+                modalBlock.style.borderTopColor = "#fbbf24"; 
+                modalBlock.style.borderLeft = "none"; 
+                modalBlock.style.borderRight = "none";
             }
+            
             const ctaBanner = document.getElementById('modalViralCTA');
-            if (!currentUser) ctaBanner.classList.remove('hidden'); else ctaBanner.classList.add('hidden');
+            if (!currentUser) ctaBanner.classList.remove('hidden'); 
+            else ctaBanner.classList.add('hidden');
+            
             const overlay = document.getElementById('postModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -625,23 +906,33 @@
             if (force || (e && e.target.id === 'postModalOverlay')) {
                 const overlay = document.getElementById('postModalOverlay');
                 overlay.classList.remove('active');
+                
                 window.history.replaceState({}, document.title, window.location.pathname);
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+                
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                }, 300);
             }
         };
 
+        // *** EDIT MODAL CONTROLS ***
         window.openEditModal = function(e, postId) {
             if (e) e.stopPropagation();
+            
             const post = currentPosts.find(p => p.postId === postId);
             if (!post || !currentUser || post.authorId !== currentUser.uid) return;
+            
             window.currentEditPostId = postId;
             document.getElementById('editPostContent').value = post.content;
             document.getElementById('editTeamTagInput').value = post.taggedTeam || "";
+            
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
                 setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
             }
+            
             const overlay = document.getElementById('editModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -652,26 +943,35 @@
             if (force || (e && e.target.id === 'editModalOverlay')) {
                 const overlay = document.getElementById('editModalOverlay');
                 overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                }, 300);
             }
         };
 
+        // *** REPORT MODAL CONTROLS ***
         window.openReportModal = function(e, postId) {
             if (e) e.stopPropagation();
             if (!currentUser) return alert("You must be logged in to report posts.");
+            
             const post = currentPosts.find(p => p.postId === postId);
             if (!post) return alert("Post not found.");
+            
             window.currentReportedPostId = postId;
             window.currentReportedPostContent = post.content;
             window.currentReportedPostAuthor = post.authorUsername;
+            
             document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
             document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
             document.getElementById('reportEmail').value = currentUser.email || "N/A";
+            
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
                 setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
             }
+            
             const overlay = document.getElementById('reportModalOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -683,7 +983,8 @@
                 const overlay = document.getElementById('reportModalOverlay');
                 overlay.classList.remove('active');
                 setTimeout(() => {
-                    overlay.style.display = 'none'; document.body.style.overflow = '';
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = '';
                     document.getElementById('reportForm').reset();
                     document.getElementById('reportStatusMessage').classList.add('hidden');
                     document.getElementById('submitReportBtn').style.display = 'block';
@@ -692,30 +993,54 @@
             }
         };
 
+        // *** SUBMIT REPORT TO GOOGLE FORMS ***
         document.getElementById('reportForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitReportBtn'); 
             const msg = document.getElementById('reportStatusMessage');
-            btn.innerText = 'Submitting...'; btn.disabled = true; btn.style.opacity = '0.7'; 
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
             const reason = document.getElementById('reportReason').value;
             const postId = window.currentReportedPostId;
             const postContent = window.currentReportedPostContent || "N/A";
             const postAuthor = window.currentReportedPostAuthor || "N/A";
             const reporterId = currentUser ? currentUser.uid : "Unknown";
             const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+            
             const combinedMessage = `*** POST REPORT ***\nReason: ${reason}\n\n*** POST INFO ***\nAuthor: @${postAuthor}\nContent: "${postContent}"\nPost ID: ${postId}\nLink: ${postUrl}\n\n*** REPORTER ID ***\n${reporterId}`;
+            
             const params = new URLSearchParams();
             params.append("entry.1967997366", combinedMessage); 
             params.append("entry.1990515734", document.getElementById('reportFirstName').value); 
             params.append("entry.1429224270", document.getElementById('reportLastName').value); 
             params.append("entry.1778241553", document.getElementById('reportEmail').value); 
-            fetch(REPORT_SUBMIT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() })
+            
+            fetch(REPORT_SUBMIT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
             .then(() => {
-                 btn.style.display = 'none'; msg.classList.remove('hidden'); msg.style.color = '#10b981'; msg.innerText = 'Report Submitted Successfully!';
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Report Submitted Successfully!';
                  setTimeout(() => { window.closeReportModal(null, true); }, 2000);
-            }).catch(() => { btn.innerText = 'Try Again'; btn.disabled = false; btn.style.opacity = '1'; msg.classList.remove('hidden'); msg.style.color = '#ef4444'; msg.innerText = 'Error sending report.'; });
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending report.'; 
+            });
         });
 
+        // XSS Security
         function escapeHTML(str) {
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
