@@ -72,6 +72,11 @@
         .divider:not(:empty)::after { margin-left: .5em; }
 
         .error-message { color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 10px; display: none; }
+        .success-message { color: #10b981; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 10px; display: none; }
+        
+        .forgot-password { color: var(--gold-hover); font-size: 12px; font-weight: 700; text-decoration: none; display: block; text-align: right; margin-top: -10px; margin-bottom: 15px; transition: 0.2s; }
+        .forgot-password:hover { text-decoration: underline; color: #d97706; }
+
         .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; }
         .back-link:hover { color: var(--gold-hover); }
 
@@ -87,6 +92,7 @@
         </div>
 
         <div id="errorMsg" class="error-message"></div>
+        <div id="successMsg" class="success-message"></div>
 
         <button id="googleBtn" class="btn-google">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
@@ -119,6 +125,8 @@
             <label>Password <span style="color:red">*</span></label>
             <input type="password" id="passwordInput" required placeholder="••••••••">
 
+            <a href="#" id="forgotPasswordBtn" class="forgot-password">Forgot Password?</a>
+
             <button type="submit" id="mainSubmitBtn" class="btn-primary">Sign In</button>
             <button type="button" id="toggleModeBtn" class="btn-secondary">Need an account? Sign Up</button>
         </form>
@@ -128,7 +136,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // Added sendPasswordResetEmail, sendEmailVerification, and signOut
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -157,20 +166,31 @@
         const formTitle = document.getElementById('formTitle');
         const formSubtitle = document.getElementById('formSubtitle');
         const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
         const googleBtn = document.getElementById('googleBtn');
         const usernameSignupInput = document.getElementById('usernameSignupInput');
+        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
         function showError(message) {
+            successMsg.style.display = 'none';
             errorMsg.innerText = message;
             errorMsg.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            errorMsg.style.display = 'none';
+            successMsg.innerText = message;
+            successMsg.style.display = 'block';
         }
 
         toggleModeBtn.addEventListener('click', () => {
             isSignUpMode = !isSignUpMode;
             errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
 
             if (isSignUpMode) {
                 signUpFields.classList.remove('hidden');
+                forgotPasswordBtn.classList.add('hidden'); // Hide forgot password on Sign Up
                 mainSubmitBtn.innerText = "Create Account";
                 toggleModeBtn.innerText = "Already have an account? Sign In";
                 formTitle.innerText = "Join the Team";
@@ -181,6 +201,7 @@
                 usernameSignupInput.required = true;
             } else {
                 signUpFields.classList.add('hidden');
+                forgotPasswordBtn.classList.remove('hidden'); // Show forgot password on Sign In
                 mainSubmitBtn.innerText = "Sign In";
                 toggleModeBtn.innerText = "Need an account? Sign Up";
                 formTitle.innerText = "Portal Access";
@@ -192,18 +213,34 @@
             }
         });
 
+        // Handle Forgot Password
+        forgotPasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            if (!email) {
+                showError("Please type your email address in the field above to reset your password.");
+                return;
+            }
+            
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    showSuccess("Password reset link sent! Please check your email.");
+                })
+                .catch((error) => {
+                    showError("Error: " + error.message);
+                });
+        });
+
         // Handle Google Sign In
         googleBtn.addEventListener('click', () => {
             signInWithPopup(auth, provider).then(async (result) => {
                 const user = result.user;
                 const nameParts = user.displayName ? user.displayName.split(" ") : ["", ""];
                 
-                // Check if this is their first time logging in so we don't overwrite their existing username
                 const userDocRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userDocRef);
                 
                 if (!userSnap.exists()) {
-                    // Generate a safe unique fallback username for Google users
                     const baseUser = user.email ? user.email.split('@')[0] : "fan";
                     const randomSuffix = Math.floor(Math.random() * 10000);
                     
@@ -228,6 +265,7 @@
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
             mainSubmitBtn.disabled = true;
             mainSubmitBtn.innerText = "Processing...";
             
@@ -248,14 +286,14 @@
                         showError("That username is already taken. Please pick another one.");
                         mainSubmitBtn.disabled = false;
                         mainSubmitBtn.innerText = "Create Account";
-                        return; // Stop the signup process
+                        return; 
                     }
 
                     // 2. CREATE ACCOUNT
                     const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                     const user = userCredential.user;
                     
-                    // 3. CREATE PROFILE
+                    // 3. CREATE PROFILE IN FIRESTORE
                     await setDoc(doc(db, "users", user.uid), {
                         firstName: fName,
                         lastName: lName,
@@ -268,7 +306,18 @@
                         followedTeams: []
                     });
 
-                    window.location.href = "profile.html"; 
+                    // 4. SEND VERIFICATION EMAIL & FORCE LOGOUT
+                    await sendEmailVerification(user);
+                    await signOut(auth);
+
+                    // Reset to Sign In Mode and show success
+                    toggleModeBtn.click();
+                    showSuccess("Account created! A verification link has been sent to your email. Please verify before signing in.");
+                    
+                    // Reset fields
+                    passwordInput.value = "";
+                    mainSubmitBtn.disabled = false;
+
                 } catch (error) {
                     showError(error.message);
                     mainSubmitBtn.disabled = false;
@@ -276,8 +325,16 @@
                 }
             } else {
                 signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-                    .then(() => { 
-                        window.location.href = "profile.html"; 
+                    .then(async (userCredential) => { 
+                        // ENFORCE EMAIL VERIFICATION ON SIGN IN
+                        if (!userCredential.user.emailVerified) {
+                            await signOut(auth);
+                            showError("Please verify your email address before logging in. Check your inbox or spam folder.");
+                            mainSubmitBtn.disabled = false;
+                            mainSubmitBtn.innerText = "Sign In";
+                        } else {
+                            window.location.href = "profile.html"; 
+                        }
                     })
                     .catch(() => { 
                         showError("Invalid email or password.");
