@@ -131,9 +131,12 @@
             <a href="login.html" class="inline-block bg-pahs-gold text-black font-head font-bold text-xl uppercase tracking-widest py-2 px-8 rounded-lg shadow-md hover:brightness-110 transition-all">Sign In</a>
         </div>
 
-        <div class="flex items-center justify-between mb-4 border-b border-gray-400 pb-2">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 self-end">
+                
+                <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 px-2 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.renderFeed()">
+                
                 <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
                     <option value="newest">Latest</option>
                     <option value="top">Most Hyped</option>
@@ -652,6 +655,18 @@
             }
             
             let postsToRender = [...currentPosts]; 
+            
+            // --- NEW FILTER LOGIC ---
+            const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
+            if (filterTeam !== "") {
+                postsToRender = postsToRender.filter(post => post.taggedTeam && post.taggedTeam.toLowerCase().includes(filterTeam));
+            }
+
+            if (postsToRender.length === 0) {
+                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found for this team.</div>`;
+                return;
+            }
+
             const sortType = document.getElementById('feedSort').value;
             
             // Sorting Logic (Includes Artificial Likes)
