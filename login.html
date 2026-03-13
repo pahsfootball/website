@@ -58,23 +58,10 @@
         }
         .btn-secondary:hover { background: rgba(0,0,0,0.05); color: var(--text-main); }
 
-        .btn-google {
-            width: 100%; background: white; color: #3c4043; border: 1px solid #dadce0; padding: 10px;
-            font-size: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 15px; display: flex;
-            align-items: center; justify-content: center; transition: 0.2s;
-        }
-        .btn-google:hover { background: #f8f9fa; }
-        .btn-google img { width: 18px; height: 18px; margin-right: 10px; }
-
-        .divider { display: flex; align-items: center; text-align: center; margin: 20px 0 5px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase; font-weight: 600; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #d1d5db; }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
-
         .error-message { color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 10px; display: none; }
         .success-message { color: #10b981; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 10px; display: none; }
         
-        .forgot-password { color: var(--gold-hover); font-size: 12px; font-weight: 700; text-decoration: none; display: block; text-align: right; margin-top: -10px; margin-bottom: 15px; transition: 0.2s; }
+        .forgot-password { color: var(--gold-hover); font-size: 13px; font-weight: 700; text-decoration: none; display: block; text-align: right; margin-top: 0px; margin-bottom: 15px; transition: 0.2s; }
         .forgot-password:hover { text-decoration: underline; color: #d97706; }
 
         .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; }
@@ -93,13 +80,6 @@
 
         <div id="errorMsg" class="error-message"></div>
         <div id="successMsg" class="success-message"></div>
-
-        <button id="googleBtn" class="btn-google">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
-            Sign in with Google
-        </button>
-
-        <div class="divider">or</div>
 
         <form id="authForm">
             <div id="signUpFields" class="hidden">
@@ -136,9 +116,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // Added sendPasswordResetEmail, sendEmailVerification, and signOut
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -153,7 +132,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
 
         let isSignUpMode = false;
 
@@ -167,7 +145,6 @@
         const formSubtitle = document.getElementById('formSubtitle');
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
-        const googleBtn = document.getElementById('googleBtn');
         const usernameSignupInput = document.getElementById('usernameSignupInput');
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
@@ -229,36 +206,6 @@
                 .catch((error) => {
                     showError("Error: " + error.message);
                 });
-        });
-
-        // Handle Google Sign In
-        googleBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider).then(async (result) => {
-                const user = result.user;
-                const nameParts = user.displayName ? user.displayName.split(" ") : ["", ""];
-                
-                const userDocRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userDocRef);
-                
-                if (!userSnap.exists()) {
-                    const baseUser = user.email ? user.email.split('@')[0] : "fan";
-                    const randomSuffix = Math.floor(Math.random() * 10000);
-                    
-                    await setDoc(userDocRef, {
-                        firstName: nameParts[0] || "",
-                        lastName: nameParts.slice(1).join(" ") || "",
-                        email: user.email,
-                        username: baseUser + randomSuffix,
-                        role: "fan",
-                        points: 0,
-                        followedTeams: []
-                    });
-                }
-                
-                window.location.href = "profile.html"; 
-            }).catch((error) => {
-                showError(error.message);
-            });
         });
 
         // Handle Form Submit
