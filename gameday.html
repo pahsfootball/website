@@ -352,7 +352,6 @@
                 }
             });
         }
-        // --- END COLOR LOGIC ---
 
         onAuthStateChanged(auth, async (user) => {
             const ctrlPanel = document.getElementById('fanControlPanel');
@@ -673,6 +672,7 @@
 
                 document.getElementById('loading-overlay').style.display = 'none';
 
+                // --- REVERTED: REQUIRE TEAM ADMIN/BACKEND DATA ---
                 if (result.status === 'error' || !result.data || !result.data.yourTeam) {
                     document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
                     const claimBtn = document.getElementById('claim-email-btn');
@@ -681,6 +681,7 @@
                     return;
                 }
 
+                // --- NORMAL PAGE LOAD LOGIC (If game data exists) ---
                 window.currentMatchupData = result.data;
                 const game = result.data;
                 document.getElementById('main-app').classList.remove('hidden');
