@@ -283,7 +283,8 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+    // --- UPDATED CSV URL ---
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
 
     let allData = [], filteredData = [];
     let currentTeam = "";
@@ -686,7 +687,7 @@
 
     window.openMapModal = function(loc) {
         els.mapModalOverlay.classList.remove('hidden');
-        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=14&ie=UTF8&iwloc=&output=embed`;
+        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=14&output=embed`;
     };
 
     function closeMapModal() {
