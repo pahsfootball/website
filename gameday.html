@@ -289,23 +289,6 @@
                 </div>
             </div>
 
-            <div id="embedFanZoneCard" class="content-card rounded-2xl p-6 mt-6 border border-gray-300 shadow-md">
-                <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> Community Chatter</h3>
-                    <a href="community.html" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors">View All</a>
-                </div>
-                
-                <div id="embedFeedContainer" class="space-y-4 mb-4">
-                    <div class="text-center py-6 text-gray-500 font-body text-sm italic">
-                        <i class="fa-solid fa-spinner fa-spin text-pahs-gold mb-2 text-xl"></i><br>Loading posts...
-                    </div>
-                </div>
-                
-                <a href="community.html" class="block w-full bg-gray-200 text-gray-800 font-bold font-head text-xl uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-300 transition-all shadow-sm border border-gray-300">
-                    Join the Conversation
-                </a>
-            </div>
-
             <div id="authActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
                 <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> Join the Action</h3>
                 <p class="text-sm text-gray-600 mb-4 font-medium">Scoreboard not updated or inaccurate? Log in or create an account today to submit scoring updates and join the Fan Zone!</p>
@@ -327,6 +310,23 @@
                         <i class="fa-solid fa-comments mr-2"></i> Go to Fan Zone
                     </a>
                 </div>
+            </div>
+
+            <div id="embedFanZoneCard" class="content-card rounded-2xl p-6 mt-6 border border-gray-300 shadow-md">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> Community Chatter</h3>
+                    <a href="community.html" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors">View All</a>
+                </div>
+                
+                <div id="embedFeedContainer" class="space-y-4 mb-4">
+                    <div class="text-center py-6 text-gray-500 font-body text-sm italic">
+                        <i class="fa-solid fa-spinner fa-spin text-pahs-gold mb-2 text-xl"></i><br>Loading posts...
+                    </div>
+                </div>
+                
+                <a href="community.html" class="block w-full bg-gray-200 text-gray-800 font-bold font-head text-xl uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-300 transition-all shadow-sm border border-gray-300">
+                    Join the Conversation
+                </a>
             </div>
         </main>
     </div>
@@ -423,7 +423,7 @@
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[tag]));
         }
 
         // --- FETCH EMBEDDED FAN ZONE POSTS ---
