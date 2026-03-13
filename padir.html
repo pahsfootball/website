@@ -263,12 +263,10 @@
 </div>
 
 <script type="module">
-    // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, updateDoc, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // --- CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
         authDomain: "pahs-football.firebaseapp.com",
@@ -283,11 +281,14 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+    // --- TWO SEPARATE DATABASES ---
+    const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+    const masterTeamsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
 
     let allData = [], filteredData = [];
     let currentTeam = "";
     let isFollowing = false;
+    let teamLogoDictionary = {}; // Will hold all the logos from the second sheet!
 
     const colorNameMap = {
         "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
@@ -321,7 +322,6 @@
         claimText: document.getElementById('claimText')
     };
 
-    // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', fetchData);
 
     els.search.addEventListener('input', () => {
@@ -352,9 +352,34 @@
         }
     });
 
-    // --- FETCH DATA ---
+    // --- TWO-STEP FETCH PROCESS ---
     function fetchData() {
-        Papa.parse(sheetUrl, {
+        // Step 1: Download the Logos
+        Papa.parse(masterTeamsUrl, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(logoRes) {
+                logoRes.data.forEach(row => {
+                    const teamName = row['School'] || row['Team Name'] || row['Team'];
+                    const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                    if (teamName && logoUrl) {
+                        teamLogoDictionary[teamName.trim()] = logoUrl.trim();
+                    }
+                });
+                
+                // Step 2: Download the Directory and match them up
+                fetchDirectoryData();
+            },
+            error: function(err) {
+                console.error("Could not load MasterTeams CSV. Proceeding without logos.", err);
+                fetchDirectoryData(); // Proceed anyway so the site doesn't break
+            }
+        });
+    }
+
+    function fetchDirectoryData() {
+        Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: res => {
                 allData = res.data.map(row => {
@@ -383,7 +408,7 @@
                     if (matchIdx !== -1) setTimeout(() => window.openModal(matchIdx), 300);
                 }
             },
-            error: () => console.error("Could not load data.")
+            error: () => console.error("Could not load main directory data.")
         });
     }
 
@@ -411,7 +436,6 @@
         Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
     }
 
-    // --- CORE LOGIC ---
     const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
 
     const getContrast = hex => {
@@ -437,14 +461,13 @@
             const { p } = parseColors(row['Colors']||row['Color']||'');
             const primaryColor = p || '#a1a1aa';
             
-            // Look for the logo in the row data
-            const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'] || '';
+            // GRAB THE LOGO FROM THE DICTIONARY WE BUILT IN STEP 1
+            const logoUrl = teamLogoDictionary[row['School']] || '';
 
             const card = document.createElement('div');
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
             card.onclick = () => window.openModal(idx);
             
-            // Build the card HTML with the injected logo block (if one exists)
             card.innerHTML = `
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2" style="background-color: ${primaryColor};"></div>
                 <div class="p-5 pl-6 flex justify-between items-start gap-3">
@@ -496,7 +519,6 @@
         handleSearch();
     }
 
-    // --- MODAL, FOLLOW & CLAIM LOGIC ---
     window.openModal = async function(idx) {
         const d = filteredData[idx];
         currentTeam = d['School'];
@@ -510,8 +532,8 @@
         document.getElementById('modalConference').innerText = d['Conference/League'] || 'N/A';
         document.getElementById('modalChamps').innerText = d['State Championships'] || 'None';
 
-        // Set the Logo in the Modal!
-        const logoUrl = d['Logo'] || d['Logo URL'] || d['LogoUrl'] || '';
+        // CHECK DICTIONARY FOR MODAL LOGO
+        const logoUrl = teamLogoDictionary[d['School']] || '';
         const modalLogoContainer = document.getElementById('modalLogoContainer');
         const modalLogo = document.getElementById('modalLogo');
 
@@ -545,7 +567,6 @@
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
         document.getElementById('modalGameDayLink').href = `gameday.html?team=${encodeURIComponent(d['School'])}`;
 
-        // RESET CLAIM BUTTON TO DEFAULT BEFORE CHECKING AUTH
         els.claimBtn.disabled = false;
         els.claimBtn.style.opacity = "1";
         els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
@@ -560,7 +581,6 @@
         const user = auth.currentUser;
         if (user) {
             try {
-                // 1. Check Following Status
                 const userSnap = await getDoc(doc(db, "users", user.uid));
                 const userData = userSnap.data() || {}; 
                 
@@ -569,31 +589,23 @@
                     isFollowing = followed.includes(currentTeam);
                     updateFollowBtnUI();
 
-                    // 2. Check Claiming Status
                     const teamSnap = await getDoc(doc(db, "team_pages", currentTeam));
 
-                    // User already admins THIS team
                     if (userData.managedTeam === currentTeam) {
                         els.claimText.innerText = "GO TO MY PROFILE";
                         els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
                         els.claimBtn.onclick = () => window.location.href = "profile.html"; 
-                    } 
-                    // Someone else already claimed this team
-                    else if (teamSnap.exists()) {
+                    } else if (teamSnap.exists()) {
                         els.claimText.innerText = "TEAM ADMIN CLAIMED";
                         els.claimBtn.disabled = true;
                         els.claimBtn.style.opacity = "0.5";
                         els.claimBtn.onclick = null;
-                    }
-                    // User already admins a DIFFERENT team
-                    else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
+                    } else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
                         els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
                         els.claimBtn.disabled = true;
                         els.claimBtn.style.opacity = "0.5";
                         els.claimBtn.onclick = null;
-                    }
-                    // Team is free and user is available
-                    else {
+                    } else {
                         els.claimText.innerText = "REQUEST TEAM ADMIN";
                         els.claimBtn.onclick = () => handleClaimTeam(currentTeam, user, userData);
                     }
@@ -627,7 +639,6 @@
         }
     }
 
-    // --- ACTION LISTENERS ---
     els.followBtn.addEventListener('click', async () => {
         const user = auth.currentUser;
         if (!user) {
@@ -661,10 +672,8 @@
             `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
         );
 
-        // Attempt to open default mail client
         window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
 
-        // Fallback for Desktop users without a default mail client configured
         setTimeout(() => {
             if(confirm("If your email app didn't open automatically, click 'OK' to copy our email address to your clipboard so you can email us manually.")) {
                 navigator.clipboard.writeText(adminEmail).then(() => {
@@ -686,7 +695,7 @@
 
     window.openMapModal = function(loc) {
         els.mapModalOverlay.classList.remove('hidden');
-        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=14&ie=UTF8&iwloc=&output=embed`;
+        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodeURIComponent(loc + ", PA")}&t=k&z=14&output=embed`;
     };
 
     function closeMapModal() {
