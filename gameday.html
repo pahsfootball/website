@@ -45,6 +45,9 @@
         @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+
+        /* FANZONE EMBED STYLES */
+        .embed-post-card { background: #ffffff; border: 1px solid #d1d5db; border-left: 4px solid var(--team-primary, #fbbf24); }
     </style>
 </head>
 <body class="antialiased relative">
@@ -286,6 +289,23 @@
                 </div>
             </div>
 
+            <div id="embedFanZoneCard" class="content-card rounded-2xl p-6 mt-6 border border-gray-300 shadow-md">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> Community Chatter</h3>
+                    <a href="community.html" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors">View All</a>
+                </div>
+                
+                <div id="embedFeedContainer" class="space-y-4 mb-4">
+                    <div class="text-center py-6 text-gray-500 font-body text-sm italic">
+                        <i class="fa-solid fa-spinner fa-spin text-pahs-gold mb-2 text-xl"></i><br>Loading posts...
+                    </div>
+                </div>
+                
+                <a href="community.html" class="block w-full bg-gray-200 text-gray-800 font-bold font-head text-xl uppercase tracking-widest py-3 rounded-xl text-center hover:bg-gray-300 transition-all shadow-sm border border-gray-300">
+                    Join the Conversation
+                </a>
+            </div>
+
             <div id="authActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
                 <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> Join the Action</h3>
                 <p class="text-sm text-gray-600 mb-4 font-medium">Scoreboard not updated or inaccurate? Log in or create an account today to submit scoring updates and join the Fan Zone!</p>
@@ -317,7 +337,12 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // *** REPLACE THIS URL IF YOU CREATED A NEW DEPLOYMENT ***
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
+        
+        // This is the URL connecting to your new Fan Zone App Script
+        const FAN_ZONE_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
+
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
 
         const firebaseConfig = {
@@ -381,6 +406,93 @@
                 }
             });
         }
+
+        function linkify(text) {
+            const urlRegex = /(https?:\/\/[^\s<]+)/g;
+            return text.replace(urlRegex, function(url) {
+                const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
+                const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+                if (ytMatch && ytMatch[1]) {
+                    return `<div class="mt-2 mb-2 rounded-lg overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
+                                <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>`;
+                }
+                const displayUrl = cleanUrl.length > 30 ? cleanUrl.substring(0, 30) + '...' : cleanUrl;
+                return `<a href="${cleanUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold underline text-xs" onclick="event.stopPropagation()">${displayUrl}</a>`;
+            });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+        }
+
+        // --- FETCH EMBEDDED FAN ZONE POSTS ---
+        async function fetchEmbeddedPosts(homeTeam, awayTeam) {
+            const container = document.getElementById('embedFeedContainer');
+            
+            try {
+                // Fetch the posts
+                const response = await fetch(FAN_ZONE_API_URL + "?t=" + new Date().getTime(), { cache: 'no-store' });
+                const rawText = await response.text(); 
+                const data = JSON.parse(rawText);
+                
+                if (data.status === "success" && data.data && data.data.length > 0) {
+                    
+                    // Filter down to only posts that tag the Home OR Away team
+                    const filteredPosts = data.data.filter(post => {
+                        const tag = post.taggedTeam || "";
+                        return (homeTeam && tag.toLowerCase() === homeTeam.toLowerCase()) || 
+                               (awayTeam && tag.toLowerCase() === awayTeam.toLowerCase());
+                    });
+
+                    // Sort newest first
+                    filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    // Show top 3 max
+                    const postsToRender = filteredPosts.slice(0, 3);
+
+                    if (postsToRender.length === 0) {
+                        container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = ''; // clear loader
+
+                    postsToRender.forEach(post => {
+                        let timeString = "Recently";
+                        if (post.timestamp) {
+                            const date = new Date(post.timestamp);
+                            timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        }
+
+                        const safeContent = linkify(escapeHTML(post.content));
+                        
+                        const postCard = document.createElement('div');
+                        postCard.className = "embed-post-card rounded-xl p-4 shadow-sm mb-3";
+                        postCard.innerHTML = `
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                    <i class="fa-solid fa-user text-gray-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 leading-none text-xs font-body">@${post.authorUsername}</h4>
+                                    <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                                </div>
+                            </div>
+                            <div class="text-gray-700 font-body text-sm leading-relaxed whitespace-pre-wrap break-words">${safeContent}</div>
+                        `;
+                        container.appendChild(postCard);
+                    });
+
+                } else {
+                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
+                }
+            } catch (err) {
+                console.error("Error loading embedded feed:", err);
+                container.innerHTML = `<div class="text-center py-6 text-red-500 font-body text-sm font-bold">Could not load community feed.</div>`;
+            }
+        }
+
 
         onAuthStateChanged(auth, async (user) => {
             const ctrlPanel = document.getElementById('fanControlPanel');
@@ -787,6 +899,9 @@
                 else { document.getElementById('ui-ticket').style.display = 'none'; }
 
                 listenToLiveScore(game);
+                
+                // TRIGGER EMBEDDED FAN ZONE
+                fetchEmbeddedPosts(game.yourTeam, game.opponent);
 
             } catch (error) {
                 console.error(error);
