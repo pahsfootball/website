@@ -29,7 +29,7 @@
     <style>
         body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
         .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; }
-        .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border-color: #fbbf24; }
+        .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
         .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -164,7 +164,6 @@
 
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
         
-        // This is your standard Contact Us Google Form submission URL
         const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
         const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
@@ -186,13 +185,39 @@
         let currentPosts = []; 
         let validTeams = new Set();
         let teamLogoDictionary = {};
+        let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
 
-        // Variables to hold data when the report modal opens
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
 
+        // --- COLOR PARSING LOGIC ---
+        const colorNameMap = {
+            "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
+            "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
+            "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
+            "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
+            "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
+        };
+
+        const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
+
+        const getContrast = hex => {
+            if(!hex) return 'black';
+            let h = normalizeColor(hex).replace('#','');
+            if(h.length === 3) h = h.split('').map(x=>x+x).join('');
+            if(h.length !== 6) return 'black';
+            const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+            return (isNaN(r)) ? 'black' : (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white');
+        };
+
+        const parseColors = str => {
+            const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
+            return { p: normalizeColor(p[0]) };
+        };
+
+        // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -237,8 +262,14 @@
                         option.value = team['School'];
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
+
+                        // Save the team's primary color
+                        const safeKey = team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        const colorData = parseColors(team['Colors'] || team['Color'] || '');
+                        if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
                     }
                 });
+                if(currentPosts.length > 0) renderFeed(); // Re-render if colors loaded after posts
             }
         });
 
@@ -320,16 +351,24 @@
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
             let tagHtml = '';
+            let postColor = '#fbbf24'; // Default to gold
+
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
+                
+                // Grab color and determine text contrast
+                postColor = teamColorDictionary[safeKey] || '#fbbf24';
+                const contrastText = getContrast(postColor);
+                const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
+
                 const iconHtml = logoUrl 
                     ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
-                    : `<i class="fa-solid fa-football mr-1.5 text-black"></i>`;
+                    : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrastText}"></i>`;
 
                 const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
                 tagHtml = `
-                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold bg-pahs-gold text-black pr-4 pl-2 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide border border-yellow-600">
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
                         ${iconHtml} View ${post.taggedTeam}
                     </a>
                 `;
@@ -337,38 +376,41 @@
 
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
 
-            return `
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                            <i class="fa-solid fa-user text-gray-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
-                            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+            return {
+                color: postColor,
+                html: `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
+                                <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="${textClass}">${escapeHTML(post.content)}</div>
-                ${tagHtml}
+                    
+                    <div class="${textClass}">${escapeHTML(post.content)}</div>
+                    ${tagHtml}
 
-                <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                    <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors p-1">
-                        <i id="${heartId}" class="fa-heart ${heartClass} text-xl"></i>
-                        <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
-                    </button>
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                        <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors p-1">
+                            <i id="${heartId}" class="fa-heart ${heartClass} text-xl"></i>
+                            <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
+                        </button>
 
-                    <div class="flex items-center gap-4">
-                        <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
-                            <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
-                        </button>
-                        <button onclick="window.openReportModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
-                            <i class="fa-solid fa-flag text-lg"></i> <span class="hidden sm:inline">Report</span>
-                        </button>
+                        <div class="flex items-center gap-4">
+                            <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                                <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
+                            </button>
+                            <button onclick="window.openReportModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                                <i class="fa-solid fa-flag text-lg"></i> <span class="hidden sm:inline">Report</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `
+            };
         }
 
         function renderFeed() {
@@ -381,10 +423,19 @@
             }
 
             currentPosts.forEach((post) => {
+                const postData = buildPostHTML(post, false);
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 postCard.onclick = () => window.openPostModal(post.postId);
-                postCard.innerHTML = buildPostHTML(post, false);
+                postCard.innerHTML = postData.html;
+                
+                // Apply the custom team color to the card borders
+                if (post.taggedTeam) {
+                    postCard.style.borderTopColor = postData.color;
+                    postCard.style.borderLeft = `3px solid ${postData.color}`;
+                    postCard.style.borderRight = `3px solid ${postData.color}`;
+                }
+
                 feedContainer.appendChild(postCard);
             });
         }
@@ -486,7 +537,19 @@
             const newUrl = window.location.pathname + "?post=" + postId;
             window.history.replaceState({}, document.title, newUrl);
 
-            document.getElementById('postModalBody').innerHTML = buildPostHTML(post, true);
+            const postData = buildPostHTML(post, true);
+            document.getElementById('postModalBody').innerHTML = postData.html;
+            
+            const modalBlock = document.getElementById('postModalContentBlock');
+            if (post.taggedTeam) {
+                modalBlock.style.borderTopColor = postData.color;
+                modalBlock.style.borderLeft = `4px solid ${postData.color}`;
+                modalBlock.style.borderRight = `4px solid ${postData.color}`;
+            } else {
+                modalBlock.style.borderTopColor = "#fbbf24";
+                modalBlock.style.borderLeft = "none";
+                modalBlock.style.borderRight = "none";
+            }
             
             const ctaBanner = document.getElementById('modalViralCTA');
             if (!currentUser) ctaBanner.classList.remove('hidden');
@@ -520,17 +583,14 @@
             const post = currentPosts.find(p => p.postId === postId);
             if (!post) return alert("Post not found.");
 
-            // Store post info to use during submission
             window.currentReportedPostId = postId;
             window.currentReportedPostContent = post.content;
             window.currentReportedPostAuthor = post.authorUsername;
 
-            // Pre-fill user data
             document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
             document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
             document.getElementById('reportEmail').value = currentUser.email || "N/A";
 
-            // If they click report while in the post modal, we need to hide the post modal first
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
@@ -553,11 +613,11 @@
                     document.getElementById('reportForm').reset();
                     document.getElementById('reportStatusMessage').classList.add('hidden');
                     document.getElementById('submitReportBtn').style.display = 'block';
+                    document.getElementById('submitReportBtn').disabled = false;
                 }, 300);
             }
         };
 
-        // Form Submit Handler
         document.getElementById('reportForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitReportBtn'); 
@@ -574,7 +634,6 @@
             const reporterId = currentUser ? currentUser.uid : "Unknown";
             const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
 
-            // Compile everything into a massive string to send to the Google Form "Reason" box
             const combinedMessage = `*** POST REPORT ***\n` +
                                     `Reason: ${reason}\n\n` +
                                     `*** POST INFO ***\n` +
@@ -586,10 +645,10 @@
                                     `${reporterId}`;
 
             const params = new URLSearchParams();
-            params.append("entry.1967997366", combinedMessage); // Reason / Message
-            params.append("entry.1990515734", document.getElementById('reportFirstName').value); // First Name
-            params.append("entry.1429224270", document.getElementById('reportLastName').value); // Last Name
-            params.append("entry.1778241553", document.getElementById('reportEmail').value); // Email
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", document.getElementById('reportFirstName').value); 
+            params.append("entry.1429224270", document.getElementById('reportLastName').value); 
+            params.append("entry.1778241553", document.getElementById('reportEmail').value); 
 
             fetch(REPORT_SUBMIT_URL, { 
                 method: 'POST', 
