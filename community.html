@@ -103,25 +103,10 @@
 
     <main class="max-w-3xl mx-auto px-4 py-8">
         
-        <div id="createPostSection" class="hidden mb-8">
-            <div class="bg-white rounded-2xl shadow-lg p-5 border border-gray-200 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-pahs-gold"></div>
-                <h2 class="font-head text-2xl uppercase tracking-wide text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-pahs-gold"></i> Create a Post
-                </h2>
-                
-                <textarea id="postContent" rows="3" placeholder="What's on your mind? Hype up your team! (You can safely paste video links here too) - PLEASE BE RESPECTFUL!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-3 resize-none font-body text-sm"></textarea>
-                
-                <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <div class="w-full sm:w-2/3 relative">
-                        <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
-                        <datalist id="teamTagList"></datalist>
-                    </div>
-                    <button id="submitPostBtn" class="w-full sm:w-1/3 bg-pahs-dark text-pahs-gold hover:bg-black font-head text-xl font-bold uppercase tracking-widest py-2 rounded-lg shadow-md transition-all">
-                        Post
-                    </button>
-                </div>
-            </div>
+        <div id="createPostAction" class="hidden mb-8 text-center sm:text-left">
+            <button onclick="openCreatePostModal()" class="w-full sm:w-auto bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-lg hover:brightness-110 transition-all border border-pahs-gold">
+                <i class="fa-solid fa-pen-to-square mr-2"></i> Create a Post
+            </button>
         </div>
 
         <div id="loggedOutPrompt" class="mb-8 bg-gray-200 border border-gray-300 rounded-2xl p-6 text-center shadow-inner hidden">
@@ -134,7 +119,6 @@
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
             <div class="flex items-center gap-2 self-end">
-                
                 <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 px-2 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.renderFeed()">
                 
                 <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
@@ -155,6 +139,35 @@
         </div>
 
     </main>
+
+    <div id="createPostModalOverlay" class="modal-overlay" onclick="closeCreatePostModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-pahs-gold"></i> Create a Post
+                </h2>
+                <button onclick="closeCreatePostModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white">
+                <textarea id="postContent" rows="4" placeholder="What's on your mind? Hype up your team! (You can safely paste video links here too) - PLEASE BE RESPECTFUL!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+                
+                <div class="relative mb-5">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tag a Team</label>
+                    <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                    <datalist id="teamTagList"></datalist>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeCreatePostModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <button id="submitPostBtn" class="flex-1 bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all">
+                        Post
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="postModalOverlay" class="modal-overlay" onclick="closePostModal(event)">
         <div class="modal-content" id="postModalContentBlock">
@@ -465,12 +478,12 @@
 
         // *** AUTHENTICATION LISTENER ***
         onAuthStateChanged(auth, async (user) => {
-            const createSec = document.getElementById('createPostSection');
+            const createBtn = document.getElementById('createPostAction');
             const loginPrompt = document.getElementById('loggedOutPrompt');
             
             if (user) {
                 currentUser = user;
-                createSec.classList.remove('hidden');
+                createBtn.classList.remove('hidden');
                 loginPrompt.classList.add('hidden');
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -479,7 +492,7 @@
             } else {
                 currentUser = null;
                 currentUserProfile = null;
-                createSec.classList.add('hidden');
+                createBtn.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
             window.loadPosts(true); 
@@ -716,6 +729,25 @@
             });
         }
 
+        // *** CREATE MODAL CONTROLS ***
+        window.openCreatePostModal = function() {
+            const overlay = document.getElementById('createPostModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeCreatePostModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'createPostModalOverlay')) {
+                const overlay = document.getElementById('createPostModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                }, 300);
+            }
+        };
+
         // *** CREATE POST SUBMISSION ***
         document.getElementById('submitPostBtn').addEventListener('click', async () => {
             if (!currentUser) return alert("You must be logged in to post.");
@@ -763,6 +795,7 @@
                     if(data.status === "success") {
                         contentBox.value = "";
                         document.getElementById('teamTagInput').value = "";
+                        window.closeCreatePostModal(null, true);
                         window.loadPosts(true);
                     } else {
                         alert("Database Error: " + data.message);
