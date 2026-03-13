@@ -28,14 +28,20 @@
 
     <style>
         body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; }
+        .post-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border-color: #fbbf24; }
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
         .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .like-btn.liked { color: #ef4444; }
         .like-btn.liked i { transform: scale(1.1); font-weight: 900; }
-        /* Style for datalist input to make it look clickable */
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+        
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transform: scale(0.95); transition: all 0.3s ease-out; position: relative; border-top: 5px solid #fbbf24; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
 </head>
 <body class="antialiased">
@@ -69,8 +75,7 @@
                 <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
                     <div class="w-full sm:w-2/3 relative">
                         <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
-                        <datalist id="teamTagList">
-                            </datalist>
+                        <datalist id="teamTagList"></datalist>
                     </div>
                     <button id="submitPostBtn" class="w-full sm:w-1/3 bg-pahs-dark text-pahs-gold hover:bg-black font-head text-xl font-bold uppercase tracking-widest py-2 rounded-lg shadow-md transition-all">
                         Post
@@ -79,7 +84,7 @@
             </div>
         </div>
 
-        <div id="loggedOutPrompt" class="mb-8 bg-gray-200 border border-gray-300 rounded-2xl p-6 text-center shadow-inner">
+        <div id="loggedOutPrompt" class="mb-8 bg-gray-200 border border-gray-300 rounded-2xl p-6 text-center shadow-inner hidden">
             <i class="fa-solid fa-lock text-3xl text-gray-400 mb-2"></i>
             <h3 class="font-head text-2xl text-gray-700 uppercase tracking-wide">Log in to join the conversation</h3>
             <p class="text-sm text-gray-500 mb-4">You must be signed in to post and like content.</p>
@@ -101,6 +106,21 @@
         </div>
 
     </main>
+
+    <div id="postModalOverlay" class="modal-overlay" onclick="closePostModal(event)">
+        <div class="modal-content" id="postModalContentBlock">
+            <button onclick="closePostModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
+            
+            <div id="postModalBody" class="p-6">
+                </div>
+
+            <div id="modalViralCTA" class="hidden bg-gray-100 border-t border-gray-200 p-5 text-center">
+                <h4 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-1"><i class="fa-solid fa-users text-pahs-gold mr-1"></i> Join the Fan Zone</h4>
+                <p class="text-sm text-gray-600 mb-4 font-body">Create a free account to like posts, support your team, and join the conversation!</p>
+                <a href="login.html" class="inline-block w-full bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 rounded-lg shadow-md hover:brightness-110 transition">Sign In / Sign Up</a>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -125,11 +145,10 @@
         let currentUser = null;
         let currentUserProfile = null;
         let currentPosts = []; 
-        
         let validTeams = new Set();
         let teamLogoDictionary = {};
+        let initialDeepLinkChecked = false; // Prevents the modal from popping up every single auto-refresh
 
-        // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -140,7 +159,6 @@
             return filteredText;
         }
 
-        // --- FETCH LOGOS FOR THE FEED ---
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
         Papa.parse(MASTER_TEAMS_CSV, {
             download: true, header: true, skipEmptyLines: true,
@@ -154,12 +172,10 @@
                         teamLogoDictionary[safeKey] = logoUrl.trim();
                     }
                 });
-                // Force a re-render if the posts loaded before the logos finished downloading
                 if(currentPosts.length > 0) renderFeed();
             }
         });
 
-        // --- POPULATE SEARCHABLE DATALIST ---
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
@@ -182,10 +198,7 @@
             }
         });
 
-        // Event listener for the refresh button
-        document.getElementById('refreshFeedBtn').addEventListener('click', () => {
-            window.loadPosts(true);
-        });
+        document.getElementById('refreshFeedBtn').addEventListener('click', () => window.loadPosts(true));
 
         onAuthStateChanged(auth, async (user) => {
             const createSec = document.getElementById('createPostSection');
@@ -210,7 +223,6 @@
 
         window.loadPosts = async function(showLoader = true) {
             const refreshIcon = document.getElementById('refreshIcon');
-            
             if (showLoader) {
                 if(refreshIcon) refreshIcon.classList.add('fa-spin');
                 document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
@@ -226,23 +238,101 @@
                     if (data.status === "success") {
                         currentPosts = data.data;
                         renderFeed();
+                        
+                        // Check for deep link on first load
+                        if (!initialDeepLinkChecked) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const targetPost = urlParams.get('post');
+                            if (targetPost) {
+                                window.openPostModal(targetPost);
+                            }
+                            initialDeepLinkChecked = true;
+                        }
+
                     } else if (showLoader) {
                         document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
                     }
                 } catch (jsonErr) {
-                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied. Check Google Script permissions.</p>';
+                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.</p>';
                 }
             } catch (error) {
-                if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers. Check your connection.</p>';
+                if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
             } finally {
                 if (showLoader && refreshIcon) refreshIcon.classList.remove('fa-spin');
             }
         };
 
-        // AUTO-REFRESH EVERY 60 SECONDS (Silent Background Refresh)
-        setInterval(() => {
-            window.loadPosts(false);
-        }, 60000);
+        setInterval(() => { window.loadPosts(false); }, 60000);
+
+        // --- HELPER: GENERATE POST HTML ---
+        // We put this in a function so we can draw it perfectly in the Feed AND in the Pop-out Modal
+        function buildPostHTML(post, isModal = false) {
+            let timeString = "Recently";
+            if (post.timestamp) {
+                const date = new Date(post.timestamp);
+                timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+
+            const likeCount = post.likes.length;
+            const hasLiked = currentUser && post.likes.includes(currentUser.uid);
+            const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
+            
+            // Add a "modal-" prefix to the IDs if it's drawing inside the modal so JS doesn't get confused
+            const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
+            const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
+
+            let tagHtml = '';
+            if (post.taggedTeam) {
+                const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const logoUrl = teamLogoDictionary[safeKey] || '';
+                const iconHtml = logoUrl 
+                    ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
+                    : `<i class="fa-solid fa-football mr-1.5 text-black"></i>`;
+
+                const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
+                tagHtml = `
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold bg-pahs-gold text-black pr-4 pl-2 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide border border-yellow-600">
+                        ${iconHtml} View ${post.taggedTeam}
+                    </a>
+                `;
+            }
+
+            // Larger text if it's the modal view
+            const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
+
+            return `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                            <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
+                            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="${textClass}">${escapeHTML(post.content)}</div>
+                ${tagHtml}
+
+                <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                    <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors p-1">
+                        <i id="${heartId}" class="fa-heart ${heartClass} text-xl"></i>
+                        <span id="${countId}">${likeCount > 0 ? likeCount : 'Like'}</span>
+                    </button>
+
+                    <div class="flex items-center gap-4">
+                        <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                            <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
+                        </button>
+                        <button onclick="window.reportPost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                            <i class="fa-solid fa-flag text-lg"></i> <span class="hidden sm:inline">Report</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
@@ -254,66 +344,11 @@
             }
 
             currentPosts.forEach((post) => {
-                let timeString = "Recently";
-                if (post.timestamp) {
-                    const date = new Date(post.timestamp);
-                    timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                }
-
-                const likeCount = post.likes.length;
-                const hasLiked = currentUser && post.likes.includes(currentUser.uid);
-                const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
-
-                // TEAM TAG GENERATOR (Now With Logos!)
-                let tagHtml = '';
-                if (post.taggedTeam) {
-                    const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                    const logoUrl = teamLogoDictionary[safeKey] || '';
-                    
-                    // If a logo is found, show it. Otherwise show the standard football icon.
-                    const iconHtml = logoUrl 
-                        ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
-                        : `<i class="fa-solid fa-football mr-1.5 text-black"></i>`;
-
-                    const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
-                    tagHtml = `
-                        <a href="${teamUrl}" class="inline-flex items-center mt-3 text-xs font-bold bg-pahs-gold text-black pr-4 pl-2 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide border border-yellow-600">
-                            ${iconHtml} View ${post.taggedTeam}
-                        </a>
-                    `;
-                }
-
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
-                postCard.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                                <i class="fa-solid fa-user text-gray-500 text-sm"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
-                                <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words">${escapeHTML(post.content)}</div>
-                    
-                    ${tagHtml}
-
-                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                        <button onclick="window.toggleLike('${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors">
-                            <i id="heart-${post.postId}" class="fa-heart ${heartClass} text-lg"></i>
-                            <span id="count-${post.postId}">${likeCount > 0 ? likeCount : 'Like'}</span>
-                        </button>
-
-                        <button onclick="window.reportPost('${post.postId}')" class="text-[11px] text-gray-400 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors">
-                            <i class="fa-solid fa-flag"></i> Report
-                        </button>
-                    </div>
-                `;
-                
+                // Make the whole card clickable to open the modal!
+                postCard.onclick = () => window.openPostModal(post.postId);
+                postCard.innerHTML = buildPostHTML(post, false);
                 feedContainer.appendChild(postCard);
             });
         }
@@ -328,15 +363,11 @@
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
 
-            // Strict Validation: Ensure the typed team is actually in the database
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) {
-                    finalTeamTag = matchedTeam;
-                } else {
-                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
-                }
+                if (matchedTeam) finalTeamTag = matchedTeam;
+                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
 
             const btn = document.getElementById('submitPostBtn');
@@ -345,21 +376,10 @@
             const cleanContent = filterProfanity(rawContent);
             const username = currentUserProfile ? currentUserProfile.username : "Fan";
 
-            const payload = {
-                action: "add_post",
-                authorId: currentUser.uid,
-                authorUsername: username,
-                content: cleanContent,
-                taggedTeam: finalTeamTag
-            };
+            const payload = { action: "add_post", authorId: currentUser.uid, authorUsername: username, content: cleanContent, taggedTeam: finalTeamTag };
 
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
                 const rawText = await response.text();
                 try {
                     const data = JSON.parse(rawText);
@@ -376,62 +396,115 @@
             }
         });
 
-        window.toggleLike = async function(postId) {
+        // --- LIKE LOGIC ---
+        window.toggleLike = async function(e, postId) {
+            if (e) e.stopPropagation(); // Stops the modal from opening when you click the like button
             if (!currentUser) return alert("You must be logged in to like posts.");
 
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
             if (postIndex > -1) {
                 const post = currentPosts[postIndex];
                 const uidIndex = post.likes.indexOf(currentUser.uid);
-                const heartIcon = document.getElementById(`heart-${postId}`);
-                const countText = document.getElementById(`count-${postId}`);
+
+                // Determine if we need to update the main feed icon, the modal icon, or both
+                const feedIcon = document.getElementById(`heart-${postId}`);
+                const feedCount = document.getElementById(`count-${postId}`);
+                const modalIcon = document.getElementById(`modal-heart-${postId}`);
+                const modalCount = document.getElementById(`modal-count-${postId}`);
 
                 if (uidIndex > -1) {
-                    post.likes.splice(uidIndex, 1);
-                    heartIcon.className = "fa-heart fa-regular text-gray-500 text-lg";
+                    post.likes.splice(uidIndex, 1); // Unlike
+                    if(feedIcon) feedIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
+                    if(modalIcon) modalIcon.className = "fa-heart fa-regular text-gray-500 text-xl";
                 } else {
-                    post.likes.push(currentUser.uid);
-                    heartIcon.className = "fa-heart fa-solid liked text-lg";
+                    post.likes.push(currentUser.uid); // Like
+                    if(feedIcon) feedIcon.className = "fa-heart fa-solid liked text-xl";
+                    if(modalIcon) modalIcon.className = "fa-heart fa-solid liked text-xl";
                 }
-                countText.innerText = post.likes.length > 0 ? post.likes.length : 'Like';
+                
+                const newCountText = post.likes.length > 0 ? post.likes.length : 'Like';
+                if(feedCount) feedCount.innerText = newCountText;
+                if(modalCount) modalCount.innerText = newCountText;
             }
 
             const payload = { action: "toggle_like", postId: postId, userId: currentUser.uid };
-            try {
-                await fetch(GOOGLE_SHEET_API_URL, {
-                    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload)
-                });
-            } catch(e) {}
+            try { fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); } catch(err) {}
         };
 
-        window.reportPost = async function(postId) {
+        // --- REPORT LOGIC ---
+        window.reportPost = async function(e, postId) {
+            if (e) e.stopPropagation();
             if (!currentUser) return alert("You must be logged in to report posts.");
-            
             if (!confirm("Are you sure you want to flag this post? It will be sent to the admin team for review.")) return;
 
-            const payload = {
-                action: "report_post",
-                postId: postId,
-                userId: currentUser.uid
-            };
-
+            const payload = { action: "report_post", postId: postId, userId: currentUser.uid };
             try {
-                await fetch(GOOGLE_SHEET_API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                });
-                alert("Post reported successfully. Thank you for helping keep the community safe!");
-            } catch(e) {
-                console.error("Error reporting post:", e);
-                alert("There was an issue reporting this post. Please try again.");
+                await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+                alert("Post reported successfully. Thank you for keeping the community safe!");
+            } catch(err) { alert("There was an issue reporting this post."); }
+        };
+
+        // --- SHARE LOGIC ---
+        window.sharePost = function(e, postId) {
+            if (e) e.stopPropagation();
+            // Generate deep link
+            const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'PAHS Football Fan Zone',
+                    text: 'Check out this post from the PAHS Football community!',
+                    url: shareUrl
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard! Paste it anywhere to share."));
+            }
+        };
+
+        // --- POST MODAL LOGIC ---
+        window.openPostModal = function(postId) {
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post) {
+                // If they have a link to a deleted post, remove the broken URL parameter
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // Update URL bar to show deep link so they can easily copy from their browser
+            const newUrl = window.location.pathname + "?post=" + postId;
+            window.history.replaceState({}, document.title, newUrl);
+
+            document.getElementById('postModalBody').innerHTML = buildPostHTML(post, true);
+            
+            // Show viral CTA banner if they aren't logged in
+            const ctaBanner = document.getElementById('modalViralCTA');
+            if (!currentUser) ctaBanner.classList.remove('hidden');
+            else ctaBanner.classList.add('hidden');
+
+            const overlay = document.getElementById('postModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closePostModal = function(e, force = false) {
+            // Close if they click the X button OR if they click outside the white box
+            if (force || (e && e.target.id === 'postModalOverlay')) {
+                const overlay = document.getElementById('postModalOverlay');
+                overlay.classList.remove('active');
+                
+                // Clear the deep link from the URL bar cleanly
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 300);
             }
         };
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[tag]));
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
     </script>
 </body>
