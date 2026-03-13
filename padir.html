@@ -281,7 +281,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- TWO SEPARATE DATABASES ---
     const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
     const masterTeamsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
 
@@ -322,7 +321,7 @@
         claimText: document.getElementById('claimText')
     };
 
-    document.addEventListener('DOMContentLoaded', fetchData);
+    document.addEventListener('DOMContentLoaded', initializeAppFlow);
 
     els.search.addEventListener('input', () => {
         handleSearch();
@@ -352,63 +351,76 @@
         }
     });
 
-    // --- TWO-STEP FETCH PROCESS ---
-    function fetchData() {
-        // Step 1: Download the Logos
-        Papa.parse(masterTeamsUrl, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(logoRes) {
-                logoRes.data.forEach(row => {
-                    const teamName = row['School'] || row['Team Name'] || row['Team'];
-                    const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
-                    if (teamName && logoUrl) {
-                        teamLogoDictionary[teamName.trim()] = logoUrl.trim();
-                    }
-                });
-                
-                // Step 2: Download the Directory and match them up
-                fetchDirectoryData();
-            },
-            error: function(err) {
-                console.error("Could not load MasterTeams CSV. Proceeding without logos.", err);
-                fetchDirectoryData(); 
-            }
+    // --- PROMISE-BASED FETCHING (Fixes the Race Condition) ---
+    async function initializeAppFlow() {
+        try {
+            await fetchLogos();
+        } catch (e) {
+            console.warn("Failed to load logos, continuing without them.");
+        }
+        await fetchDirectoryData();
+    }
+
+    function fetchLogos() {
+        return new Promise((resolve, reject) => {
+            Papa.parse(masterTeamsUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(logoRes) {
+                    logoRes.data.forEach(row => {
+                        const teamName = row['School'] || row['Team Name'] || row['Team'];
+                        const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                        if (teamName && logoUrl) {
+                            teamLogoDictionary[teamName.trim()] = logoUrl.trim();
+                        }
+                    });
+                    resolve();
+                },
+                error: function(err) {
+                    reject(err);
+                }
+            });
         });
     }
 
     function fetchDirectoryData() {
-        Papa.parse(directoryUrl, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: res => {
-                allData = res.data.map(row => {
-                    const newRow = {};
-                    Object.keys(row).forEach(k => newRow[k.trim()] = row[k]);
-                    if(newRow['Team']) newRow['Team'] = newRow['Team'].replace(/^\*+|\*+$/g, '').trim();
-                    if(newRow['School']) newRow['School'] = newRow['School'].replace(/^\*+|\*+$/g, '').trim();
-                    if(newRow['District']) newRow['District'] = newRow['District'].replace(/district/gi, '').trim();
-                    return newRow;
-                }).filter(r => r['School']);
+        return new Promise((resolve) => {
+            Papa.parse(directoryUrl, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: res => {
+                    allData = res.data.map(row => {
+                        const newRow = {};
+                        Object.keys(row).forEach(k => newRow[k.trim()] = row[k]);
+                        if(newRow['Team']) newRow['Team'] = newRow['Team'].replace(/^\*+|\*+$/g, '').trim();
+                        if(newRow['School']) newRow['School'] = newRow['School'].replace(/^\*+|\*+$/g, '').trim();
+                        if(newRow['District']) newRow['District'] = newRow['District'].replace(/district/gi, '').trim();
+                        return newRow;
+                    }).filter(r => r['School']);
 
-                filteredData = allData;
-                populateFilters(allData);
-                renderCards(filteredData);
-                els.loading.classList.add('hidden');
-                els.grid.classList.remove('hidden');
+                    filteredData = allData;
+                    populateFilters(allData);
+                    renderCards(filteredData);
+                    els.loading.classList.add('hidden');
+                    els.grid.classList.remove('hidden');
 
-                // --- DEEP LINKING LOGIC ---
-                const urlParams = new URLSearchParams(window.location.search);
-                const teamParam = urlParams.get('team');
-                if (teamParam) {
-                    els.search.value = teamParam;
-                    els.clear.classList.remove('hidden');
-                    handleSearch(); 
-                    const matchIdx = allData.findIndex(r => r['School'] === teamParam);
-                    if (matchIdx !== -1) setTimeout(() => window.openModal(matchIdx), 300);
+                    // --- DEEP LINKING LOGIC ---
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const teamParam = urlParams.get('team');
+                    if (teamParam) {
+                        els.search.value = teamParam;
+                        els.clear.classList.remove('hidden');
+                        handleSearch(); 
+                        const matchIdx = allData.findIndex(r => r['School'] === teamParam);
+                        if (matchIdx !== -1) setTimeout(() => window.openModal(matchIdx), 300);
+                    }
+                    resolve();
+                },
+                error: () => {
+                    console.error("Could not load main directory data.");
+                    resolve(); // Resolve anyway so the app doesn't crash completely
                 }
-            },
-            error: () => console.error("Could not load main directory data.")
+            });
         });
     }
 
@@ -461,8 +473,9 @@
             const { p } = parseColors(row['Colors']||row['Color']||'');
             const primaryColor = p || '#a1a1aa';
             
-            // GRAB THE LOGO FROM THE DICTIONARY
-            const logoUrl = teamLogoDictionary[row['School']] || '';
+            // LOGO LOOKUP: Use row['School'], make sure it's trimmed
+            const lookupName = (row['School'] || '').trim();
+            const logoUrl = teamLogoDictionary[lookupName] || '';
 
             const card = document.createElement('div');
             card.className = "directory-card rounded-2xl cursor-pointer flex flex-col justify-between group";
@@ -532,7 +545,9 @@
         document.getElementById('modalConference').innerText = d['Conference/League'] || 'N/A';
         document.getElementById('modalChamps').innerText = d['State Championships'] || 'None';
 
-        const logoUrl = teamLogoDictionary[d['School']] || '';
+        const lookupName = (d['School'] || '').trim();
+        const logoUrl = teamLogoDictionary[lookupName] || '';
+        
         const modalLogoContainer = document.getElementById('modalLogoContainer');
         const modalLogo = document.getElementById('modalLogo');
 
@@ -571,7 +586,7 @@
         els.claimBtn.style.opacity = "1";
         els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600');
         els.claimText.innerText = "REQUEST TEAM ADMIN";
-        els.claimBtn.classList.remove('hidden'); // UN-HIDE THE BUTTON HERE
+        els.claimBtn.classList.remove('hidden'); 
         
         els.claimBtn.onclick = () => {
             if(confirm("You must be logged in to request Team Admin. Go to login?")) {
