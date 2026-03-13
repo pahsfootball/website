@@ -103,7 +103,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // *** PASTE YOUR GOOGLE SCRIPT WEB APP URL HERE ***
+        // *** YOUR GOOGLE APP SCRIPT URL ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxYGm57UKS4zIQlGDSTWtqnFBXBBwX0TZ3PJ06Qmtb9st5RbKUsqaRDNu6roaNR6RY/exec";
 
         const firebaseConfig = {
@@ -121,7 +121,7 @@
 
         let currentUser = null;
         let currentUserProfile = null;
-        let currentPosts = []; // Local cache of posts
+        let currentPosts = []; 
 
         // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
@@ -134,15 +134,29 @@
             return filteredText;
         }
 
-        // --- POPULATE TEAM DROPDOWN ---
+        // --- POPULATE TEAM DROPDOWN (WITH ASTERISK SCRUBBER) ---
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 const select = document.getElementById('teamTagSelect');
-                const teams = results.data.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
+                
+                // Step 1: Clean the asterisks out of the school names
+                const cleanData = results.data.map(row => {
+                    if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
+                    return row;
+                });
+
+                // Step 2: Filter and sort alphabetically
+                const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
+                
+                // Step 3: Add to dropdown and prevent duplicates
+                const addedTeams = new Set();
                 teams.forEach(team => {
-                    select.add(new Option(team['School'], team['School']));
+                    if(!addedTeams.has(team['School'])) {
+                        select.add(new Option(team['School'], team['School']));
+                        addedTeams.add(team['School']);
+                    }
                 });
             }
         });
@@ -179,15 +193,25 @@
 
             try {
                 const response = await fetch(GOOGLE_SHEET_API_URL);
-                const data = await response.json();
-
-                if (data.status === "success") {
-                    currentPosts = data.data;
-                    renderFeed();
+                const rawText = await response.text(); 
+                
+                try {
+                    const data = JSON.parse(rawText);
+                    if (data.status === "success") {
+                        currentPosts = data.data;
+                        renderFeed();
+                    } else {
+                        console.error("Sheet Error:", data.message);
+                        document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}<br><span class="text-sm font-normal text-gray-700">Check your Google Sheet tab name. It must be named exactly "Posts".</span></p>`;
+                    }
+                } catch (jsonErr) {
+                    console.error("Permissions Error:", rawText);
+                    document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.<br><span class="text-sm font-normal text-gray-700">Go to your Google Script > Deploy > Manage Deployments > Edit.<br>Set "Who has access" to "Anyone" and redeploy.</span></p>';
                 }
+
             } catch (error) {
                 console.error("Error fetching feed:", error);
-                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error loading feed. Please try again later.</p>';
+                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with Google Servers. Check your connection.</p>';
             }
         };
 
@@ -279,22 +303,30 @@
             };
 
             try {
-                // Send to Google Sheets (text/plain avoids CORS errors)
-                await fetch(GOOGLE_SHEET_API_URL, {
+                const response = await fetch(GOOGLE_SHEET_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
-
-                contentBox.value = "";
-                document.getElementById('teamTagSelect').value = "";
                 
-                // Refresh the feed immediately to show the new post
-                window.loadPosts();
+                const rawText = await response.text();
+
+                try {
+                    const data = JSON.parse(rawText);
+                    if(data.status === "success") {
+                        contentBox.value = "";
+                        document.getElementById('teamTagSelect').value = "";
+                        window.loadPosts();
+                    } else {
+                        alert("Database Error: " + data.message);
+                    }
+                } catch(e) {
+                    alert("Permissions Error. Ensure Google Script is set to 'Anyone'.");
+                }
 
             } catch (error) {
                 console.error("Error adding post: ", error);
-                alert("Failed to create post.");
+                alert("Failed to communicate with server.");
             } finally {
                 btn.innerText = "Post"; btn.disabled = false;
             }
