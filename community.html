@@ -103,6 +103,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // *** YOUR GOOGLE APP SCRIPT URL ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxYGm57UKS4zIQlGDSTWtqnFBXBBwX0TZ3PJ06Qmtb9st5RbKUsqaRDNu6roaNR6RY/exec";
 
         const firebaseConfig = {
@@ -178,7 +179,9 @@
             document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
 
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL);
+                // CACHE BUSTER INSTALLED HERE to bypass PC browser caching
+                const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
+                const response = await fetch(cacheBusterUrl);
                 const rawText = await response.text(); 
                 
                 try {
