@@ -18,7 +18,6 @@
                     colors: { 
                         pahs: { 
                             dark: '#0f0f0f', 
-                            // Maps tailwind's pahs-gold to a CSS variable that we will dynamically change!
                             gold: 'var(--team-primary, #fbbf24)' 
                         } 
                     }, 
@@ -33,7 +32,6 @@
 
     <style>
         :root {
-            /* Default fallbacks */
             --team-primary: #fbbf24;
             --team-text: #000000;
         }
@@ -71,7 +69,24 @@
                     Request Admin Access
                 </button>
             </div>
-            <a href="padir.html" class="text-blue-600 font-bold text-sm hover:underline"><i class="fa-solid fa-arrow-left"></i> Back to PAHSFOOTBALL Team Directory</a>
+            
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold mb-3">Explore PAHS Football</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 border border-gray-200 shadow-sm">
+                        <i class="fa-solid fa-house"></i> Home
+                    </a>
+                    <a href="padir.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 border border-gray-200 shadow-sm">
+                        <i class="fa-solid fa-address-book"></i> Directory
+                    </a>
+                    <a href="community.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 border border-gray-200 shadow-sm">
+                        <i class="fa-solid fa-comments"></i> Fan Zone
+                    </a>
+                    <a href="all-scores.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 border border-gray-200 shadow-sm">
+                        <i class="fa-solid fa-list-ol"></i> Scores
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -577,7 +592,6 @@
         async function fetchWeather(address, gameDateObj) {
             const weatherEl = document.getElementById('ui-weather');
 
-            // 1. Check if date is missing or invalid FIRST
             if (!gameDateObj || isNaN(gameDateObj)) {
                 weatherEl.innerText = "Check back closer to game day";
                 return;
@@ -591,7 +605,6 @@
             weatherEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-pahs-gold mr-1"></i> Checking forecast...';
 
             try {
-                // Step 1: Geocode the address to get Latitude and Longitude
                 const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
                 const geoRes = await fetch(geoUrl, { headers: { 'User-Agent': 'PAHSFootballApp/1.0' } });
                 const geoData = await geoRes.json();
@@ -604,7 +617,6 @@
                 const lat = geoData[0].lat;
                 const lon = geoData[0].lon;
 
-                // Step 2: Use NWS API to get the forecast URL for those coordinates
                 const nwsPointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
                 const pointsRes = await fetch(nwsPointsUrl);
                 const pointsData = await pointsRes.json();
@@ -612,8 +624,6 @@
                 if(!pointsData.properties || !pointsData.properties.forecast) throw new Error("No forecast endpoint found");
 
                 const forecastUrl = pointsData.properties.forecast;
-
-                // Step 3: Fetch the actual 7-day forecast
                 const forecastRes = await fetch(forecastUrl);
                 const forecastData = await forecastRes.json();
 
@@ -621,7 +631,6 @@
                     const gameTime = gameDateObj.getTime();
                     const periods = forecastData.properties.periods;
                     
-                    // Find the specific period the game kickoff falls into
                     const targetPeriod = periods.find(p => {
                         const start = new Date(p.startTime).getTime();
                         const end = new Date(p.endTime).getTime();
@@ -629,21 +638,16 @@
                     });
 
                     if (targetPeriod) {
-                        // 3. We found a forecast specifically for the game date!
                         const temp = targetPeriod.temperature;
                         const desc = targetPeriod.shortForecast;
                         const prefix = `${targetPeriod.name}: `;
-                        
                         weatherEl.innerHTML = `<span class="font-bold text-lg">${temp}°F</span> - ${prefix}${desc}`;
                     } else {
-                        // 2. Date is valid, but no forecast exists for that date (too far out)
                         weatherEl.innerText = "Check back closer to game day for up-to-date forecast information";
                     }
-
                 } else {
                     weatherEl.innerText = "Forecast currently unavailable";
                 }
-
             } catch (error) {
                 console.error("Weather fetch failed:", error);
                 weatherEl.innerText = "Check back closer to game day for up-to-date forecast information";
@@ -663,7 +667,6 @@
                 return;
             }
 
-            // Instantly apply team colors from Directory CSV
             applyTeamColors(teamParam);
 
             try {
@@ -672,7 +675,6 @@
 
                 document.getElementById('loading-overlay').style.display = 'none';
 
-                // --- REVERTED: REQUIRE TEAM ADMIN/BACKEND DATA ---
                 if (result.status === 'error' || !result.data || !result.data.yourTeam) {
                     document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
                     const claimBtn = document.getElementById('claim-email-btn');
@@ -681,7 +683,6 @@
                     return;
                 }
 
-                // --- NORMAL PAGE LOAD LOGIC (If game data exists) ---
                 window.currentMatchupData = result.data;
                 const game = result.data;
                 document.getElementById('main-app').classList.remove('hidden');
