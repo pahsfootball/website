@@ -352,7 +352,7 @@
         }
     });
 
-    // --- PROMISE-BASED FETCHING (Fixes the Race Condition & Formatting Bugs) ---
+    // --- PROMISE-BASED FETCHING (Fixes the Race Condition) ---
     async function initializeAppFlow() {
         try {
             await fetchLogos();
@@ -362,35 +362,28 @@
         await fetchDirectoryData();
     }
 
+    // --- NEW BULLETPROOF LOGO PARSER ---
     function fetchLogos() {
         return new Promise((resolve, reject) => {
             Papa.parse(masterTeamsUrl, {
                 download: true,
-                header: false, // Turn headers off to bulletproof the parsing
+                header: true, 
                 skipEmptyLines: true,
+                // This makes your headers bulletproof by making them lowercase and removing spaces
+                transformHeader: function(header) {
+                    return header.toLowerCase().replace(/[^a-z0-9]/g, '');
+                },
                 complete: function(logoRes) {
                     logoRes.data.forEach(row => {
-                        let teamName = "";
-                        let logoUrl = "";
+                        // Looks for "teamname", "school", or "team"
+                        const teamName = row['school'] || row['teamname'] || row['team'];
+                        // Looks for "logourl" or "logo"
+                        const logoUrl = row['logourl'] || row['logo'];
                         
-                        // Scrape every cell in the row to find the text and the link
-                        row.forEach(cell => {
-                            if (typeof cell === 'string') {
-                                const val = cell.trim();
-                                if (val.startsWith('http')) {
-                                    logoUrl = val;
-                                } else if (val.length > 2 && !val.toLowerCase().includes('logo url')) {
-                                    if (val.length > teamName.length) {
-                                        teamName = val;
-                                    }
-                                }
-                            }
-                        });
-
                         if (teamName && logoUrl) {
-                            // Strip out EVERYTHING except Letters and Numbers to force a perfect match
+                            // Convert strictly to uppercase alphanumeric for a perfect match
                             const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                            teamLogoDictionary[safeKey] = logoUrl;
+                            teamLogoDictionary[safeKey] = logoUrl.trim();
                         }
                     });
                     resolve();
@@ -422,6 +415,7 @@
                     els.loading.classList.add('hidden');
                     els.grid.classList.remove('hidden');
 
+                    // --- DEEP LINKING LOGIC ---
                     const urlParams = new URLSearchParams(window.location.search);
                     const teamParam = urlParams.get('team');
                     if (teamParam) {
