@@ -94,9 +94,15 @@
 
         <div class="flex items-center justify-between mb-4 border-b border-gray-400 pb-2">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
-            <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
-                <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
-            </button>
+            <div class="flex items-center gap-3">
+                <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
+                    <option value="newest">Latest</option>
+                    <option value="top">Most Hyped</option>
+                </select>
+                <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
+                    <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
+                </button>
+            </div>
         </div>
 
         <div id="feedContainer" class="space-y-5">
@@ -227,14 +233,11 @@
             return filteredText;
         }
 
-        // --- NEW LINKIFY FUNCTION ---
         function linkify(text) {
-            // This regex finds URLs starting with http or https
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
-                const cleanUrl = url.replace(/[.,!?;:]$/, ''); // remove accidental trailing punctuation
+                const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
                 
-                // YOUTUBE VIDEO DETECTION (Auto-embeds the video!)
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
                     return `<div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
@@ -242,7 +245,6 @@
                             </div>`;
                 }
 
-                // STANDARD EXTERNAL LINK (Creates a nice chip and triggers warning modal)
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
                 return `<span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
@@ -250,9 +252,8 @@
             });
         }
 
-        // --- EXTERNAL LINK WARNING LOGIC ---
         window.openExternalLink = function(e, url) {
-            if (e) e.stopPropagation(); // Don't trigger the post modal click
+            if (e) e.stopPropagation(); 
             document.getElementById('warningUrlText').innerText = url;
             document.getElementById('continueLinkBtn').href = url;
             
@@ -286,7 +287,7 @@
                         teamLogoDictionary[safeKey] = logoUrl.trim();
                     }
                 });
-                if(currentPosts.length > 0) renderFeed();
+                if(currentPosts.length > 0) window.renderFeed();
             }
         });
 
@@ -313,7 +314,7 @@
                         if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
                     }
                 });
-                if(currentPosts.length > 0) renderFeed(); 
+                if(currentPosts.length > 0) window.renderFeed(); 
             }
         });
 
@@ -356,7 +357,7 @@
                     const data = JSON.parse(rawText);
                     if (data.status === "success") {
                         currentPosts = data.data;
-                        renderFeed();
+                        window.renderFeed();
                         
                         if (!initialDeepLinkChecked) {
                             const urlParams = new URLSearchParams(window.location.search);
@@ -419,9 +420,6 @@
 
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
 
-            // SECURE AND RENDER CONTENT:
-            // 1. First, Escape HTML to neutralize any script tags or bad code
-            // 2. Second, run the safe text through linkify() to turn URLs into buttons/videos
             const safeContent = linkify(escapeHTML(post.content));
 
             return {
@@ -461,7 +459,8 @@
             };
         }
 
-        function renderFeed() {
+        // --- RENDER FEED WITH SORTING LOGIC ---
+        window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
             feedContainer.innerHTML = '';
 
@@ -470,7 +469,17 @@
                 return;
             }
 
-            currentPosts.forEach((post) => {
+            // Create a copy of the posts to sort so we don't mutate the original data
+            let postsToRender = [...currentPosts]; 
+            const sortType = document.getElementById('feedSort').value;
+
+            if (sortType === 'top') {
+                postsToRender.sort((a, b) => b.likes.length - a.likes.length || new Date(b.timestamp) - new Date(a.timestamp));
+            } else {
+                postsToRender.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+
+            postsToRender.forEach((post) => {
                 const postData = buildPostHTML(post, false);
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
@@ -718,7 +727,6 @@
             });
         });
 
-        // Security first: Escape HTML characters so users can't inject code
         function escapeHTML(str) {
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
