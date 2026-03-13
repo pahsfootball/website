@@ -38,7 +38,7 @@
             background: #f4f4f5; 
             border: 1px solid rgba(0, 0, 0, 0.1); 
             border-top: 4px solid #fbbf24; 
-            transition: all 0.2s; 
+            transition: all 0.4s ease; 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
             cursor: pointer; 
             position: relative; 
@@ -67,14 +67,10 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
-        @keyframes newPostGlow {
-            0% { box-shadow: 0 0 0px #fbbf24; border-color: rgba(0, 0, 0, 0.1); }
-            50% { box-shadow: 0 0 20px 4px #fbbf24; border-color: #fbbf24; }
-            100% { box-shadow: 0 0 0px #fbbf24; border-color: rgba(0, 0, 0, 0.1); }
-        }
-        
-        .new-post-flash {
-            animation: newPostGlow 2s ease-in-out infinite;
+        /* --- NEW SOLID GLOW --- */
+        .new-post-solid-glow {
+            box-shadow: 0 0 15px 3px #fbbf24 !important;
+            border-color: #fbbf24 !important;
             z-index: 10;
         }
         
@@ -119,7 +115,13 @@
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
             <div class="flex items-center gap-2 self-end">
-                <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 px-2 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.renderFeed()">
+                
+                <div class="relative flex items-center">
+                    <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
+                    <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </button>
+                </div>
                 
                 <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
                     <option value="newest">Latest</option>
@@ -503,6 +505,24 @@
             window.loadPosts(true);
         });
 
+        // *** FILTER TOGGLE LOGIC ***
+        window.toggleClearBtn = function() {
+            const input = document.getElementById('feedTeamFilter');
+            const btn = document.getElementById('clearFilterBtn');
+            if (input.value.length > 0) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        };
+
+        window.clearFeedFilter = function() {
+            const input = document.getElementById('feedTeamFilter');
+            input.value = "";
+            window.toggleClearBtn();
+            window.renderFeed();
+        };
+
         // *** FETCH POSTS FROM GOOGLE SCRIPT ***
         window.loadPosts = async function(showLoader = true) {
             const refreshIcon = document.getElementById('refreshIcon');
@@ -594,7 +614,7 @@
                 const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
                 
                 tagHtml = `
-                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide" style="background-color: ${postColor}; color: ${contrastText}; border: 1px solid ${borderColor};">
                         ${iconHtml} View ${post.taggedTeam}
                     </a>
                 `;
@@ -669,7 +689,7 @@
             
             let postsToRender = [...currentPosts]; 
             
-            // --- NEW FILTER LOGIC ---
+            // --- FILTER LOGIC ---
             const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
             if (filterTeam !== "") {
                 postsToRender = postsToRender.filter(post => post.taggedTeam && post.taggedTeam.toLowerCase().includes(filterTeam));
@@ -700,29 +720,29 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // --- NEW POST GLOW LOGIC ---
+                // --- NEW POST GLOW LOGIC (10 Seconds, Solid) ---
                 const secondsOld = (now - postData.timestamp) / 1000;
                 
                 // Check if post is between 10 seconds old and -30 seconds (to account for clock lag)
                 if (secondsOld < 10 && secondsOld >= -30) {
-                    postCard.classList.add('new-post-flash');
+                    postCard.classList.add('new-post-solid-glow');
                     
                     const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
                     
                     // Remove the class after the 10 seconds total time elapses
                     setTimeout(() => { 
-                        postCard.classList.remove('new-post-flash'); 
+                        postCard.classList.remove('new-post-solid-glow'); 
                     }, timeRemaining * 1000);
                 }
 
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
-                // Color border top based on team
+                // --- FULL BORDER COLOR UPDATE ---
+                // Changes the border on ALL sides instead of just the top
                 if (post.taggedTeam) {
-                    postCard.style.borderTopColor = postData.color;
-                    postCard.style.borderLeft = `3px solid ${postData.color}`;
-                    postCard.style.borderRight = `3px solid ${postData.color}`;
+                    postCard.style.border = `3px solid ${postData.color}`;
+                    postCard.style.borderTop = `4px solid ${postData.color}`;
                 }
                 
                 feedContainer.appendChild(postCard);
@@ -1019,13 +1039,11 @@
             
             const modalBlock = document.getElementById('postModalContentBlock');
             if (post.taggedTeam) {
-                modalBlock.style.borderTopColor = postData.color;
-                modalBlock.style.borderLeft = `4px solid ${postData.color}`;
-                modalBlock.style.borderRight = `4px solid ${postData.color}`;
+                modalBlock.style.border = `3px solid ${postData.color}`;
+                modalBlock.style.borderTop = `5px solid ${postData.color}`;
             } else {
-                modalBlock.style.borderTopColor = "#fbbf24"; 
-                modalBlock.style.borderLeft = "none"; 
-                modalBlock.style.borderRight = "none";
+                modalBlock.style.border = "none";
+                modalBlock.style.borderTop = "5px solid #fbbf24"; 
             }
             
             const ctaBanner = document.getElementById('modalViralCTA');
