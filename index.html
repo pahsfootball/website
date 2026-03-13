@@ -121,9 +121,18 @@
 
 <div class="content-area">
     <a href="livescoreboards.html" class="nav-card featured-card">
-        <div class="nav-text"><span class="nav-title">Game Day Info & Scores</span><span class="nav-sub">Real-time Scores, Game Info etc - see Participating Teams</span></div>
+        <div class="nav-text"><span class="nav-title">Game Day Info & Scores</span><span class="nav-sub">Real-time Scores & Participating Teams</span></div>
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </a>
+    
+    <a href="community.html" id="communityNavBtn" class="nav-card hidden">
+        <div class="nav-text">
+            <span class="nav-title">Fan Zone</span>
+            <span class="nav-sub">Join the community & hype up your team</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>
+    </a>
+
     <a href="padir.html" class="nav-card">
         <div class="nav-text"><span class="nav-title">PA Team Directory</span><span class="nav-sub">Find teams across the state</span></div>
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -233,7 +242,6 @@
     const db = getFirestore(app);
     const dbRealtime = getDatabase(app);
 
-    // --- 1. FALLBACK LOGO DICTIONARY ---
     const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
     let teamLogoDictionary = {};
 
@@ -253,12 +261,11 @@
             startLiveTicker();
         },
         error: function(err) {
-            console.error("Could not load MasterTeams CSV. Starting ticker without fallbacks.");
+            console.error("Could not load MasterTeams CSV.");
             startLiveTicker();
         }
     });
 
-    // --- 2. LIVE FIREBASE TICKER ---
     function startLiveTicker() {
         onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
             const data = snapshot.val();
@@ -278,7 +285,6 @@
                     let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
                     let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
 
-                    // --- UPDATED LOGO LOGIC (Master Dictionary first, then Admin URL) ---
                     const finalHomeLogo = teamLogoDictionary[(game.home || '').trim()] || game.homeLogo || '';
                     const finalAwayLogo = teamLogoDictionary[(game.away || '').trim()] || game.awayLogo || '';
 
@@ -295,7 +301,6 @@
                     </a>`;
                 });
                 
-                // Duplicate cards if there are only a few, so the marquee animation doesn't snap
                 if(games.length > 0 && games.length < 8) {
                     html = html + html + html + html; 
                 }
@@ -304,7 +309,6 @@
         });
     }
 
-    // --- 3. USER AUTHENTICATION LOGIC ---
     window.logoutUser = function(e) {
         if(e) e.preventDefault();
         signOut(auth).then(() => { window.location.reload(); });
@@ -314,8 +318,12 @@
         const authBtn = document.getElementById("authNavBtn");
         const authTitle = document.getElementById("authNavTitle");
         const authSub = document.getElementById("authNavSub");
+        const communityBtn = document.getElementById("communityNavBtn");
 
-       if (user) {
+        if (user) {
+            // SHOW FAN ZONE BUTTON ONLY FOR LOGGED IN USERS
+            if(communityBtn) communityBtn.classList.remove("hidden");
+
             if(authBtn) {
                 authBtn.classList.add("logged-in-state");
                 authBtn.href = "profile.html"; 
@@ -340,6 +348,9 @@
             }
 
         } else {
+            // HIDE FAN ZONE BUTTON FOR GUESTS
+            if(communityBtn) communityBtn.classList.add("hidden");
+
             if(authBtn) {
                 authBtn.classList.remove("logged-in-state");
                 authBtn.href = "login.html"; 
