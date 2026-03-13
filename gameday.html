@@ -407,6 +407,18 @@
             });
         }
 
+        // *** FIX: Corrected escapeHTML function ***
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
@@ -420,10 +432,6 @@
                 const displayUrl = cleanUrl.length > 30 ? cleanUrl.substring(0, 30) + '...' : cleanUrl;
                 return `<a href="${cleanUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold underline text-xs" onclick="event.stopPropagation()">${displayUrl}</a>`;
             });
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[tag]));
         }
 
         // --- FETCH EMBEDDED FAN ZONE POSTS ---
