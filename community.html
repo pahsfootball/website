@@ -34,6 +34,8 @@
         .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .like-btn.liked { color: #ef4444; }
         .like-btn.liked i { transform: scale(1.1); font-weight: 900; }
+        /* Style for datalist input to make it look clickable */
+        input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
     </style>
 </head>
 <body class="antialiased">
@@ -65,10 +67,10 @@
                 <textarea id="postContent" rows="3" placeholder="What's on your mind? Hype up your team!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-3 resize-none font-body text-sm"></textarea>
                 
                 <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <div class="w-full sm:w-2/3">
-                        <select id="teamTagSelect" class="input-box w-full p-2 rounded-lg text-sm text-gray-600 font-bold cursor-pointer">
-                            <option value="">+ Tag a Team (Optional)</option>
-                        </select>
+                    <div class="w-full sm:w-2/3 relative">
+                        <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                        <datalist id="teamTagList">
+                            </datalist>
                     </div>
                     <button id="submitPostBtn" class="w-full sm:w-1/3 bg-pahs-dark text-pahs-gold hover:bg-black font-head text-xl font-bold uppercase tracking-widest py-2 rounded-lg shadow-md transition-all">
                         Post
@@ -105,7 +107,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // *** NEW GOOGLE SHEET API URL ***
         const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
 
         const firebaseConfig = {
@@ -124,7 +125,11 @@
         let currentUser = null;
         let currentUserProfile = null;
         let currentPosts = []; 
+        
+        let validTeams = new Set();
+        let teamLogoDictionary = {};
 
+        // --- PROFANITY FILTER ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -135,21 +140,43 @@
             return filteredText;
         }
 
+        // --- FETCH LOGOS FOR THE FEED ---
+        const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
+        Papa.parse(MASTER_TEAMS_CSV, {
+            download: true, header: true, skipEmptyLines: true,
+            transformHeader: function(header) { return header.toLowerCase().replace(/[^a-z0-9]/g, ''); },
+            complete: function(logoRes) {
+                logoRes.data.forEach(row => {
+                    const teamName = row['school'] || row['teamname'] || row['team'];
+                    const logoUrl = row['logourl'] || row['logo'];
+                    if (teamName && logoUrl) {
+                        const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        teamLogoDictionary[safeKey] = logoUrl.trim();
+                    }
+                });
+                // Force a re-render if the posts loaded before the logos finished downloading
+                if(currentPosts.length > 0) renderFeed();
+            }
+        });
+
+        // --- POPULATE SEARCHABLE DATALIST ---
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                const select = document.getElementById('teamTagSelect');
+                const datalist = document.getElementById('teamTagList');
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
                     return row;
                 });
                 const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
-                const addedTeams = new Set();
+                
                 teams.forEach(team => {
-                    if(!addedTeams.has(team['School'])) {
-                        select.add(new Option(team['School'], team['School']));
-                        addedTeams.add(team['School']);
+                    if(!validTeams.has(team['School'])) {
+                        const option = document.createElement('option');
+                        option.value = team['School'];
+                        datalist.appendChild(option);
+                        validTeams.add(team['School']);
                     }
                 });
             }
@@ -190,7 +217,6 @@
             }
 
             try {
-                // The ?t= timestamp guarantees the browser won't use a cached version
                 const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
                 const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
                 const rawText = await response.text(); 
@@ -238,12 +264,21 @@
                 const hasLiked = currentUser && post.likes.includes(currentUser.uid);
                 const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
 
+                // TEAM TAG GENERATOR (Now With Logos!)
                 let tagHtml = '';
                 if (post.taggedTeam) {
+                    const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const logoUrl = teamLogoDictionary[safeKey] || '';
+                    
+                    // If a logo is found, show it. Otherwise show the standard football icon.
+                    const iconHtml = logoUrl 
+                        ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
+                        : `<i class="fa-solid fa-football mr-1.5 text-black"></i>`;
+
                     const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
                     tagHtml = `
-                        <a href="${teamUrl}" class="inline-flex items-center gap-1.5 mt-3 text-xs font-bold bg-pahs-gold text-black px-3 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide">
-                            <i class="fa-solid fa-football"></i> View ${post.taggedTeam}
+                        <a href="${teamUrl}" class="inline-flex items-center mt-3 text-xs font-bold bg-pahs-gold text-black pr-4 pl-2 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide border border-yellow-600">
+                            ${iconHtml} View ${post.taggedTeam}
                         </a>
                     `;
                 }
@@ -287,11 +322,22 @@
             if (!currentUser) return alert("You must be logged in to post.");
             
             const contentBox = document.getElementById('postContent');
-            const teamTag = document.getElementById('teamTagSelect').value;
+            const teamTagInput = document.getElementById('teamTagInput').value.trim();
             let rawContent = contentBox.value.trim();
 
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            // Strict Validation: Ensure the typed team is actually in the database
+            let finalTeamTag = "";
+            if (teamTagInput !== "") {
+                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
+                if (matchedTeam) {
+                    finalTeamTag = matchedTeam;
+                } else {
+                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                }
+            }
 
             const btn = document.getElementById('submitPostBtn');
             btn.innerText = "Posting..."; btn.disabled = true;
@@ -304,7 +350,7 @@
                 authorId: currentUser.uid,
                 authorUsername: username,
                 content: cleanContent,
-                taggedTeam: teamTag
+                taggedTeam: finalTeamTag
             };
 
             try {
@@ -319,7 +365,7 @@
                     const data = JSON.parse(rawText);
                     if(data.status === "success") {
                         contentBox.value = "";
-                        document.getElementById('teamTagSelect').value = "";
+                        document.getElementById('teamTagInput').value = "";
                         window.loadPosts(true);
                     } else alert("Database Error: " + data.message);
                 } catch(e) { alert("Permissions Error."); }
