@@ -126,6 +126,23 @@
         </div>
     </div>
 
+    <div id="editModalOverlay" class="modal-overlay" onclick="closeEditModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-pen"></i> Edit Post</h2>
+                <button onclick="closeEditModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white">
+                <textarea id="editPostContent" rows="4" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+                <div class="relative mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
+                    <input type="text" id="editTeamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                </div>
+                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <div id="reportModalOverlay" class="modal-overlay" onclick="closeReportModal(event)">
         <div class="modal-content" style="border-top-color: #dc2626;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -200,6 +217,8 @@
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
+        
+        window.currentEditPostId = null;
 
         const colorNameMap = {
             "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
@@ -422,6 +441,16 @@
 
             const safeContent = linkify(escapeHTML(post.content));
 
+            // EDIT BUTTON (Only visible to author)
+            let editBtnHtml = '';
+            if (currentUser && post.authorId === currentUser.uid) {
+                editBtnHtml = `
+                    <button onclick="window.openEditModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-pahs-gold font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                        <i class="fa-solid fa-pen text-lg"></i> <span class="hidden sm:inline">Edit</span>
+                    </button>
+                `;
+            }
+
             return {
                 color: postColor,
                 html: `
@@ -447,6 +476,7 @@
                         </button>
 
                         <div class="flex items-center gap-4">
+                            ${editBtnHtml}
                             <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                                 <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
                             </button>
@@ -459,7 +489,6 @@
             };
         }
 
-        // --- RENDER FEED WITH SORTING LOGIC ---
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
             feedContainer.innerHTML = '';
@@ -469,7 +498,6 @@
                 return;
             }
 
-            // Create a copy of the posts to sort so we don't mutate the original data
             let postsToRender = [...currentPosts]; 
             const sortType = document.getElementById('feedSort').value;
 
@@ -536,6 +564,54 @@
                 alert("Failed to communicate with server.");
             } finally {
                 btn.innerText = "Post"; btn.disabled = false;
+            }
+        });
+
+        // --- NEW EDIT POST SUBMISSION LOGIC ---
+        document.getElementById('submitEditBtn').addEventListener('click', async () => {
+            if (!currentUser || !window.currentEditPostId) return;
+            
+            const contentBox = document.getElementById('editPostContent');
+            const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
+            let rawContent = contentBox.value.trim();
+
+            if (rawContent === "") return alert("Post cannot be empty.");
+            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            let finalTeamTag = "";
+            if (teamTagInput !== "") {
+                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
+                if (matchedTeam) finalTeamTag = matchedTeam;
+                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+            }
+
+            const btn = document.getElementById('submitEditBtn');
+            btn.innerText = "Saving..."; btn.disabled = true;
+
+            const cleanContent = filterProfanity(rawContent);
+
+            const payload = { 
+                action: "edit_post", 
+                postId: window.currentEditPostId,
+                userId: currentUser.uid, 
+                newContent: cleanContent, 
+                newTaggedTeam: finalTeamTag 
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+                const rawText = await response.text();
+                try {
+                    const data = JSON.parse(rawText);
+                    if(data.status === "success") {
+                        window.closeEditModal(null, true);
+                        window.loadPosts(true); // Force reload
+                    } else alert("Error: " + data.message);
+                } catch(e) { alert("Permissions Error."); }
+            } catch (error) {
+                alert("Failed to communicate with server.");
+            } finally {
+                btn.innerText = "Save Changes"; btn.disabled = false;
             }
         });
 
@@ -624,6 +700,43 @@
                 
                 window.history.replaceState({}, document.title, window.location.pathname);
 
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+        };
+
+        // --- NEW EDIT MODAL LOGIC ---
+        window.openEditModal = function(e, postId) {
+            if (e) e.stopPropagation();
+            
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post || !currentUser || post.authorId !== currentUser.uid) return;
+
+            window.currentEditPostId = postId;
+            
+            // Pre-fill the edit form with their existing content
+            document.getElementById('editPostContent').value = post.content;
+            document.getElementById('editTeamTagInput').value = post.taggedTeam || "";
+
+            // Close the post viewer modal if they clicked edit from inside it
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                postOverlay.classList.remove('active');
+                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
+            }
+
+            const overlay = document.getElementById('editModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeEditModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'editModalOverlay')) {
+                const overlay = document.getElementById('editModalOverlay');
+                overlay.classList.remove('active');
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     document.body.style.overflow = '';
