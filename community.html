@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fan Zone | PAHS Football</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .post-card { background: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #fbbf24; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
+        .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+        .like-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .like-btn.liked { color: #ef4444; }
+        .like-btn.liked i { transform: scale(1.1); font-weight: 900; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10 py-4 px-4 sm:px-8">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-bold font-head tracking-wide uppercase">Fan Zone</h1>
+            </div>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-comments text-pahs-gold"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        
+        <div id="createPostSection" class="hidden mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-5 border border-gray-200 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-pahs-gold"></div>
+                <h2 class="font-head text-2xl uppercase tracking-wide text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-pahs-gold"></i> Create a Post
+                </h2>
+                
+                <textarea id="postContent" rows="3" placeholder="What's on your mind? Hype up your team!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-3 resize-none font-body text-sm"></textarea>
+                
+                <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                    <div class="w-full sm:w-2/3">
+                        <select id="teamTagSelect" class="input-box w-full p-2 rounded-lg text-sm text-gray-600 font-bold cursor-pointer">
+                            <option value="">+ Tag a Team (Optional)</option>
+                        </select>
+                    </div>
+                    <button id="submitPostBtn" class="w-full sm:w-1/3 bg-pahs-dark text-pahs-gold hover:bg-black font-head text-xl font-bold uppercase tracking-widest py-2 rounded-lg shadow-md transition-all">
+                        Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loggedOutPrompt" class="mb-8 bg-gray-200 border border-gray-300 rounded-2xl p-6 text-center shadow-inner">
+            <i class="fa-solid fa-lock text-3xl text-gray-400 mb-2"></i>
+            <h3 class="font-head text-2xl text-gray-700 uppercase tracking-wide">Log in to join the conversation</h3>
+            <p class="text-sm text-gray-500 mb-4">You must be signed in to post and like content.</p>
+            <a href="login.html" class="inline-block bg-pahs-gold text-black font-head font-bold text-xl uppercase tracking-widest py-2 px-8 rounded-lg shadow-md hover:brightness-110 transition-all">Sign In</a>
+        </div>
+
+        <div class="flex items-center justify-between mb-4 border-b border-gray-400 pb-2">
+            <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
+            <button onclick="loadPosts()" class="text-gray-600 hover:text-pahs-gold transition-colors" title="Refresh Feed"><i class="fa-solid fa-arrows-rotate"></i></button>
+        </div>
+
+        <div id="feedContainer" class="space-y-5">
+            <div id="feedLoading" class="text-center py-12">
+                <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
+                <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // *** PASTE YOUR GOOGLE SCRIPT WEB APP URL HERE ***
+        const GOOGLE_SHEET_API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+            authDomain: "pahs-football.firebaseapp.com",
+            projectId: "pahs-football",
+            storageBucket: "pahs-football.firebasestorage.app",
+            messagingSenderId: "260294523190",
+            appId: "1:260294523190:web:b3963804702d2a03749b97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentUserProfile = null;
+        let currentPosts = []; // Local cache of posts
+
+        // --- PROFANITY FILTER ---
+        const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
+        function filterProfanity(text) {
+            let filteredText = text;
+            badWords.forEach(word => {
+                const regex = new RegExp('\\b' + word + '\\b', 'gi');
+                filteredText = filteredText.replace(regex, '***');
+            });
+            return filteredText;
+        }
+
+        // --- POPULATE TEAM DROPDOWN ---
+        const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+        Papa.parse(directoryUrl, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                const select = document.getElementById('teamTagSelect');
+                const teams = results.data.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
+                teams.forEach(team => {
+                    select.add(new Option(team['School'], team['School']));
+                });
+            }
+        });
+
+        // --- AUTH STATE ---
+        onAuthStateChanged(auth, async (user) => {
+            const createSec = document.getElementById('createPostSection');
+            const loginPrompt = document.getElementById('loggedOutPrompt');
+
+            if (user) {
+                currentUser = user;
+                createSec.classList.remove('hidden');
+                loginPrompt.classList.add('hidden');
+                
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) currentUserProfile = userDoc.data();
+                } catch(e) { console.error(e); }
+            } else {
+                currentUser = null;
+                currentUserProfile = null;
+                createSec.classList.add('hidden');
+                loginPrompt.classList.remove('hidden');
+            }
+            
+            // Load feed regardless of login status
+            window.loadPosts(); 
+        });
+
+        // --- FETCH POSTS FROM GOOGLE SHEETS ---
+        window.loadPosts = async function() {
+            document.getElementById('feedLoading').style.display = 'block';
+            document.getElementById('feedContainer').innerHTML = '<div id="feedLoading" class="text-center py-12"><i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i><p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p></div>';
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    currentPosts = data.data;
+                    renderFeed();
+                }
+            } catch (error) {
+                console.error("Error fetching feed:", error);
+                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error loading feed. Please try again later.</p>';
+            }
+        };
+
+        // --- RENDER FEED ---
+        function renderFeed() {
+            const feedContainer = document.getElementById('feedContainer');
+            feedContainer.innerHTML = '';
+
+            if (currentPosts.length === 0) {
+                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`;
+                return;
+            }
+
+            currentPosts.forEach((post) => {
+                let timeString = "Recently";
+                if (post.timestamp) {
+                    const date = new Date(post.timestamp);
+                    timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                }
+
+                const likeCount = post.likes.length;
+                const hasLiked = currentUser && post.likes.includes(currentUser.uid);
+                const heartClass = hasLiked ? 'fa-solid liked' : 'fa-regular text-gray-500';
+
+                let tagHtml = '';
+                if (post.taggedTeam) {
+                    const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
+                    tagHtml = `
+                        <a href="${teamUrl}" class="inline-flex items-center gap-1.5 mt-3 text-xs font-bold bg-pahs-gold text-black px-3 py-1.5 rounded-full hover:bg-yellow-500 transition shadow-sm font-body uppercase tracking-wide">
+                            <i class="fa-solid fa-football"></i> View ${post.taggedTeam}
+                        </a>
+                    `;
+                }
+
+                const postCard = document.createElement('div');
+                postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
+                postCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
+                                <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words">${escapeHTML(post.content)}</div>
+                    
+                    ${tagHtml}
+
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-start">
+                        <button onclick="window.toggleLike('${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-red-500 text-gray-500 transition-colors">
+                            <i id="heart-${post.postId}" class="fa-heart ${heartClass} text-lg"></i>
+                            <span id="count-${post.postId}">${likeCount > 0 ? likeCount : 'Like'}</span>
+                        </button>
+                    </div>
+                `;
+                
+                feedContainer.appendChild(postCard);
+            });
+        }
+
+        // --- SUBMIT POST (Send to Google Sheets) ---
+        document.getElementById('submitPostBtn').addEventListener('click', async () => {
+            if (!currentUser) return alert("You must be logged in to post.");
+            
+            const contentBox = document.getElementById('postContent');
+            const teamTag = document.getElementById('teamTagSelect').value;
+            let rawContent = contentBox.value.trim();
+
+            if (rawContent === "") return alert("Post cannot be empty.");
+            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            const btn = document.getElementById('submitPostBtn');
+            btn.innerText = "Posting..."; btn.disabled = true;
+
+            const cleanContent = filterProfanity(rawContent);
+            const username = currentUserProfile ? currentUserProfile.username : "Fan";
+
+            const payload = {
+                action: "add_post",
+                authorId: currentUser.uid,
+                authorUsername: username,
+                content: cleanContent,
+                taggedTeam: teamTag
+            };
+
+            try {
+                // Send to Google Sheets (text/plain avoids CORS errors)
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+
+                contentBox.value = "";
+                document.getElementById('teamTagSelect').value = "";
+                
+                // Refresh the feed immediately to show the new post
+                window.loadPosts();
+
+            } catch (error) {
+                console.error("Error adding post: ", error);
+                alert("Failed to create post.");
+            } finally {
+                btn.innerText = "Post"; btn.disabled = false;
+            }
+        });
+
+        // --- TOGGLE LIKE LOGIC ---
+        window.toggleLike = async function(postId) {
+            if (!currentUser) return alert("You must be logged in to like posts.");
+
+            // 1. Optimistic UI Update (Makes it feel instant)
+            const postIndex = currentPosts.findIndex(p => p.postId === postId);
+            if (postIndex > -1) {
+                const post = currentPosts[postIndex];
+                const uidIndex = post.likes.indexOf(currentUser.uid);
+                const heartIcon = document.getElementById(`heart-${postId}`);
+                const countText = document.getElementById(`count-${postId}`);
+
+                if (uidIndex > -1) {
+                    post.likes.splice(uidIndex, 1); // Remove
+                    heartIcon.className = "fa-heart fa-regular text-gray-500 text-lg";
+                } else {
+                    post.likes.push(currentUser.uid); // Add
+                    heartIcon.className = "fa-heart fa-solid liked text-lg";
+                }
+                
+                countText.innerText = post.likes.length > 0 ? post.likes.length : 'Like';
+            }
+
+            // 2. Send Background Request to Google Sheets
+            const payload = {
+                action: "toggle_like",
+                postId: postId,
+                userId: currentUser.uid
+            };
+
+            try {
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+            } catch(e) {
+                console.error("Error saving like:", e);
+            }
+        };
+
+        // --- SECURITY HELPER ---
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+    </script>
+</body>
+</html>
