@@ -18,31 +18,54 @@
             }
         }
     </script>
+    <style>
+        body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        
+        .pulse-live {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); opacity: 0.9; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.9; }
+        }
+    </style>
 </head>
 <body class="bg-[#adadad] font-body text-[#18181b]">
 
     <nav class="bg-pahs-dark text-white p-4 sticky top-0 z-50 border-b border-white/10 shadow-xl">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div class="flex items-center gap-4 w-full md:w-auto">
                 <a href="index.html" class="bg-white/10 hover:bg-pahs-gold hover:text-black p-2 rounded transition-all"><i class="fa-solid fa-arrow-left"></i></a>
                 <h1 class="text-2xl font-head uppercase tracking-tighter">Statewide <span class="text-pahs-gold">Teams</span></h1>
             </div>
-            <div class="text-gray-400 font-head text-xl uppercase"><span id="count">0</span> Teams</div>
+
+            <a href="all-scores.html" class="flex items-center gap-3 bg-pahs-gold text-black px-6 py-2 rounded-full font-head text-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-lg hover:scale-105">
+                <i class="fa-solid fa-tower-broadcast pulse-live text-red-600"></i>
+                SEE PAHSFOOTBALL SCORES & LIVE GAMES
+            </a>
+
+            <div class="text-gray-400 font-head text-xl uppercase hidden md:block"><span id="count">0</span> Teams</div>
         </div>
     </nav>
 
-    <div class="bg-pahs-dark p-6 shadow-lg">
+    <div class="bg-pahs-dark p-6 shadow-lg border-b border-white/5">
         <div class="max-w-4xl mx-auto">
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="searchInput" placeholder="Search for your team..." class="w-full pl-12 pr-4 py-4 rounded-xl text-lg font-bold outline-none focus:ring-4 focus:ring-pahs-gold/50 transition-all">
+                <input type="text" id="searchInput" placeholder="Search for your team or mascot..." class="w-full pl-12 pr-4 py-4 rounded-xl text-lg font-bold outline-none focus:ring-4 focus:ring-pahs-gold/50 transition-all shadow-inner">
             </div>
         </div>
     </div>
 
     <main class="max-w-6xl mx-auto p-4 py-12">
         <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-20">
+                <i class="fa-solid fa-football fa-spin text-4xl text-gray-600 mb-4"></i>
+                <p class="font-head text-2xl uppercase text-gray-600">Loading PIAA Directory...</p>
             </div>
+        </div>
     </main>
 
     <script>
@@ -59,22 +82,17 @@
 
         function clean(str) { return str ? str.replace(/\*/g, '').trim() : ""; }
 
-        // Logic to determine best accent color
         function getBestAccent(colorString) {
-            if (!colorString) return "#fbbf24"; // Fallback Gold
+            if (!colorString) return "#fbbf24";
             const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
-            
             let primary = colorMap[parts[0]] || parts[0];
             let secondary = parts[1] ? (colorMap[parts[1]] || parts[1]) : primary;
-
-            // If primary is Black or very dark, use secondary
             if (primary === "#000000" || primary.toLowerCase() === "black") {
                 return secondary;
             }
             return primary;
         }
 
-        // Logic to determine text color (Black or White) based on background brightness
         function getContrastYIQ(hexcolor){
             if (!hexcolor || hexcolor.startsWith('rgb')) return 'black';
             hexcolor = hexcolor.replace("#", "");
@@ -107,6 +125,11 @@
 
         function render(teams) {
             const grid = document.getElementById('grid');
+            if (teams.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 font-bold text-gray-500">No teams found matching your search.</div>';
+                return;
+            }
+
             grid.innerHTML = teams.map(team => {
                 const accent = getBestAccent(team.colors);
                 const textColor = getContrastYIQ(accent);
