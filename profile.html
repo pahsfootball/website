@@ -78,6 +78,12 @@
         .status-success { color: #10b981; }
         .status-error { color: #ef4444; }
 
+        /* MODAL STYLES */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content-popup { background: white; width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transform: scale(0.95); transition: all 0.3s ease-out; position: relative; border-top: 8px solid #ef4444; }
+        .modal-overlay.active .modal-content-popup { transform: scale(1); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -176,8 +182,8 @@
         </div>
     </div>
 
-    <div id="relinquishModalOverlay" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" onclick="window.closeRelinquishModal(event)">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col border-t-8 border-red-600">
+    <div id="relinquishModalOverlay" class="modal-overlay" onclick="window.closeRelinquishModal(event)">
+        <div class="modal-content-popup flex flex-col">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
                 <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2">
                     <i class="fa-solid fa-user-xmark"></i> Relinquish Admin
@@ -235,6 +241,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const dbRealtime = getDatabase(app);
+
+        const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
 
         // UI Elements
         const displayEmail = document.getElementById('displayEmail');
@@ -297,7 +305,7 @@
                 
                 let bIcon = '<i class="fa-solid fa-football text-slate-500"></i>';
                 let bClass = 'badge-icon bg-slate-100 border-slate-300 shadow-sm';
-                let bTitle = 'Fan';
+                let bTitle = 'Fan (0+ Likes)';
 
                 if (totalLikes >= 500) { 
                     bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; 
@@ -418,11 +426,9 @@
             document.getElementById('relinquishEmail').value = auth.currentUser?.email || "N/A";
             
             const overlay = document.getElementById('relinquishModalOverlay');
-            overlay.classList.remove('hidden');
             overlay.style.display = 'flex'; 
             setTimeout(() => {
                 overlay.classList.add('active');
-                overlay.children[0].classList.remove('scale-95');
             }, 10);
         };
 
@@ -430,9 +436,7 @@
             if (force || (e && e.target.id === 'relinquishModalOverlay')) {
                 const overlay = document.getElementById('relinquishModalOverlay');
                 overlay.classList.remove('active');
-                overlay.children[0].classList.add('scale-95');
                 setTimeout(() => { 
-                    overlay.classList.add('hidden');
                     overlay.style.display = 'none';
                     document.getElementById('relinquishAdminForm').reset();
                     document.getElementById('relinquishStatusMessage').classList.add('hidden');
@@ -458,14 +462,12 @@
             
             const combinedMessage = `*** ADMIN REMOVAL REQUEST ***\nTeam to Remove: ${teamName}\n\nReason: ${reason}\n\n*** USER INFO ***\nUsername: @${username}\nUser ID: ${uid}`;
             
-            const params = new URLSearchParams();
+            const params = newSearchParams();
             params.append("entry.1967997366", combinedMessage); 
             params.append("entry.1990515734", document.getElementById('relinquishFirstName').value); 
             params.append("entry.1429224270", document.getElementById('relinquishLastName').value); 
             params.append("entry.1778241553", document.getElementById('relinquishEmail').value); 
             
-            const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
-
             fetch(CONTACT_FORM_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
