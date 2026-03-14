@@ -97,8 +97,13 @@
         </div>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 py-8">
+    <main id="communityMain" class="max-w-3xl mx-auto px-4 py-8">
         
+        <div id="sharedPostGuestHeader" class="hidden mb-6 text-center">
+            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900">Shared Post</h2>
+            <p class="text-gray-600 font-medium">You were invited to view this update from the community.</p>
+        </div>
+
         <div id="createPostAction" class="hidden mb-8 text-center sm:text-left">
             <button onclick="openCreatePostModal()" class="w-full sm:w-auto bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-lg hover:brightness-110 transition-all border border-pahs-gold">
                 <i class="fa-solid fa-pen-to-square mr-2"></i> Create a Post
@@ -112,33 +117,50 @@
             <a href="login.html" class="inline-block bg-pahs-gold text-black font-head font-bold text-xl uppercase tracking-widest py-2 px-8 rounded-lg shadow-md hover:brightness-110 transition-all">Sign In</a>
         </div>
 
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
+        <div id="feedControls" class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
             </h3>
-            <div class="flex items-center gap-2 self-end">
+            <div class="flex flex-wrap items-center gap-2 self-end">
                 
                 <div class="relative flex items-center">
-                    <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
+                    <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-28 sm:w-32" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
                     <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
                         <i class="fa-solid fa-circle-xmark text-sm"></i>
                     </button>
                 </div>
                 
+                <select id="feedScope" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-blue-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-blue-500 transition-colors">
+                    <option value="global">Global Feed</option>
+                    <option value="following">Following</option>
+                </select>
+
                 <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
                     <option value="newest">Latest</option>
                     <option value="top">Most Hyped</option>
                 </select>
+                
                 <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
                     <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
                 </button>
             </div>
         </div>
 
+        <div id="sharedPostGuestContainer" class="hidden mb-10"></div>
+
         <div id="feedContainer" class="space-y-5">
             <div id="feedLoading" class="text-center py-12">
                 <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
                 <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
+            </div>
+        </div>
+
+        <div id="sharedPostGuestCTA" class="hidden mt-8 bg-pahs-dark border-t-4 border-pahs-gold rounded-2xl p-8 text-center shadow-2xl">
+            <h3 class="font-head text-3xl text-pahs-gold uppercase tracking-wide mb-2">Want to see more?</h3>
+            <p class="text-gray-300 mb-6 font-body">Join thousands of fans in the Fan Zone! Create a free account to follow teams, like posts, and interact with the community.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="login.html" class="bg-pahs-gold text-black font-head font-bold text-2xl uppercase tracking-widest py-3 px-10 rounded-xl shadow-lg hover:brightness-110 transition-all">Sign Up Free</a>
+                <a href="index.html" class="bg-white/10 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 px-10 rounded-xl border border-white/20 hover:bg-white/20 transition-all">Back Home</a>
             </div>
         </div>
 
@@ -168,13 +190,38 @@
                 </div>
 
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeCreatePostModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <button id="submitPostBtn" class="flex-1 bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all">
-                        Post
-                    </button>
+                    <button type="button" onclick="closeCreatePostModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <button id="submitPostBtn" class="flex-1 bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all">Post</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="userProfileModalOverlay" class="modal-overlay" onclick="closeUserProfileModal(event)">
+        <div class="modal-content border-t-8 border-pahs-gold">
+            <button onclick="closeUserProfileModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
+            
+            <div class="p-8 text-center bg-white relative">
+                <div id="upm-badge-container" class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-md mb-4 text-4xl">
+                    <i class="fa-solid fa-user text-gray-400"></i>
+                </div>
+                <h3 id="upm-username" class="font-head text-4xl uppercase tracking-wide text-gray-900 leading-none">@User</h3>
+                <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Fan (0 Points)</p>
+                
+                <div class="text-left bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+                    <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">About Me</p>
+                    <p id="upm-about" class="text-sm text-gray-800 font-body leading-relaxed">Loading bio...</p>
+                </div>
+
+                <div class="text-left">
+                    <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Followed Teams</p>
+                    <div id="upm-teams" class="flex flex-wrap gap-2">
+                        </div>
+                </div>
+
+                <button id="upm-follow-btn" style="display:none;" class="w-full bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow-md mt-6">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Follow User
+                </button>
             </div>
         </div>
     </div>
@@ -202,7 +249,6 @@
             </div>
             <div class="p-6 bg-white">
                 <textarea id="editPostContent" rows="4" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div class="relative">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
@@ -213,10 +259,7 @@
                         <input type="text" id="editTeamTagInput2" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
                     </div>
                 </div>
-
-                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">
-                    Save Changes
-                </button>
+                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">Save Changes</button>
             </div>
         </div>
     </div>
@@ -230,16 +273,10 @@
                 <button onclick="closeDeleteModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white text-center">
-                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">
-                    Are you sure you want to permanently delete this post? This action cannot be undone.
-                </p>
+                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">Are you sure you want to permanently delete this post? This action cannot be undone.</p>
                 <div class="flex gap-3">
-                    <button onclick="closeDeleteModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <button id="confirmDeleteBtn" onclick="confirmDeletePost()" class="flex-1 bg-red-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-red-700 transition-all text-sm shadow">
-                        Yes, Delete
-                    </button>
+                    <button onclick="closeDeleteModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <button id="confirmDeleteBtn" onclick="confirmDeletePost()" class="flex-1 bg-red-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-red-700 transition-all text-sm shadow">Yes, Delete</button>
                 </div>
             </div>
         </div>
@@ -254,13 +291,10 @@
                 <button onclick="closeReportModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
-                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
-                    Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.
-                </p>
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.</p>
                 <form id="reportForm">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
                     <textarea id="reportReason" rows="3" required placeholder="Describe why this post violates community guidelines..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
@@ -271,13 +305,9 @@
                             <input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
                         </div>
                     </div>
-
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
                     <input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
-                    
-                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">
-                        Submit to Admins
-                    </button>
+                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">Submit to Admins</button>
                     <div id="reportStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
                 </form>
             </div>
@@ -293,17 +323,11 @@
                 <button onclick="closeLinkWarning(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white text-center">
-                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">
-                    You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.
-                </p>
+                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.</p>
                 <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 break-all text-xs text-gray-800 font-mono mb-6" id="warningUrlText"></div>
                 <div class="flex gap-3">
-                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">
-                        Continue to Site
-                    </a>
+                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">Continue to Site</a>
                 </div>
             </div>
         </div>
@@ -312,14 +336,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // *** GOOGLE FORM FOR REPORTING ONLY ***
         const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
         const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
-        // *** FIREBASE CONFIGURATION ***
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
@@ -335,7 +357,6 @@
         const db = getFirestore(app);
         const dbRealtime = getDatabase(app);
 
-        // *** GLOBAL VARIABLES ***
         let currentUser = null;
         let currentUserProfile = null;
         let currentPosts = []; 
@@ -344,7 +365,8 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
         
-        window.authorPointsCache = {}; // Local Dynamic Points Calculator
+        window.authorPointsCache = {}; 
+        window.userCache = {}; 
 
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
@@ -353,72 +375,34 @@
         window.currentEditPostId = null;
         window.currentDeletePostId = null;
 
-        // *** COLOR PARSING LOGIC ***
-        const colorNameMap = {
-            "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
-            "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
-            "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
-            "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
-            "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
-        };
-
+        const colorNameMap = {"white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "grey": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "scarlet": "#dc2626"};
         const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
-        
-        const getContrast = hex => {
-            if(!hex) return 'black';
-            let h = normalizeColor(hex).replace('#','');
-            if(h.length === 3) h = h.split('').map(x=>x+x).join('');
-            if(h.length !== 6) return 'black';
-            const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
-            return (isNaN(r)) ? 'black' : (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white');
-        };
-        
-        const parseColors = str => {
-            const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
-            return { p: normalizeColor(p[0]) };
-        };
-
-        // *** PROFANITY & LINK FILTER ***
-        const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
-        const prohibitedDomains = ['pornhub', 'xvideos', 'onlyfans', 'redtube', 'youporn', 'chaturbate', 'stripchat', 'fansly'];
+        const getContrast = hex => { if(!hex) return 'black'; let h = normalizeColor(hex).replace('#',''); if(h.length === 3) h = h.split('').map(x=>x+x).join(''); if(h.length !== 6) return 'black'; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); return (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white'); };
+        const parseColors = str => { const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s); return { p: normalizeColor(p[0]) }; };
 
         function filterProfanity(text) {
+            const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
             let filteredText = text;
-            badWords.forEach(word => {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                filteredText = filteredText.replace(regex, '***');
-            });
+            badWords.forEach(word => { const regex = new RegExp('\\b' + word + '\\b', 'gi'); filteredText = filteredText.replace(regex, '***'); });
             return filteredText;
         }
 
         function containsProhibitedDomain(text) {
+            const prohibitedDomains = ['pornhub', 'xvideos', 'onlyfans', 'redtube', 'youporn', 'chaturbate', 'stripchat', 'fansly'];
             const lowerText = text.toLowerCase();
             return prohibitedDomains.some(domain => lowerText.includes(domain));
         }
 
-        function escapeHTML(str) {
-            if (!str) return "";
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
-        }
+        function escapeHTML(str) { if (!str) return ""; return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])); }
 
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
-                
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-                if (ytMatch && ytMatch[1]) {
-                    return `
-                        <div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
-                            <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>`;
-                }
-
+                if (ytMatch && ytMatch[1]) return `<div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
-                return `
-                    <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
-                    </span>`;
+                return `<span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}</span>`;
             });
         }
 
@@ -440,27 +424,15 @@
             }
         };
 
-        // *** LOAD CSV DATA ***
-        const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
-        Papa.parse(MASTER_TEAMS_CSV, {
+        Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv", {
             download: true, header: true, skipEmptyLines: true,
-            transformHeader: header => header.toLowerCase().replace(/[^a-z0-9]/g, ''),
-            complete: function(logoRes) {
-                logoRes.data.forEach(row => {
-                    const teamName = row['school'] || row['teamname'] || row['team'];
-                    const logoUrl = row['logourl'] || row['logo'];
-                    if (teamName && logoUrl) {
-                        teamLogoDictionary[teamName.toUpperCase().replace(/[^A-Z0-9]/g, '')] = logoUrl.trim();
-                    }
-                });
-                if(currentPosts.length > 0) window.renderFeed();
-            }
+            transformHeader: h => h.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            complete: r => { r.data.forEach(row => { const name = row['school'] || row['teamname']; const logo = row['logourl']; if (name && logo) teamLogoDictionary[name.toUpperCase().replace(/[^A-Z0-9]/g, '')] = logo.trim(); }); if(currentPosts.length > 0) window.renderFeed(); }
         });
 
-        const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-        Papa.parse(directoryUrl, {
+        Papa.parse("https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory", {
             download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
+            complete: results => {
                 const datalist = document.getElementById('teamTagList');
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
@@ -474,7 +446,7 @@
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
 
-                        const colorData = parseColors(team['Colors'] || team['Color'] || '');
+                        const colorData = parseColors(team['Colors'] || team['Color']);
                         if (colorData.p) teamColorDictionary[team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '')] = colorData.p;
                     }
                 });
@@ -482,28 +454,25 @@
             }
         });
 
-        // *** AUTHENTICATION LISTENER ***
         onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
             const createBtn = document.getElementById('createPostAction');
             const loginPrompt = document.getElementById('loggedOutPrompt');
-            
             if (user) {
-                currentUser = user;
-                createBtn.classList.remove('hidden');
-                loginPrompt.classList.add('hidden');
+                createBtn.classList.remove('hidden'); loginPrompt.classList.add('hidden');
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) currentUserProfile = userDoc.data();
+                    if (userDoc.exists()) {
+                        currentUserProfile = userDoc.data();
+                        window.userCache[user.uid] = currentUserProfile; 
+                    }
                 } catch(e) {}
             } else {
-                currentUser = null;
-                currentUserProfile = null;
-                createBtn.classList.add('hidden');
-                loginPrompt.classList.remove('hidden');
+                createBtn.classList.add('hidden'); loginPrompt.classList.remove('hidden');
             }
+            window.renderFeed(); 
         });
 
-        // *** REFRESH BUTTON LISTENER ***
         document.getElementById('refreshFeedBtn').addEventListener('click', () => {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
@@ -511,7 +480,6 @@
             setTimeout(() => { icon.classList.remove('fa-spin'); }, 500);
         });
 
-        // *** FILTER TOGGLE LOGIC ***
         window.toggleClearBtn = function() {
             const input = document.getElementById('feedTeamFilter');
             const btn = document.getElementById('clearFilterBtn');
@@ -525,16 +493,13 @@
             window.renderFeed();
         };
 
-        // *** FIREBASE REALTIME DB LISTENER ***
         function startFirebaseListener() {
-            const postsRef = ref(dbRealtime, 'fanzone_posts');
-            
-            onValue(postsRef, (snapshot) => {
+            onValue(ref(dbRealtime, 'fanzone_posts'), (snapshot) => {
                 const loader = document.getElementById('feedLoading');
                 if (loader) loader.style.display = 'none';
                 
                 currentPosts = [];
-                window.authorPointsCache = {}; // Reset the dynamic points cache
+                window.authorPointsCache = {}; 
                 
                 const data = snapshot.val();
                 if (data) {
@@ -548,7 +513,7 @@
 
                         currentPosts.push(post);
 
-                        // --- ZERO-COST DYNAMIC POINTS TALLY ---
+                        // Calculate points locally
                         if (post.authorId) {
                             window.authorPointsCache[post.authorId] = (window.authorPointsCache[post.authorId] || 0) + likesArray.length;
                         }
@@ -571,10 +536,121 @@
             });
         }
         
+        // Start listening to the database instantly on page load
         startFirebaseListener();
 
 
-        // *** HTML TEMPLATE GENERATOR FOR POSTS ***
+        window.openUserProfile = async function(e, authorId) {
+            if(e) e.stopPropagation();
+
+            const modal = document.getElementById('userProfileModalOverlay');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            document.getElementById('upm-username').innerText = "Loading...";
+            document.getElementById('upm-rank').innerText = "...";
+            document.getElementById('upm-about').innerText = "...";
+            document.getElementById('upm-teams').innerHTML = "";
+            document.getElementById('upm-follow-btn').style.display = 'none';
+
+            try {
+                let userData = window.userCache[authorId];
+                
+                // Fetch from Firestore if we don't have the profile in cache
+                if (!userData || typeof userData.followedTeams === 'undefined') {
+                    const uSnap = await getDoc(doc(db, "users", authorId));
+                    if(uSnap.exists()) {
+                        userData = uSnap.data();
+                        window.userCache[authorId] = userData; 
+                    } else {
+                        userData = { username: "Unknown", followedTeams: [], aboutMe: "This user does not have a profile set up yet." };
+                    }
+                }
+
+                const pts = window.authorPointsCache[authorId] || 0;
+                let bIcon = '<i class="fa-solid fa-user text-gray-400"></i>', bClass = 'bg-gray-100 border-gray-300', bTitle = 'Fan';
+                if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; bClass = 'bg-yellow-50 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]'; bTitle = 'Hall of Fame'; }
+                else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
+                else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
+                else if (pts >= 10) { bIcon = '<i class="fa-solid fa-bullhorn text-amber-700"></i>'; bClass = 'bg-amber-50 border-amber-200'; bTitle = 'Super Fan'; }
+
+                const badgeContainer = document.getElementById('upm-badge-container');
+                badgeContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center border-4 shadow-md mb-4 text-4xl ${bClass}`;
+                badgeContainer.innerHTML = bIcon;
+
+                document.getElementById('upm-username').innerText = '@' + (userData.username || 'Unknown');
+                document.getElementById('upm-rank').innerText = `${bTitle} (${pts} Points)`;
+                document.getElementById('upm-about').innerText = userData.aboutMe || "This user hasn't added a bio yet.";
+
+                const teamsContainer = document.getElementById('upm-teams');
+                if (userData.followedTeams && userData.followedTeams.length > 0) {
+                    teamsContainer.innerHTML = userData.followedTeams.map(t => `<span class="bg-gray-200 text-xs px-2 py-1 rounded font-bold">${t}</span>`).join(' ');
+                } else {
+                    teamsContainer.innerHTML = `<span class="text-xs text-gray-500 italic">No teams followed.</span>`;
+                }
+
+                const followBtn = document.getElementById('upm-follow-btn');
+                if (!currentUser || currentUser.uid === authorId) {
+                    followBtn.style.display = 'none';
+                } else {
+                    followBtn.style.display = 'block';
+                    followBtn.disabled = false;
+                    
+                    const myFollowing = (window.currentUserProfile && window.currentUserProfile.following) ? window.currentUserProfile.following : [];
+                    const isFollowing = myFollowing.includes(authorId);
+
+                    if (isFollowing) {
+                        followBtn.innerHTML = `<i class="fa-solid fa-user-minus mr-1"></i> Unfollow`;
+                        followBtn.className = "w-full bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow-md mt-6";
+                        followBtn.onclick = () => window.toggleFollow(authorId, false);
+                    } else {
+                        followBtn.innerHTML = `<i class="fa-solid fa-user-plus mr-1"></i> Follow User`;
+                        followBtn.className = "w-full bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow-md mt-6";
+                        followBtn.onclick = () => window.toggleFollow(authorId, true);
+                    }
+                }
+            } catch(err) {
+                console.error(err);
+                document.getElementById('upm-username').innerText = "Error loading profile";
+            }
+        };
+
+        window.closeUserProfileModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'userProfileModalOverlay')) {
+                const overlay = document.getElementById('userProfileModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            }
+        };
+
+        window.toggleFollow = async function(targetUid, isFollowingNow) {
+            if (!currentUser || !window.currentUserProfile) return;
+
+            const myRef = doc(db, "users", currentUser.uid);
+            const btn = document.getElementById('upm-follow-btn');
+            btn.disabled = true;
+            btn.innerText = "Updating...";
+
+            try {
+                if (isFollowingNow) {
+                    await updateDoc(myRef, { following: arrayUnion(targetUid) });
+                    if(!window.currentUserProfile.following) window.currentUserProfile.following = [];
+                    window.currentUserProfile.following.push(targetUid);
+                } else {
+                    await updateDoc(myRef, { following: arrayRemove(targetUid) });
+                    window.currentUserProfile.following = window.currentUserProfile.following.filter(id => id !== targetUid);
+                }
+                
+                window.openUserProfile(null, targetUid);
+                window.renderFeed(); 
+            } catch(err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = "Error";
+            }
+        };
+
+
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
             const postTime = post.timestamp ? new Date(post.timestamp).getTime() : 0;
@@ -632,7 +708,6 @@
                 finalTagSection = `<div class="mt-3 flex flex-wrap">${tagsContainerHtml}</div>`;
             }
 
-            // --- USER BADGE LOGIC (Using Dynamic Points Cache) ---
             const pts = window.authorPointsCache[post.authorId] || 0;
             
             let badgeIcon = '<i class="fa-solid fa-user text-gray-500 text-sm"></i>';
@@ -680,12 +755,12 @@
                 timestamp: postTime,
                 html: `
                     <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center border ${badgeClass}" title="${badgeTitle}">
+                        <div class="flex items-center gap-2 cursor-pointer group" onclick="window.openUserProfile(event, '${post.authorId}')" title="View Profile">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${badgeClass}" title="${badgeTitle}">
                                 ${badgeIcon}
                             </div>
                             <div>
-                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
+                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors">@${post.authorUsername}</h4>
                                 <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
                             </div>
                         </div>
@@ -718,436 +793,167 @@
         // *** RENDER POSTS TO SCREEN ***
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
+            const sharedPostContainer = document.getElementById('sharedPostGuestContainer');
+            const sharedPostGuestCTA = document.getElementById('sharedPostGuestCTA');
+            const sharedPostGuestHeader = document.getElementById('sharedPostGuestHeader');
+            const feedControls = document.getElementById('feedControls');
+
             if (!feedContainer) return;
-            
-            feedContainer.innerHTML = '';
-            
-            if (currentPosts.length === 0) {
-                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`;
-                return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetPostId = urlParams.get('post');
+
+            if (targetPostId && !currentUser) {
+                const post = currentPosts.find(p => p.postId === targetPostId);
+                if (post) {
+                    feedContainer.classList.add('hidden');
+                    feedControls.classList.add('hidden');
+                    
+                    sharedPostGuestHeader.classList.remove('hidden');
+                    sharedPostGuestContainer.classList.remove('hidden');
+                    sharedPostGuestCTA.classList.remove('hidden');
+                    
+                    const postData = buildPostHTML(post, true);
+                    sharedPostGuestContainer.innerHTML = `<div class="post-card rounded-2xl p-6 bg-white border-2" style="border-color: ${postData.color}">${postData.html}</div>`;
+                    return;
+                }
             }
+
+            sharedPostGuestHeader.classList.add('hidden');
+            sharedPostGuestContainer.classList.add('hidden');
+            sharedPostGuestCTA.classList.add('hidden');
+            feedContainer.classList.remove('hidden');
+            feedControls.classList.remove('hidden');
+
+            feedContainer.innerHTML = '';
+            if (currentPosts.length === 0) { feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`; return; }
             
-            let postsToRender = [...currentPosts]; 
-            
-            const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
-            if (filterTeam !== "") {
+            let postsToRender = [...currentPosts];
+            const filterElem = document.getElementById('feedTeamFilter');
+            const filter = filterElem ? filterElem.value.trim().toLowerCase() : "";
+            const scopeElem = document.getElementById('feedScope');
+            const scope = scopeElem ? scopeElem.value : 'global';
+
+            if (scope === 'following') {
+                if (!currentUser || !currentUserProfile) {
+                    postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
+                } else {
+                    const followingList = currentUserProfile.following || [];
+                    postsToRender = postsToRender.filter(p => 
+                        p.authorUsername === 'PAHSFOOTBALL' || 
+                        p.authorId === currentUser.uid ||      
+                        followingList.includes(p.authorId)     
+                    );
+                }
+            }
+
+            if (filter !== "") {
                 postsToRender = postsToRender.filter(post => {
                     const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
                     const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
-                    return tag1.includes(filterTeam) || tag2.includes(filterTeam);
+                    return tag1.includes(filter) || tag2.includes(filter);
                 });
             }
-
+            
             if (postsToRender.length === 0) {
-                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found for this team.</div>`;
+                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found in this view.</div>`;
                 return;
             }
 
-            const sortType = document.getElementById('feedSort').value;
+            const sortElem = document.getElementById('feedSort');
+            const sort = sortElem ? sortElem.value : 'newest';
             
-            if (sortType === 'top') {
-                postsToRender.sort((a, b) => {
-                    const aTotal = a.likes.length + (a.artificialLikes || 0);
-                    const bTotal = b.likes.length + (b.artificialLikes || 0);
-                    return bTotal - aTotal || new Date(b.timestamp) - new Date(a.timestamp);
-                });
-            } else {
-                postsToRender.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            }
+            if (sort === 'top') postsToRender.sort((a,b) => b.likes.length - a.likes.length);
+            else postsToRender.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             const now = new Date().getTime();
 
-            postsToRender.forEach((post) => {
+            postsToRender.forEach(post => {
                 const postData = buildPostHTML(post, false);
-                const postCard = document.createElement('div');
-                postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
+                const card = document.createElement('div');
+                card.className = "post-card rounded-2xl p-5 relative bg-white";
+                card.onclick = () => window.openPostModal(post.postId);
+                card.innerHTML = postData.html;
+                if (post.taggedTeam) { card.style.border = `3px solid ${postData.color}`; card.style.borderTop = `4px solid ${postData.color}`; }
                 
                 const secondsOld = (now - postData.timestamp) / 1000;
                 if (secondsOld < 10 && secondsOld >= -30) {
-                    postCard.classList.add('new-post-solid-glow');
+                    card.classList.add('new-post-solid-glow');
                     const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
-                    setTimeout(() => { postCard.classList.remove('new-post-solid-glow'); }, timeRemaining * 1000);
+                    setTimeout(() => { card.classList.remove('new-post-solid-glow'); }, timeRemaining * 1000);
                 }
 
-                postCard.onclick = () => window.openPostModal(post.postId);
-                postCard.innerHTML = postData.html;
-                
-                if (post.taggedTeam) {
-                    postCard.style.border = `3px solid ${postData.color}`;
-                    postCard.style.borderTop = `4px solid ${postData.color}`;
-                }
-                
-                feedContainer.appendChild(postCard);
+                feedContainer.appendChild(card);
             });
-        }
 
-        // *** CREATE MODAL CONTROLS ***
-        window.openCreatePostModal = function() {
-            const overlay = document.getElementById('createPostModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeCreatePostModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'createPostModalOverlay')) {
-                const overlay = document.getElementById('createPostModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+            if (targetPostId && !initialDeepLinkChecked && currentUser) {
+                window.openPostModal(targetPostId); initialDeepLinkChecked = true;
             }
         };
 
-        // *** CREATE POST SUBMISSION (Firebase) ***
-        document.getElementById('submitPostBtn').addEventListener('click', async () => {
-            if (!currentUser) return alert("You must be logged in to post.");
-            
-            const contentBox = document.getElementById('postContent');
-            const teamTagInput = document.getElementById('teamTagInput').value.trim();
-            const teamTagInput2 = document.getElementById('teamTagInput2').value.trim();
-            let rawContent = contentBox.value.trim();
-            
-            if (rawContent === "") return alert("Post cannot be empty.");
-            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
-            
-            if (containsProhibitedDomain(rawContent)) {
-                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
-            }
-            
-            let finalTeamTag = "";
-            if (teamTagInput !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
-            }
-            
-            let finalTeamTag2 = "";
-            if (teamTagInput2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
-                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
-            }
-            
-            const btn = document.getElementById('submitPostBtn');
-            btn.innerText = "Posting..."; btn.disabled = true;
-            
-            const cleanContent = filterProfanity(rawContent);
-            const username = currentUserProfile ? currentUserProfile.username : "Fan";
-            
-            try {
-                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
-                await set(newPostRef, {
-                    authorId: currentUser.uid,
-                    authorUsername: username,
-                    content: cleanContent,
-                    taggedTeam: finalTeamTag,
-                    taggedTeam2: finalTeamTag2,
-                    timestamp: new Date().toISOString()
-                });
-                
-                contentBox.value = "";
-                document.getElementById('teamTagInput').value = "";
-                document.getElementById('teamTagInput2').value = "";
-                window.closeCreatePostModal(null, true);
-            } catch (error) { 
-                console.error(error);
-                alert("Failed to post to server."); 
-            } finally { 
-                btn.innerText = "Post"; btn.disabled = false; 
-            }
-        });
-
-        // *** EDIT POST SUBMISSION (Firebase) ***
-        document.getElementById('submitEditBtn').addEventListener('click', async () => {
-            if (!currentUser || !window.currentEditPostId) return;
-            
-            const contentBox = document.getElementById('editPostContent');
-            const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
-            const teamTagInput2 = document.getElementById('editTeamTagInput2').value.trim();
-            let rawContent = contentBox.value.trim();
-            
-            if (rawContent === "") return alert("Post cannot be empty.");
-            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
-            
-            if (containsProhibitedDomain(rawContent)) {
-                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
-            }
-            
-            let finalTeamTag = "";
-            if (teamTagInput !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
-            }
-
-            let finalTeamTag2 = "";
-            if (teamTagInput2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
-                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
-            }
-            
-            const btn = document.getElementById('submitEditBtn');
-            btn.innerText = "Saving..."; btn.disabled = true;
-            
-            const cleanContent = filterProfanity(rawContent);
-            
-            try {
-                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId);
-                await update(postRef, {
-                    content: cleanContent,
-                    taggedTeam: finalTeamTag,
-                    taggedTeam2: finalTeamTag2,
-                    lastEdited: new Date().toISOString()
-                });
-                window.closeEditModal(null, true); 
-            } catch (error) { 
-                console.error(error);
-                alert("Failed to update post."); 
-            } finally { 
-                btn.innerText = "Save Changes"; btn.disabled = false; 
-            }
-        });
-
-        // *** DELETE POST LOGIC (Firebase) ***
-        window.deletePost = function(e, postId) {
-            if (e) e.stopPropagation();
-            if (!currentUser) return;
-            
-            const post = currentPosts.find(p => p.postId === postId);
-            if (!post || post.authorId !== currentUser.uid) return;
-
-            window.currentDeletePostId = postId;
-
-            const postOverlay = document.getElementById('postModalOverlay');
-            if (postOverlay.style.display === 'flex') {
-                postOverlay.classList.remove('active');
-                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
-            }
-
-            const overlay = document.getElementById('deleteModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
+        window.openCreatePostModal = () => { document.getElementById('createPostModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('createPostModalOverlay').classList.add('active'), 10); };
+        window.closeCreatePostModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('createPostModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('createPostModalOverlay').style.display='none', 300); } };
+        
+        document.getElementById('submitPostBtn').onclick = async () => {
+            const content = document.getElementById('postContent').value.trim();
+            if(!content || content.length > 500 || containsProhibitedDomain(content)) return alert("Invalid post content.");
+            const team1 = document.getElementById('teamTagInput').value.trim();
+            const team2 = document.getElementById('teamTagInput2').value.trim();
+            const btn = document.getElementById('submitPostBtn'); btn.disabled = true;
+            const newRef = push(ref(dbRealtime, 'fanzone_posts'));
+            await set(newRef, { authorId: currentUser.uid, authorUsername: currentUserProfile.username, content: filterProfanity(content), taggedTeam: team1, taggedTeam2: team2, timestamp: new Date().toISOString() });
+            document.getElementById('postContent').value = ''; window.closeCreatePostModal(null, true); btn.disabled = false;
         };
 
-        window.closeDeleteModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'deleteModalOverlay')) {
-                const overlay = document.getElementById('deleteModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; window.currentDeletePostId = null; }, 300);
-            }
+        window.openEditModal = (e, id) => {
+            e.stopPropagation(); window.currentEditPostId = id;
+            const p = currentPosts.find(x => x.postId === id);
+            document.getElementById('editPostContent').value = p.content;
+            document.getElementById('editTeamTagInput').value = p.taggedTeam || "";
+            document.getElementById('editTeamTagInput2').value = p.taggedTeam2 || "";
+            document.getElementById('editModalOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('editModalOverlay').classList.add('active'), 10);
         };
 
-        window.confirmDeletePost = async function() {
-            if (!currentUser || !window.currentDeletePostId) return;
+        window.closeEditModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('editModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('editModalOverlay').style.display='none', 300); } };
 
-            const btn = document.getElementById('confirmDeleteBtn');
-            btn.innerText = "Deleting..."; btn.disabled = true;
-
-            try {
-                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId);
-                await remove(postRef);
-                window.closeDeleteModal(null, true);
-            } catch (error) {
-                console.error(error);
-                alert("Failed to delete post.");
-                window.closeDeleteModal(null, true);
-            } finally {
-                btn.innerText = "Yes, Delete"; btn.disabled = false;
-            }
+        document.getElementById('submitEditBtn').onclick = async () => {
+            const c = document.getElementById('editPostContent').value.trim();
+            const t1 = document.getElementById('editTeamTagInput').value.trim();
+            const t2 = document.getElementById('editTeamTagInput2').value.trim();
+            await update(ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId), { content: filterProfanity(c), taggedTeam: t1, taggedTeam2: t2 });
+            window.closeEditModal(null, true);
         };
 
-        // *** TOGGLE LIKE (Firebase - ZERO COST CALCULATION) ***
-        window.toggleLike = async function(e, postId) {
-            if (e) e.stopPropagation(); 
-            if (!currentUser) return alert("You must be logged in to like posts.");
-            
-            const postIndex = currentPosts.findIndex(p => p.postId === postId);
-            if (postIndex === -1) return;
+        window.deletePost = (e, id) => { e.stopPropagation(); window.currentDeletePostId = id; document.getElementById('deleteModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('deleteModalOverlay').classList.add('active'), 10); };
+        window.closeDeleteModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('deleteModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('deleteModalOverlay').style.display='none', 300); } };
+        window.confirmDeletePost = async () => { await remove(ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId)); window.closeDeleteModal(null, true); };
 
-            const post = currentPosts[postIndex];
-            const hasLiked = post.likes.includes(currentUser.uid);
-            
-            // Optimistic UI Update
-            const feedIcon = document.getElementById(`heart-${postId}`);
-            const feedCount = document.getElementById(`count-${postId}`);
-            const modalIcon = document.getElementById(`modal-heart-${postId}`);
-            const modalCount = document.getElementById(`modal-count-${postId}`);
-            
-            let currentLikeCount = post.likes.length + (post.artificialLikes || 0);
-
-            if (hasLiked) {
-                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
-                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
-                currentLikeCount--;
-            } else {
-                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
-                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
-                currentLikeCount++;
-            }
-            
-            const newCountText = currentLikeCount > 0 ? currentLikeCount : 'Like';
-            if(feedCount) feedCount.innerText = newCountText;
-            if(modalCount) modalCount.innerText = newCountText;
-
-            // Database Update (Only RTDB needed now!)
-            try { 
-                const likeRef = ref(dbRealtime, `fanzone_posts/${postId}/likes/${currentUser.uid}`);
-                if (hasLiked) {
-                    await remove(likeRef);
-                } else {
-                    await set(likeRef, true);
-                }
-            } catch(err) { console.error(err); }
+        window.openReportModal = (e, id) => {
+            e.stopPropagation(); window.currentReportedPostId = id;
+            const p = currentPosts.find(x => x.postId === id);
+            window.currentReportedPostContent = p.content;
+            window.currentReportedPostAuthor = p.authorUsername;
+            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "";
+            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "";
+            document.getElementById('reportEmail').value = currentUser?.email || "";
+            document.getElementById('reportModalOverlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('reportModalOverlay').classList.add('active'), 10);
         };
 
-        // *** SHARE POST NATIVE ***
-        window.sharePost = function(e, postId) {
-            if (e) e.stopPropagation();
-            const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
-            
-            if (navigator.share) {
-                navigator.share({ 
-                    title: 'PAHS Football Fan Zone', 
-                    text: 'Check out this post from the PAHS Football community!', 
-                    url: shareUrl 
-                }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard! Paste it anywhere to share."));
-            }
-        };
+        window.closeReportModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('reportModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('reportModalOverlay').style.display='none', 300); } };
 
-        // *** POST MODAL CONTROLS ***
-        window.openPostModal = function(postId) {
-            const post = currentPosts.find(p => p.postId === postId);
-            if (!post) { 
-                window.history.replaceState({}, document.title, window.location.pathname); 
-                return; 
-            }
-            
-            const newUrl = window.location.pathname + "?post=" + postId;
-            window.history.replaceState({}, document.title, newUrl);
-            
-            const postData = buildPostHTML(post, true);
-            document.getElementById('postModalBody').innerHTML = postData.html;
-            
-            const modalBlock = document.getElementById('postModalContentBlock');
-            if (post.taggedTeam) {
-                modalBlock.style.border = `3px solid ${postData.color}`;
-                modalBlock.style.borderTop = `5px solid ${postData.color}`;
-            } else {
-                modalBlock.style.border = "none";
-                modalBlock.style.borderTop = "5px solid #fbbf24"; 
-            }
-            
-            const ctaBanner = document.getElementById('modalViralCTA');
-            if (!currentUser) ctaBanner.classList.remove('hidden'); 
-            else ctaBanner.classList.add('hidden');
-            
-            const overlay = document.getElementById('postModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closePostModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'postModalOverlay')) {
-                const overlay = document.getElementById('postModalOverlay');
-                overlay.classList.remove('active');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
-            }
-        };
-
-        // *** REPORT MODAL CONTROLS ***
-        window.openReportModal = function(e, postId) {
-            if (e) e.stopPropagation();
-            if (!currentUser) return alert("You must be logged in to report posts.");
-            
-            const post = currentPosts.find(p => p.postId === postId);
-            if (!post) return alert("Post not found.");
-            
-            window.currentReportedPostId = postId;
-            window.currentReportedPostContent = post.content;
-            window.currentReportedPostAuthor = post.authorUsername;
-            
-            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
-            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
-            document.getElementById('reportEmail').value = currentUser.email || "N/A";
-            
-            const postOverlay = document.getElementById('postModalOverlay');
-            if (postOverlay.style.display === 'flex') {
-                postOverlay.classList.remove('active');
-                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
-            }
-            
-            const overlay = document.getElementById('reportModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeReportModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'reportModalOverlay')) {
-                const overlay = document.getElementById('reportModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = '';
-                    document.getElementById('reportForm').reset();
-                    document.getElementById('reportStatusMessage').classList.add('hidden');
-                    document.getElementById('submitReportBtn').style.display = 'block';
-                    document.getElementById('submitReportBtn').disabled = false;
-                }, 300);
-            }
-        };
-
-        // *** SUBMIT REPORT TO GOOGLE FORMS ***
-        document.getElementById('reportForm').addEventListener('submit', function(e) {
+        document.getElementById('reportForm').onsubmit = (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitReportBtn'); 
-            const msg = document.getElementById('reportStatusMessage');
-            
-            btn.innerText = 'Submitting...'; 
-            btn.disabled = true; 
-            btn.style.opacity = '0.7'; 
-            
-            const reason = document.getElementById('reportReason').value;
-            const postId = window.currentReportedPostId;
-            const postContent = window.currentReportedPostContent || "N/A";
-            const postAuthor = window.currentReportedPostAuthor || "N/A";
-            const reporterId = currentUser ? currentUser.uid : "Unknown";
-            const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
-            
-            const combinedMessage = `*** POST REPORT ***\nReason: ${reason}\n\n*** POST INFO ***\nAuthor: @${postAuthor}\nContent: "${postContent}"\nPost ID: ${postId}\nLink: ${postUrl}\n\n*** REPORTER ID ***\n${reporterId}`;
-            
             const params = new URLSearchParams();
-            params.append("entry.1967997366", combinedMessage); 
-            params.append("entry.1990515734", document.getElementById('reportFirstName').value); 
-            params.append("entry.1429224270", document.getElementById('reportLastName').value); 
-            params.append("entry.1778241553", document.getElementById('reportEmail').value); 
-            
-            fetch(REPORT_SUBMIT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                body: params.toString() 
-            })
-            .then(() => {
-                 btn.style.display = 'none'; 
-                 msg.classList.remove('hidden'); 
-                 msg.style.color = '#10b981'; 
-                 msg.innerText = 'Report Submitted Successfully!';
-                 setTimeout(() => { window.closeReportModal(null, true); }, 2000);
-            }).catch(() => { 
-                btn.innerText = 'Try Again'; 
-                btn.disabled = false; 
-                btn.style.opacity = '1'; 
-                msg.classList.remove('hidden'); 
-                msg.style.color = '#ef4444'; 
-                msg.innerText = 'Error sending report.'; 
-            });
-        });
+            const reportBody = `REASON: ${document.getElementById('reportReason').value}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${window.currentReportedPostId}`;
+            params.append("entry.1967997366", reportBody);
+            params.append("entry.1990515734", document.getElementById('reportFirstName').value);
+            params.append("entry.1429224270", document.getElementById('reportLastName').value);
+            params.append("entry.1778241553", document.getElementById('reportEmail').value);
+            fetch('https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse', { method: 'POST', mode: 'no-cors', body: params });
+            alert("Report sent to admins!"); window.closeReportModal(null, true);
+        };
     </script>
 </body>
 </html>
