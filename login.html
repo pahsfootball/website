@@ -9,6 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         :root {
             --bg-main: #adadad;
@@ -114,6 +130,23 @@
         <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
     </div>
 
+    <div id="spamWarningModal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity opacity-0 duration-300">
+        <div id="spamWarningModalContent" class="bg-white border-t-4 border-pahs-gold w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-yellow-600 shadow-inner">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                </div>
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 mb-2">Check Your Spam!</h2>
+                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">
+                    Your account has been successfully created. We just sent a verification link to your email. <strong class="text-red-600">Please check your Junk or Spam folder</strong> as it often ends up there!
+                </p>
+                <button onclick="closeSpamModal()" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-black transition-all">
+                    I Understand
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -148,6 +181,14 @@
         const usernameSignupInput = document.getElementById('usernameSignupInput');
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
+        // Username Profanity List (Adjusted to avoid blocking names containing 'ass' like Cassidy)
+        const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
+
+        function containsProfanity(text) {
+            const lowerText = text.toLowerCase();
+            return badWords.some(word => lowerText.includes(word));
+        }
+
         function showError(message) {
             successMsg.style.display = 'none';
             errorMsg.innerText = message;
@@ -159,6 +200,29 @@
             successMsg.innerText = message;
             successMsg.style.display = 'block';
         }
+
+        // --- SPAM MODAL CONTROLS ---
+        window.openSpamModal = function() {
+            const modal = document.getElementById('spamWarningModal');
+            const content = document.getElementById('spamWarningModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeSpamModal = function() {
+            const modal = document.getElementById('spamWarningModal');
+            const content = document.getElementById('spamWarningModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        };
 
         toggleModeBtn.addEventListener('click', () => {
             isSignUpMode = !isSignUpMode;
@@ -223,8 +287,16 @@
                 const phone = document.getElementById('phoneInput').value.trim();
                 const requestedUsername = usernameSignupInput.value.trim();
 
+                // 1. PROFANITY CHECK
+                if (containsProfanity(requestedUsername)) {
+                    showError("Please choose a family-friendly username.");
+                    mainSubmitBtn.disabled = false;
+                    mainSubmitBtn.innerText = "Create Account";
+                    return;
+                }
+
                 try {
-                    // 1. UNIQUE USERNAME CHECK
+                    // 2. UNIQUE USERNAME CHECK
                     const usersRef = collection(db, "users");
                     const q = query(usersRef, where("username", "==", requestedUsername));
                     const querySnapshot = await getDocs(q);
@@ -236,11 +308,11 @@
                         return; 
                     }
 
-                    // 2. CREATE ACCOUNT
+                    // 3. CREATE ACCOUNT
                     const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                     const user = userCredential.user;
                     
-                    // 3. CREATE PROFILE IN FIRESTORE
+                    // 4. CREATE PROFILE IN FIRESTORE
                     await setDoc(doc(db, "users", user.uid), {
                         firstName: fName,
                         lastName: lName,
@@ -253,13 +325,13 @@
                         followedTeams: []
                     });
 
-                    // 4. SEND VERIFICATION EMAIL & FORCE LOGOUT
+                    // 5. SEND VERIFICATION EMAIL & FORCE LOGOUT
                     await sendEmailVerification(user);
                     await signOut(auth);
 
-                    // Reset to Sign In Mode and show success
+                    // Reset to Sign In Mode and show the Spam Warning Modal
                     toggleModeBtn.click();
-                    showSuccess("Account created! A verification link has been sent to your email. Please verify before signing in.");
+                    window.openSpamModal();
                     
                     // Reset fields
                     passwordInput.value = "";
