@@ -48,6 +48,10 @@
 
         /* FANZONE EMBED STYLES */
         .embed-post-card { background: #ffffff; border: 1px solid #d1d5db; border-left: 4px solid var(--team-primary, #fbbf24); }
+        
+        /* INPUT STYLES FOR SHARE MODAL */
+        .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
+        .input-box:focus { border-color: var(--team-primary, #fbbf24); outline: none; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="antialiased relative">
@@ -145,6 +149,32 @@
                         Push Live Update
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="shareScoreModalOverlay" class="modal-overlay" onclick="closeShareScoreModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-share-nodes text-blue-600"></i> Share to Fan Zone
+                </h2>
+                <button onclick="closeShareScoreModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-3 font-body leading-relaxed">
+                    Add your own message above or below the live score update!
+                </p>
+                <textarea id="shareScoreContent" rows="6" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeShareScoreModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <button id="submitShareScoreBtn" onclick="submitSharedScore()" class="flex-1 bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                        Post to Fan Zone
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -253,7 +283,13 @@
             <div id="basicScoreboardCard" class="content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500">
                 <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
                     <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><span id="sb-live-dot" class="w-3 h-3 rounded-full bg-pahs-gold transition-colors duration-500"></span> Live Scoreboard</h3>
-                    <div class="flex items-center gap-3"><span id="sb-status" class="bg-pahs-gold text-[color:var(--team-text,#000)] transition-colors duration-500 text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span><span id="sb-clock" class="font-mono font-bold text-gray-700">12:00</span></div>
+                    <div class="flex items-center gap-3">
+                        <span id="sb-status" class="bg-pahs-gold text-[color:var(--team-text,#000)] transition-colors duration-500 text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span>
+                        <span id="sb-clock" class="font-mono font-bold text-gray-700 hidden sm:block">12:00</span>
+                        <button onclick="openShareScoreModal()" class="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex justify-between items-center px-4">
@@ -314,7 +350,7 @@
 
             <div id="embedFanZoneCard" class="content-card rounded-2xl p-6 mt-6 border border-gray-300 shadow-md">
                 <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> Community Chatter</h3>
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> FAN ZONE - Community Chatter</h3>
                     <a href="community.html" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors">View All</a>
                 </div>
                 
@@ -407,7 +443,6 @@
             });
         }
 
-        // *** FIX: Corrected escapeHTML function ***
         function escapeHTML(str) {
             if (!str) return "";
             return str.replace(/[&<>'"]/g, tag => ({
@@ -624,6 +659,101 @@
                 alert("Error updating score."); btn.innerText = "Push Live Update"; btn.disabled = false;
             });
         });
+
+        // --- SHARE SCORE TO FAN ZONE LOGIC ---
+        window.openShareScoreModal = function(e) {
+            if (e) e.stopPropagation();
+            if (!auth.currentUser) {
+                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
+                    window.location.href = "login.html";
+                }
+                return;
+            }
+
+            // Grab the live info directly from the scoreboard UI
+            const homeName = document.getElementById('sb-home-name').innerText;
+            const homeScore = document.getElementById('sb-home-score').innerText;
+            const awayName = document.getElementById('sb-away-name').innerText;
+            const awayScore = document.getElementById('sb-away-score').innerText;
+            const status = document.getElementById('sb-status').innerText;
+            const clock = document.getElementById('sb-clock').innerText;
+
+            let timeStr = "";
+            if (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") {
+                timeStr = ` | Time: ${clock}`;
+            }
+
+            // Create the template
+            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}\n\n`;
+            
+            document.getElementById('shareScoreContent').value = shareText;
+
+            const overlay = document.getElementById('shareScoreModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeShareScoreModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
+                const overlay = document.getElementById('shareScoreModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = ''; 
+                }, 300);
+            }
+        };
+
+        window.submitSharedScore = async function() {
+            const btn = document.getElementById('submitShareScoreBtn');
+            const content = document.getElementById('shareScoreContent').value.trim();
+            
+            if (content === "") return alert("Post cannot be empty.");
+            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            btn.innerText = "Posting...";
+            btn.disabled = true;
+
+            const cleanContent = filterProfanity(content);
+            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
+            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
+
+            const payload = { 
+                action: "add_post", 
+                authorId: auth.currentUser.uid, 
+                authorUsername: username, 
+                content: cleanContent, 
+                taggedTeam: teamToTag 
+            };
+
+            try {
+                const response = await fetch(FAN_ZONE_API_URL, { 
+                    method: "POST", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(payload) 
+                });
+                const rawText = await response.text();
+                try {
+                    const data = JSON.parse(rawText);
+                    if(data.status === "success") {
+                        window.closeShareScoreModal(null, true);
+                        // Refresh the embed feed to show their new post
+                        if (window.currentMatchupData) {
+                            fetchEmbeddedPosts(window.currentMatchupData.yourTeam, window.currentMatchupData.opponent);
+                        }
+                        alert("Score shared to the Fan Zone successfully!");
+                    } else {
+                        alert("Database Error: " + data.message);
+                    }
+                } catch(e) { alert("Permissions Error."); }
+            } catch (error) { 
+                alert("Failed to communicate with server."); 
+            } finally {
+                btn.innerText = "Post to Fan Zone";
+                btn.disabled = false;
+            }
+        };
 
         function listenToLiveScore(game) {
             const isHome = (game.homeAway || "").toLowerCase().includes('home');
@@ -911,7 +1041,7 @@
                 // TRIGGER EMBEDDED FAN ZONE
                 fetchEmbeddedPosts(game.yourTeam, game.opponent);
                 
-                // NEW: Silently update the feed every 60 seconds
+                // Silently update the feed every 60 seconds
                 setInterval(() => {
                     fetchEmbeddedPosts(game.yourTeam, game.opponent);
                 }, 60000);
