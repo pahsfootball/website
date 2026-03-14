@@ -117,6 +117,7 @@
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
             </h3>
             <div class="flex items-center gap-2 self-end">
+                
                 <div class="relative flex items-center">
                     <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
                     <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
@@ -128,6 +129,9 @@
                     <option value="newest">Latest</option>
                     <option value="top">Most Hyped</option>
                 </select>
+                <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
+                    <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
+                </button>
             </div>
         </div>
 
@@ -488,6 +492,14 @@
                 loginPrompt.classList.remove('hidden');
             }
             startFirebaseListener(); 
+        });
+
+        // *** REFRESH BUTTON LISTENER ***
+        document.getElementById('refreshFeedBtn').addEventListener('click', () => {
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('fa-spin');
+            window.renderFeed();
+            setTimeout(() => { icon.classList.remove('fa-spin'); }, 500);
         });
 
         // *** FILTER TOGGLE LOGIC ***
