@@ -343,6 +343,8 @@
         let teamLogoDictionary = {};
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
+        
+        window.authorPointsCache = {}; // Local Dynamic Points Calculator
 
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
@@ -396,13 +398,7 @@
 
         function escapeHTML(str) {
             if (!str) return "";
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[tag]));
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
         }
 
         function linkify(text) {
@@ -538,6 +534,7 @@
                 if (loader) loader.style.display = 'none';
                 
                 currentPosts = [];
+                window.authorPointsCache = {}; // Reset the dynamic points cache
                 
                 const data = snapshot.val();
                 if (data) {
@@ -546,12 +543,15 @@
                         post.postId = key; 
                         
                         let likesArray = [];
-                        if (post.likes) {
-                            likesArray = Object.keys(post.likes);
-                        }
+                        if (post.likes) likesArray = Object.keys(post.likes);
                         post.likes = likesArray;
 
                         currentPosts.push(post);
+
+                        // --- ZERO-COST DYNAMIC POINTS TALLY ---
+                        if (post.authorId) {
+                            window.authorPointsCache[post.authorId] = (window.authorPointsCache[post.authorId] || 0) + likesArray.length;
+                        }
                     });
                 }
                 
@@ -571,7 +571,6 @@
             });
         }
         
-        // Start listening to the database instantly on page load
         startFirebaseListener();
 
 
@@ -598,7 +597,6 @@
             let tagsContainerHtml = '';
             let postColor = '#fbbf24'; 
 
-            // Helper to build a single team tag badge
             const buildTagHtml = (teamName) => {
                 const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -619,14 +617,12 @@
                 `;
             };
 
-            // Build Team 1 Tag (and set main post color)
             if (post.taggedTeam && post.taggedTeam.trim() !== "") {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 postColor = teamColorDictionary[safeKey] || '#fbbf24'; 
                 tagsContainerHtml += buildTagHtml(post.taggedTeam);
             }
             
-            // Build Team 2 Tag
             if (post.taggedTeam2 && post.taggedTeam2.trim() !== "") {
                 tagsContainerHtml += buildTagHtml(post.taggedTeam2);
             }
@@ -636,12 +632,35 @@
                 finalTagSection = `<div class="mt-3 flex flex-wrap">${tagsContainerHtml}</div>`;
             }
 
+            // --- USER BADGE LOGIC (Using Dynamic Points Cache) ---
+            const pts = window.authorPointsCache[post.authorId] || 0;
+            
+            let badgeIcon = '<i class="fa-solid fa-user text-gray-500 text-sm"></i>';
+            let badgeClass = 'bg-gray-200 border-gray-300';
+            let badgeTitle = 'Fan';
+
+            if (pts >= 500) { 
+                badgeIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; 
+                badgeClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; 
+                badgeTitle = 'Hall of Fame (500+ Likes)'; 
+            } else if (pts >= 150) { 
+                badgeIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; 
+                badgeClass = 'bg-orange-50 border-orange-300'; 
+                badgeTitle = 'All-State (150+ Likes)'; 
+            } else if (pts >= 50) { 
+                badgeIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; 
+                badgeClass = 'bg-gray-100 border-gray-300'; 
+                badgeTitle = 'Varsity (50+ Likes)'; 
+            } else if (pts >= 10) { 
+                badgeIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; 
+                badgeClass = 'bg-amber-50 border-amber-200'; 
+                badgeTitle = 'Super Fan (10+ Likes)'; 
+            }
+
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             
-            // Text Processing: Escape -> Linkify -> Username Tagging (@username)
             let safeContent = escapeHTML(post.content);
             safeContent = linkify(safeContent);
-            // Replace @username with a styled badge
             safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
 
             let authorActionsHtml = '';
@@ -662,8 +681,8 @@
                 html: `
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                                <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border ${badgeClass}" title="${badgeTitle}">
+                                ${badgeIcon}
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
@@ -938,7 +957,7 @@
             }
         };
 
-        // *** TOGGLE LIKE (Firebase) ***
+        // *** TOGGLE LIKE (Firebase - ZERO COST CALCULATION) ***
         window.toggleLike = async function(e, postId) {
             if (e) e.stopPropagation(); 
             if (!currentUser) return alert("You must be logged in to like posts.");
@@ -971,7 +990,7 @@
             if(feedCount) feedCount.innerText = newCountText;
             if(modalCount) modalCount.innerText = newCountText;
 
-            // Database Update
+            // Database Update (Only RTDB needed now!)
             try { 
                 const likeRef = ref(dbRealtime, `fanzone_posts/${postId}/likes/${currentUser.uid}`);
                 if (hasLiked) {
