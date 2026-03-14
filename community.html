@@ -67,6 +67,7 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
+        /* --- SOLID GLOW --- */
         .new-post-solid-glow {
             box-shadow: 0 0 15px 3px #fbbf24 !important;
             border-color: #fbbf24 !important;
@@ -646,8 +647,17 @@
         window.openUserProfile = async function(e, authorId) {
             if(e) e.stopPropagation();
 
+            // FIX 1: Safely close the post modal if it's currently open
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                postOverlay.classList.remove('active');
+                postOverlay.style.display = 'none';
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             const modal = document.getElementById('userProfileModalOverlay');
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
             setTimeout(() => modal.classList.add('active'), 10);
 
             // Set loading states
@@ -696,7 +706,9 @@
 
                 // Setup Follow Button
                 const followBtn = document.getElementById('upm-follow-btn');
-                if (!currentUser || currentUser.uid === authorId) {
+                
+                // FIX 2: Check PAHSFOOTBALL username and currentUserProfile existence
+                if (!currentUser || currentUser.uid === authorId || (userData.username && userData.username.toUpperCase() === 'PAHSFOOTBALL')) {
                     followBtn.style.display = 'none';
                 } else {
                     followBtn.style.display = 'block';
@@ -725,7 +737,7 @@
             if (force || (e && e.target.id === 'userProfileModalOverlay')) {
                 const overlay = document.getElementById('userProfileModalOverlay');
                 overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
@@ -758,78 +770,150 @@
         };
 
 
+        // *** HTML TEMPLATE GENERATOR FOR POSTS ***
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
-            if (post.timestamp) {
+            const postTime = post.timestamp ? new Date(post.timestamp).getTime() : 0;
+            
+            if (postTime > 0) {
                 const date = new Date(post.timestamp);
                 timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
-            const totalLikes = post.likes.length;
+
+            const realLikes = post.likes.length;
+            const artificialLikes = post.artificialLikes || 0; 
+            const totalLikes = realLikes + artificialLikes;
+            
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
             const iconClass = hasLiked ? 'liked' : 'text-gray-400';
+            
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
-            let tagsHtml = '';
+            let tagsContainerHtml = '';
             let postColor = '#fbbf24'; 
-            const buildTag = (name) => {
-                const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                const logo = teamLogoDictionary[key];
-                const color = teamColorDictionary[key] || '#fbbf24';
-                const contrast = getContrast(color);
-                const icon = logo ? `<img src="${logo}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300">` : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrast}"></i>`;
-                return `<a href="gameday.html?team=${encodeURIComponent(name)}" onclick="event.stopPropagation()" class="inline-flex items-center text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border mr-2 mb-2" style="background-color: ${color}; color: ${contrast}; border-color: ${contrast === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)'};">${icon} View ${name}</a>`;
+
+            const buildTagHtml = (teamName) => {
+                const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const logoUrl = teamLogoDictionary[safeKey] || '';
+                const tColor = teamColorDictionary[safeKey] || '#fbbf24';
+                const contrastText = getContrast(tColor);
+                const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
+                
+                const iconHtml = logoUrl 
+                    ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
+                    : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrastText}"></i>`;
+                    
+                const teamUrl = `gameday.html?team=${encodeURIComponent(teamName)}`;
+                
+                return `
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border mr-2 mb-2" style="background-color: ${tColor}; color: ${contrastText}; border-color: ${borderColor};">
+                        ${iconHtml} View ${teamName}
+                    </a>
+                `;
             };
 
-            if (post.taggedTeam) { postColor = teamColorDictionary[post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '')] || '#fbbf24'; tagsHtml += buildTag(post.taggedTeam); }
-            if (post.taggedTeam2) tagsHtml += buildTag(post.taggedTeam2);
+            if (post.taggedTeam && post.taggedTeam.trim() !== "") {
+                const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                postColor = teamColorDictionary[safeKey] || '#fbbf24'; 
+                tagsContainerHtml += buildTagHtml(post.taggedTeam);
+            }
+            
+            if (post.taggedTeam2 && post.taggedTeam2.trim() !== "") {
+                tagsContainerHtml += buildTagHtml(post.taggedTeam2);
+            }
 
+            let finalTagSection = "";
+            if (tagsContainerHtml !== "") {
+                finalTagSection = `<div class="mt-3 flex flex-wrap">${tagsContainerHtml}</div>`;
+            }
+
+            // --- USER BADGE LOGIC (Using Dynamic Points Cache) ---
             const pts = window.authorPointsCache[post.authorId] || 0;
-            let bIcon = '<i class="fa-solid fa-user text-gray-500 text-sm"></i>', bClass = 'bg-gray-200 border-gray-300', bTitle = 'Fan';
-            if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; bClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; bTitle = 'Hall of Fame'; }
-            else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
-            else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
-            else if (pts >= 10) { bIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; bClass = 'bg-amber-50 border-amber-200'; bTitle = 'Super Fan'; }
+            
+            let badgeIcon = '<i class="fa-solid fa-user text-gray-500 text-sm"></i>';
+            let badgeClass = 'bg-gray-200 border-gray-300';
+            let badgeTitle = 'Fan';
 
+            if (pts >= 500) { 
+                badgeIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; 
+                badgeClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; 
+                badgeTitle = 'Hall of Fame (500+ Likes)'; 
+            } else if (pts >= 150) { 
+                badgeIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; 
+                badgeClass = 'bg-orange-50 border-orange-300'; 
+                badgeTitle = 'All-State (150+ Likes)'; 
+            } else if (pts >= 50) { 
+                badgeIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; 
+                badgeClass = 'bg-gray-100 border-gray-300'; 
+                badgeTitle = 'Varsity (50+ Likes)'; 
+            } else if (pts >= 10) { 
+                badgeIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; 
+                badgeClass = 'bg-amber-50 border-amber-200'; 
+                badgeTitle = 'Super Fan (10+ Likes)'; 
+            }
+
+            const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
+            
             let safeContent = escapeHTML(post.content);
             safeContent = linkify(safeContent);
+            
+            // User Tagging Detection
             safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
 
-            let authActions = '';
+            let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
-                authActions = `<button onclick="window.openEditModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-pahs-gold font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1"><i class="fa-solid fa-pen text-lg"></i></button>
-                               <button onclick="window.deletePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1"><i class="fa-solid fa-trash text-lg"></i></button>`;
+                authorActionsHtml = `
+                    <button onclick="window.openEditModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-pahs-gold font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                        <i class="fa-solid fa-pen text-lg"></i> <span class="hidden sm:inline">Edit</span>
+                    </button>
+                    <button onclick="window.deletePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                        <i class="fa-solid fa-trash text-lg"></i> <span class="hidden sm:inline">Delete</span>
+                    </button>
+                `;
             }
 
             return {
                 color: postColor,
+                timestamp: postTime,
                 html: `
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2 cursor-pointer group" onclick="window.openUserProfile(event, '${post.authorId}')" title="View Profile">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${bClass}" title="${bTitle}">${bIcon}</div>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${badgeClass}" title="${badgeTitle}">
+                                ${badgeIcon}
+                            </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors">@${post.authorUsername}</h4>
                                 <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="${isModal ? 'text-lg' : 'text-sm'} text-gray-800 font-body leading-relaxed mt-2 whitespace-pre-wrap break-words">${safeContent}</div>
-                    <div class="mt-3 flex flex-wrap">${tagsHtml}</div>
+                    
+                    <div class="${textClass}">${safeContent}</div>
+                    
+                    ${finalTagSection}
+                    
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
                             <i id="${heartId}" class="fa-solid fa-football like-icon ${iconClass} text-xl"></i>
                             <span id="${countId}">${totalLikes > 0 ? totalLikes : 'Like'}</span>
                         </button>
+                        
                         <div class="flex items-center gap-4">
-                            ${authActions}
-                            <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1"><i class="fa-solid fa-share-nodes text-lg"></i></button>
-                            <button onclick="window.openReportModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1"><i class="fa-solid fa-flag text-lg"></i></button>
+                            ${authorActionsHtml}
+                            <button onclick="window.sharePost(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                                <i class="fa-solid fa-share-nodes text-lg"></i> <span class="hidden sm:inline">Share</span>
+                            </button>
+                            <button onclick="window.openReportModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
+                                <i class="fa-solid fa-flag text-lg"></i> <span class="hidden sm:inline">Report</span>
+                            </button>
                         </div>
                     </div>
                 `
             };
         }
 
+        // *** RENDER POSTS TO SCREEN ***
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
             const sharedPostContainer = document.getElementById('sharedPostGuestContainer');
@@ -867,11 +951,15 @@
             feedControls.classList.remove('hidden');
 
             feedContainer.innerHTML = '';
-            if (currentPosts.length === 0) { feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet.</div>`; return; }
             
-            let postsToRender = [...currentPosts];
-            const filterElem = document.getElementById('feedTeamFilter');
-            const filter = filterElem ? filterElem.value.trim().toLowerCase() : "";
+            if (currentPosts.length === 0) {
+                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`;
+                return;
+            }
+            
+            let postsToRender = [...currentPosts]; 
+            
+            const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
             const scopeElem = document.getElementById('feedScope');
             const scope = scopeElem ? scopeElem.value : 'global';
 
@@ -890,218 +978,449 @@
                 }
             }
 
-            if (filter !== "") {
+            if (filterTeam !== "") {
                 postsToRender = postsToRender.filter(post => {
                     const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
                     const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
-                    return tag1.includes(filter) || tag2.includes(filter);
+                    return tag1.includes(filterTeam) || tag2.includes(filterTeam);
                 });
             }
-            
+
             if (postsToRender.length === 0) {
                 feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found in this view.</div>`;
                 return;
             }
 
-            const sortElem = document.getElementById('feedSort');
-            const sort = sortElem ? sortElem.value : 'newest';
+            const sortType = document.getElementById('feedSort').value;
             
-            if (sort === 'top') postsToRender.sort((a,b) => b.likes.length - a.likes.length);
-            else postsToRender.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            if (sortType === 'top') {
+                postsToRender.sort((a, b) => {
+                    const aTotal = a.likes.length + (a.artificialLikes || 0);
+                    const bTotal = b.likes.length + (b.artificialLikes || 0);
+                    return bTotal - aTotal || new Date(b.timestamp) - new Date(a.timestamp);
+                });
+            } else {
+                postsToRender.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
 
             const now = new Date().getTime();
 
-            postsToRender.forEach(post => {
+            postsToRender.forEach((post) => {
                 const postData = buildPostHTML(post, false);
-                const card = document.createElement('div');
-                card.className = "post-card rounded-2xl p-5 relative bg-white";
-                card.onclick = () => window.openPostModal(post.postId);
-                card.innerHTML = postData.html;
-                if (post.taggedTeam) { card.style.border = `3px solid ${postData.color}`; card.style.borderTop = `4px solid ${postData.color}`; }
+                const postCard = document.createElement('div');
+                postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
                 const secondsOld = (now - postData.timestamp) / 1000;
                 if (secondsOld < 10 && secondsOld >= -30) {
-                    card.classList.add('new-post-solid-glow');
+                    postCard.classList.add('new-post-solid-glow');
                     const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
-                    setTimeout(() => { card.classList.remove('new-post-solid-glow'); }, timeRemaining * 1000);
+                    setTimeout(() => { postCard.classList.remove('new-post-solid-glow'); }, timeRemaining * 1000);
                 }
 
-                feedContainer.appendChild(card);
+                postCard.onclick = () => window.openPostModal(post.postId);
+                postCard.innerHTML = postData.html;
+                
+                if (post.taggedTeam) {
+                    postCard.style.border = `3px solid ${postData.color}`;
+                    postCard.style.borderTop = `4px solid ${postData.color}`;
+                }
+                
+                feedContainer.appendChild(postCard);
             });
+        }
 
-            if (targetPostId && !initialDeepLinkChecked && currentUser) {
-                window.openPostModal(targetPostId); initialDeepLinkChecked = true;
+        // *** CREATE MODAL CONTROLS ***
+        window.openCreatePostModal = function() {
+            const overlay = document.getElementById('createPostModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeCreatePostModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'createPostModalOverlay')) {
+                const overlay = document.getElementById('createPostModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
-        // BUTTON ACTIONS
-        window.openCreatePostModal = () => { document.getElementById('createPostModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('createPostModalOverlay').classList.add('active'), 10); };
-        window.closeCreatePostModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('createPostModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('createPostModalOverlay').style.display='none', 300); } };
-        
-        document.getElementById('submitPostBtn').onclick = async () => {
-            const content = document.getElementById('postContent').value.trim();
-            if(!content || content.length > 500 || containsProhibitedDomain(content)) return alert("Invalid post content.");
-            const team1 = document.getElementById('teamTagInput').value.trim();
-            const team2 = document.getElementById('teamTagInput2').value.trim();
+        // *** CREATE POST SUBMISSION (Firebase) ***
+        document.getElementById('submitPostBtn').addEventListener('click', async () => {
+            if (!currentUser) return alert("You must be logged in to post.");
             
-            const btn = document.getElementById('submitPostBtn'); 
+            const contentBox = document.getElementById('postContent');
+            const teamTagInput = document.getElementById('teamTagInput').value.trim();
+            const teamTagInput2 = document.getElementById('teamTagInput2').value.trim();
+            let rawContent = contentBox.value.trim();
+            
+            if (rawContent === "") return alert("Post cannot be empty.");
+            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
+            if (containsProhibitedDomain(rawContent)) {
+                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
+            }
+            
+            const btn = document.getElementById('submitPostBtn');
             const origText = btn.innerText;
             btn.innerText = "Posting..."; 
             btn.disabled = true;
 
+            // FIX 3: Safely check for currentUserProfile before trying to read the username
             const username = currentUserProfile ? currentUserProfile.username : "Fan";
             
             let finalTeamTag = "";
-            if (team1 !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === team1.toLowerCase());
+            if (teamTagInput !== "") {
+                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
                 if (matchedTeam) finalTeamTag = matchedTeam;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid team tag. Please select a valid team from the dropdown list."); }
+                else {
+                    btn.innerText = origText; 
+                    btn.disabled = false; 
+                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                }
             }
             
             let finalTeamTag2 = "";
-            if (team2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === team2.toLowerCase());
+            if (teamTagInput2 !== "") {
+                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
                 if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list."); }
+                else {
+                    btn.innerText = origText; 
+                    btn.disabled = false; 
+                    return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
+                }
             }
-
-            try {
-                const newRef = push(ref(dbRealtime, 'fanzone_posts'));
-                await set(newRef, { 
-                    authorId: currentUser.uid, 
-                    authorUsername: username, 
-                    content: filterProfanity(content), 
-                    taggedTeam: finalTeamTag, 
-                    taggedTeam2: finalTeamTag2, 
-                    timestamp: new Date().toISOString() 
-                });
-                document.getElementById('postContent').value = ''; 
-                document.getElementById('teamTagInput').value = '';
-                document.getElementById('teamTagInput2').value = '';
-                window.closeCreatePostModal(null, true); 
-            } catch (err) {
-                console.error(err);
-                alert("Failed to post.");
-            } finally {
-                btn.innerText = origText; 
-                btn.disabled = false;
-            }
-        };
-
-        window.toggleLike = async (e, id) => {
-            if(e) e.stopPropagation(); if(!currentUser) return alert("Log in to like posts!");
-            const post = currentPosts.find(p => p.postId === id);
-            const hasLiked = post.likes.includes(currentUser.uid);
-            const likeRef = ref(dbRealtime, `fanzone_posts/${id}/likes/${currentUser.uid}`);
-            if (hasLiked) await remove(likeRef); else await set(likeRef, true);
-        };
-
-        window.sharePost = (e, id) => {
-            if(e) e.stopPropagation();
-            const url = window.location.origin + window.location.pathname + "?post=" + id;
-            if (navigator.share) navigator.share({ title: 'Fan Zone Post', url: url });
-            else { navigator.clipboard.writeText(url); alert("Link copied!"); }
-        };
-
-        window.openPostModal = (id) => {
-            const post = currentPosts.find(p => p.postId === id);
-            if (!post || !currentUser) return;
-            window.history.replaceState({}, '', window.location.pathname + "?post=" + id);
-            const data = buildPostHTML(post, true);
-            document.getElementById('postModalBody').innerHTML = data.html;
-            document.getElementById('postModalOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('postModalOverlay').classList.add('active'), 10);
-        };
-
-        window.closePostModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { window.history.replaceState({}, '', window.location.pathname); document.getElementById('postModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('postModalOverlay').style.display='none', 300); } };
-
-        // EDIT & DELETE LOGIC
-        window.openEditModal = (e, id) => {
-            e.stopPropagation(); window.currentEditPostId = id;
-            const p = currentPosts.find(x => x.postId === id);
-            document.getElementById('editPostContent').value = p.content;
-            document.getElementById('editTeamTagInput').value = p.taggedTeam || "";
-            document.getElementById('editTeamTagInput2').value = p.taggedTeam2 || "";
-            document.getElementById('editModalOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('editModalOverlay').classList.add('active'), 10);
-        };
-
-        window.closeEditModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('editModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('editModalOverlay').style.display='none', 300); } };
-
-        document.getElementById('submitEditBtn').onclick = async () => {
-            const c = document.getElementById('editPostContent').value.trim();
-            const t1 = document.getElementById('editTeamTagInput').value.trim();
-            const t2 = document.getElementById('editTeamTagInput2').value.trim();
             
-            if(!c || c.length > 500 || containsProhibitedDomain(c)) return alert("Invalid post content.");
+            try {
+                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
+                await set(newPostRef, {
+                    authorId: currentUser.uid,
+                    authorUsername: username,
+                    content: filterProfanity(rawContent),
+                    taggedTeam: finalTeamTag,
+                    taggedTeam2: finalTeamTag2,
+                    timestamp: new Date().toISOString()
+                });
+                
+                contentBox.value = "";
+                document.getElementById('teamTagInput').value = "";
+                document.getElementById('teamTagInput2').value = "";
+                window.closeCreatePostModal(null, true);
+            } catch (error) { 
+                console.error(error);
+                alert("Failed to post to server."); 
+            } finally { 
+                btn.innerText = origText; 
+                btn.disabled = false; 
+            }
+        });
 
+        // *** EDIT POST SUBMISSION (Firebase) ***
+        document.getElementById('submitEditBtn').addEventListener('click', async () => {
+            if (!currentUser || !window.currentEditPostId) return;
+            
+            const contentBox = document.getElementById('editPostContent');
+            const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
+            const teamTagInput2 = document.getElementById('editTeamTagInput2').value.trim();
+            let rawContent = contentBox.value.trim();
+            
+            if (rawContent === "") return alert("Post cannot be empty.");
+            if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
+            if (containsProhibitedDomain(rawContent)) {
+                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
+            }
+            
             const btn = document.getElementById('submitEditBtn');
             const origText = btn.innerText;
             btn.innerText = "Saving..."; 
             btn.disabled = true;
 
             let finalTeamTag = "";
-            if (t1 !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === t1.toLowerCase());
+            if (teamTagInput !== "") {
+                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
                 if (matchedTeam) finalTeamTag = matchedTeam;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid team tag. Please select a valid team from the dropdown list."); }
-            }
-            
-            let finalTeamTag2 = "";
-            if (t2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === t2.toLowerCase());
-                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list."); }
+                else {
+                    btn.innerText = origText; 
+                    btn.disabled = false; 
+                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+                }
             }
 
+            let finalTeamTag2 = "";
+            if (teamTagInput2 !== "") {
+                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
+                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
+                else {
+                    btn.innerText = origText; 
+                    btn.disabled = false; 
+                    return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
+                }
+            }
+            
+            const cleanContent = filterProfanity(rawContent);
+            
             try {
-                await update(ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId), { 
-                    content: filterProfanity(c), 
-                    taggedTeam: finalTeamTag, 
-                    taggedTeam2: finalTeamTag2 
+                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId);
+                await update(postRef, {
+                    content: cleanContent,
+                    taggedTeam: finalTeamTag,
+                    taggedTeam2: finalTeamTag2,
+                    lastEdited: new Date().toISOString()
                 });
-                window.closeEditModal(null, true);
-            } catch (err) {
-                console.error("Edit error:", err);
-                alert("Failed to update.");
+                window.closeEditModal(null, true); 
+            } catch (error) { 
+                console.error(error);
+                alert("Failed to update post."); 
+            } finally { 
+                btn.innerText = origText; 
+                btn.disabled = false; 
+            }
+        });
+
+        // *** DELETE POST LOGIC (Firebase) ***
+        window.deletePost = function(e, postId) {
+            if (e) e.stopPropagation();
+            if (!currentUser) return;
+            
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post || post.authorId !== currentUser.uid) return;
+
+            window.currentDeletePostId = postId;
+
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                postOverlay.classList.remove('active');
+                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
+            }
+
+            const overlay = document.getElementById('deleteModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeDeleteModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'deleteModalOverlay')) {
+                const overlay = document.getElementById('deleteModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; window.currentDeletePostId = null; }, 300);
+            }
+        };
+
+        window.confirmDeletePost = async function() {
+            if (!currentUser || !window.currentDeletePostId) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            const origText = btn.innerText;
+            btn.innerText = "Deleting..."; 
+            btn.disabled = true;
+
+            try {
+                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId);
+                await remove(postRef);
+                window.closeDeleteModal(null, true);
+            } catch (error) {
+                console.error(error);
+                alert("Failed to delete post.");
+                window.closeDeleteModal(null, true);
             } finally {
-                btn.innerText = origText;
+                btn.innerText = origText; 
                 btn.disabled = false;
             }
         };
 
-        window.deletePost = (e, id) => { e.stopPropagation(); window.currentDeletePostId = id; document.getElementById('deleteModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('deleteModalOverlay').classList.add('active'), 10); };
-        window.closeDeleteModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('deleteModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('deleteModalOverlay').style.display='none', 300); } };
-        window.confirmDeletePost = async () => { await remove(ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId)); window.closeDeleteModal(null, true); };
+        // *** TOGGLE LIKE (Firebase - ZERO COST CALCULATION) ***
+        window.toggleLike = async function(e, postId) {
+            if (e) e.stopPropagation(); 
+            if (!currentUser) return alert("You must be logged in to like posts.");
+            
+            const postIndex = currentPosts.findIndex(p => p.postId === postId);
+            if (postIndex === -1) return;
 
-        window.openReportModal = (e, id) => {
-            e.stopPropagation(); window.currentReportedPostId = id;
-            const p = currentPosts.find(x => x.postId === id);
-            window.currentReportedPostContent = p.content;
-            window.currentReportedPostAuthor = p.authorUsername;
-            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "";
-            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "";
-            document.getElementById('reportEmail').value = currentUser?.email || "";
-            document.getElementById('reportModalOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('reportModalOverlay').classList.add('active'), 10);
+            const post = currentPosts[postIndex];
+            const hasLiked = post.likes.includes(currentUser.uid);
+            
+            // Optimistic UI Update
+            const feedIcon = document.getElementById(`heart-${postId}`);
+            const feedCount = document.getElementById(`count-${postId}`);
+            const modalIcon = document.getElementById(`modal-heart-${postId}`);
+            const modalCount = document.getElementById(`modal-count-${postId}`);
+            
+            let currentLikeCount = post.likes.length + (post.artificialLikes || 0);
+
+            if (hasLiked) {
+                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
+                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
+                currentLikeCount--;
+            } else {
+                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
+                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
+                currentLikeCount++;
+            }
+            
+            const newCountText = currentLikeCount > 0 ? currentLikeCount : 'Like';
+            if(feedCount) feedCount.innerText = newCountText;
+            if(modalCount) modalCount.innerText = newCountText;
+
+            // Database Update (Only RTDB needed now!)
+            try { 
+                const likeRef = ref(dbRealtime, `fanzone_posts/${postId}/likes/${currentUser.uid}`);
+                if (hasLiked) {
+                    await remove(likeRef);
+                } else {
+                    await set(likeRef, true);
+                }
+            } catch(err) { console.error(err); }
         };
 
-        window.closeReportModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('reportModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('reportModalOverlay').style.display='none', 300); } };
+        // *** SHARE POST NATIVE ***
+        window.sharePost = function(e, postId) {
+            if (e) e.stopPropagation();
+            const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+            
+            if (navigator.share) {
+                navigator.share({ 
+                    title: 'PAHS Football Fan Zone', 
+                    text: 'Check out this post from the PAHS Football community!', 
+                    url: shareUrl 
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard! Paste it anywhere to share."));
+            }
+        };
 
-        document.getElementById('reportForm').onsubmit = (e) => {
+        // *** POST MODAL CONTROLS ***
+        window.openPostModal = function(postId) {
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post) { 
+                window.history.replaceState({}, document.title, window.location.pathname); 
+                return; 
+            }
+            
+            const newUrl = window.location.pathname + "?post=" + postId;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            const postData = buildPostHTML(post, true);
+            document.getElementById('postModalBody').innerHTML = postData.html;
+            
+            const modalBlock = document.getElementById('postModalContentBlock');
+            if (post.taggedTeam) {
+                modalBlock.style.border = `3px solid ${postData.color}`;
+                modalBlock.style.borderTop = `5px solid ${postData.color}`;
+            } else {
+                modalBlock.style.border = "none";
+                modalBlock.style.borderTop = "5px solid #fbbf24"; 
+            }
+            
+            const ctaBanner = document.getElementById('modalViralCTA');
+            if (!currentUser) ctaBanner.classList.remove('hidden'); 
+            else ctaBanner.classList.add('hidden');
+            
+            const overlay = document.getElementById('postModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closePostModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'postModalOverlay')) {
+                const overlay = document.getElementById('postModalOverlay');
+                overlay.classList.remove('active');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+            }
+        };
+
+        // *** REPORT MODAL CONTROLS ***
+        window.openReportModal = function(e, postId) {
+            if (e) e.stopPropagation();
+            if (!currentUser) return alert("You must be logged in to report posts.");
+            
+            const post = currentPosts.find(p => p.postId === postId);
+            if (!post) return alert("Post not found.");
+            
+            window.currentReportedPostId = postId;
+            window.currentReportedPostContent = post.content;
+            window.currentReportedPostAuthor = post.authorUsername;
+            
+            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "N/A";
+            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "N/A";
+            document.getElementById('reportEmail').value = currentUser.email || "N/A";
+            
+            const postOverlay = document.getElementById('postModalOverlay');
+            if (postOverlay.style.display === 'flex') {
+                postOverlay.classList.remove('active');
+                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
+            }
+            
+            const overlay = document.getElementById('reportModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeReportModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'reportModalOverlay')) {
+                const overlay = document.getElementById('reportModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = '';
+                    document.getElementById('reportForm').reset();
+                    document.getElementById('reportStatusMessage').classList.add('hidden');
+                    document.getElementById('submitReportBtn').style.display = 'block';
+                    document.getElementById('submitReportBtn').disabled = false;
+                }, 300);
+            }
+        };
+
+        // *** SUBMIT REPORT TO GOOGLE FORMS ***
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const btn = document.getElementById('submitReportBtn'); 
+            const msg = document.getElementById('reportStatusMessage');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
+            const reason = document.getElementById('reportReason').value;
+            const postId = window.currentReportedPostId;
+            const postContent = window.currentReportedPostContent || "N/A";
+            const postAuthor = window.currentReportedPostAuthor || "N/A";
+            const reporterId = currentUser ? currentUser.uid : "Unknown";
+            const postUrl = window.location.origin + window.location.pathname + "?post=" + postId;
+            
+            const combinedMessage = `*** POST REPORT ***\nReason: ${reason}\n\n*** POST INFO ***\nAuthor: @${postAuthor}\nContent: "${postContent}"\nPost ID: ${postId}\nLink: ${postUrl}\n\n*** REPORTER ID ***\n${reporterId}`;
+            
             const params = new URLSearchParams();
-            const reportBody = `REASON: ${document.getElementById('reportReason').value}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${window.currentReportedPostId}`;
-            params.append("entry.1967997366", reportBody);
-            params.append("entry.1990515734", document.getElementById('reportFirstName').value);
-            params.append("entry.1429224270", document.getElementById('reportLastName').value);
-            params.append("entry.1778241553", document.getElementById('reportEmail').value);
-            fetch('https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse', { method: 'POST', mode: 'no-cors', body: params });
-            alert("Report sent to admins!"); window.closeReportModal(null, true);
-        };
-
-        window.openExternalLink = (e, url) => { e.stopPropagation(); document.getElementById('warningUrlText').innerText = url; document.getElementById('continueLinkBtn').href = url; document.getElementById('linkWarningModal').style.display = 'flex'; setTimeout(() => document.getElementById('linkWarningModal').classList.add('active'), 10); };
-        window.closeLinkWarning = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('linkWarningModal').classList.remove('active'); setTimeout(() => document.getElementById('linkWarningModal').style.display='none', 300); } };
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", document.getElementById('reportFirstName').value); 
+            params.append("entry.1429224270", document.getElementById('reportLastName').value); 
+            params.append("entry.1778241553", document.getElementById('reportEmail').value); 
+            
+            fetch(REPORT_SUBMIT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Report Submitted Successfully!';
+                 setTimeout(() => { window.closeReportModal(null, true); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending report.'; 
+            });
+        });
     </script>
 </body>
 </html>
