@@ -67,6 +67,7 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
+        /* --- SOLID GLOW --- */
         .new-post-solid-glow {
             box-shadow: 0 0 15px 3px #fbbf24 !important;
             border-color: #fbbf24 !important;
@@ -120,8 +121,8 @@
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
             </h3>
+            
             <div class="flex flex-wrap items-center gap-2 self-end">
-                
                 <div class="relative flex items-center">
                     <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-28 sm:w-32" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
                     <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
@@ -175,7 +176,6 @@
             </div>
             <div class="p-6 bg-white">
                 <textarea id="postContent" rows="4" placeholder="What's on your mind? (Paste video links or use @username to tag others) - PLEASE BE RESPECTFUL!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                     <div class="relative">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tag a Team (Opt)</label>
@@ -187,14 +187,9 @@
                         <input type="text" id="teamTagInput2" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
                     </div>
                 </div>
-
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeCreatePostModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <button id="submitPostBtn" class="flex-1 bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all">
-                        Post
-                    </button>
+                    <button type="button" onclick="closeCreatePostModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <button id="submitPostBtn" class="flex-1 bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all">Post</button>
                 </div>
             </div>
         </div>
@@ -206,7 +201,7 @@
             
             <div class="p-8 text-center bg-white relative">
                 <div id="upm-badge-container" class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-md mb-4 text-4xl">
-                    <i class="fa-solid fa-user text-gray-400"></i>
+                    <i class="fa-solid fa-football text-slate-500"></i>
                 </div>
                 <h3 id="upm-username" class="font-head text-4xl uppercase tracking-wide text-gray-900 leading-none">@User</h3>
                 <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Fan (0 Points)</p>
@@ -252,7 +247,6 @@
             </div>
             <div class="p-6 bg-white">
                 <textarea id="editPostContent" rows="4" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div class="relative">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
@@ -263,10 +257,7 @@
                         <input type="text" id="editTeamTagInput2" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
                     </div>
                 </div>
-
-                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">
-                    Save Changes
-                </button>
+                <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">Save Changes</button>
             </div>
         </div>
     </div>
@@ -280,16 +271,10 @@
                 <button onclick="closeDeleteModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white text-center">
-                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">
-                    Are you sure you want to permanently delete this post? This action cannot be undone.
-                </p>
+                <p class="text-sm text-gray-600 mb-6 font-body leading-relaxed">Are you sure you want to permanently delete this post? This action cannot be undone.</p>
                 <div class="flex gap-3">
-                    <button onclick="closeDeleteModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <button id="confirmDeleteBtn" onclick="confirmDeletePost()" class="flex-1 bg-red-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-red-700 transition-all text-sm shadow">
-                        Yes, Delete
-                    </button>
+                    <button onclick="closeDeleteModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <button id="confirmDeleteBtn" onclick="confirmDeletePost()" class="flex-1 bg-red-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-red-700 transition-all text-sm shadow">Yes, Delete</button>
                 </div>
             </div>
         </div>
@@ -304,13 +289,10 @@
                 <button onclick="closeReportModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
-                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
-                    Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.
-                </p>
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.</p>
                 <form id="reportForm">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
                     <textarea id="reportReason" rows="3" required placeholder="Describe why this post violates community guidelines..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
@@ -321,13 +303,9 @@
                             <input type="text" id="reportLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
                         </div>
                     </div>
-
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
                     <input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
-                    
-                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">
-                        Submit to Admins
-                    </button>
+                    <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">Submit to Admins</button>
                     <div id="reportStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
                 </form>
             </div>
@@ -343,17 +321,11 @@
                 <button onclick="closeLinkWarning(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white text-center">
-                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">
-                    You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.
-                </p>
+                <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">You are about to leave PAHS Football and visit an external website. We cannot verify the safety of this link. Proceed with caution.</p>
                 <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 break-all text-xs text-gray-800 font-mono mb-6" id="warningUrlText"></div>
                 <div class="flex gap-3">
-                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
-                        Cancel
-                    </button>
-                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">
-                        Continue to Site
-                    </a>
+                    <button onclick="closeLinkWarning(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <a id="continueLinkBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="closeLinkWarning(event, true)" class="flex-1 bg-yellow-500 text-black font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-yellow-600 transition-all text-sm shadow">Continue to Site</a>
                 </div>
             </div>
         </div>
@@ -365,11 +337,9 @@
         import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // *** GOOGLE FORM FOR REPORTING ONLY ***
         const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
         const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
-        // *** FIREBASE CONFIGURATION ***
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
@@ -385,7 +355,6 @@
         const db = getFirestore(app);
         const dbRealtime = getDatabase(app);
 
-        // *** GLOBAL VARIABLES ***
         let currentUser = null;
         let currentUserProfile = null;
         let currentPosts = []; 
@@ -394,8 +363,8 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
         
-        window.authorPointsCache = {}; // Local Dynamic Points Calculator
-        window.userCache = {}; // Profile cache
+        window.authorPointsCache = {}; 
+        window.userCache = {}; 
 
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
@@ -404,72 +373,34 @@
         window.currentEditPostId = null;
         window.currentDeletePostId = null;
 
-        // *** COLOR PARSING LOGIC ***
-        const colorNameMap = {
-            "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
-            "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
-            "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
-            "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
-            "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
-        };
-
+        const colorNameMap = {"white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "grey": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "scarlet": "#dc2626"};
         const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
-        
-        const getContrast = hex => {
-            if(!hex) return 'black';
-            let h = normalizeColor(hex).replace('#','');
-            if(h.length === 3) h = h.split('').map(x=>x+x).join('');
-            if(h.length !== 6) return 'black';
-            const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
-            return (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white');
-        };
-        
-        const parseColors = str => {
-            const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
-            return { p: normalizeColor(p[0]) };
-        };
-
-        // *** PROFANITY & LINK FILTER ***
-        const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
-        const prohibitedDomains = ['pornhub', 'xvideos', 'onlyfans', 'redtube', 'youporn', 'chaturbate', 'stripchat', 'fansly'];
+        const getContrast = hex => { if(!hex) return 'black'; let h = normalizeColor(hex).replace('#',''); if(h.length === 3) h = h.split('').map(x=>x+x).join(''); if(h.length !== 6) return 'black'; const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16); return (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white'); };
+        const parseColors = str => { const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s); return { p: normalizeColor(p[0]) }; };
 
         function filterProfanity(text) {
+            const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
             let filteredText = text;
-            badWords.forEach(word => {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                filteredText = filteredText.replace(regex, '***');
-            });
+            badWords.forEach(word => { const regex = new RegExp('\\b' + word + '\\b', 'gi'); filteredText = filteredText.replace(regex, '***'); });
             return filteredText;
         }
 
         function containsProhibitedDomain(text) {
+            const prohibitedDomains = ['pornhub', 'xvideos', 'onlyfans', 'redtube', 'youporn', 'chaturbate', 'stripchat', 'fansly'];
             const lowerText = text.toLowerCase();
             return prohibitedDomains.some(domain => lowerText.includes(domain));
         }
 
-        function escapeHTML(str) {
-            if (!str) return "";
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
-        }
+        function escapeHTML(str) { if (!str) return ""; return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])); }
 
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
-                
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-                if (ytMatch && ytMatch[1]) {
-                    return `
-                        <div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
-                            <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>`;
-                }
-
+                if (ytMatch && ytMatch[1]) return `<div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
-                return `
-                    <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
-                    </span>`;
+                return `<span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}</span>`;
             });
         }
 
@@ -491,27 +422,16 @@
             }
         };
 
-        // *** LOAD CSV DATA ***
-        const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
-        Papa.parse(MASTER_TEAMS_CSV, {
+        // LOAD CSV DATA
+        Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv", {
             download: true, header: true, skipEmptyLines: true,
-            transformHeader: header => header.toLowerCase().replace(/[^a-z0-9]/g, ''),
-            complete: function(logoRes) {
-                logoRes.data.forEach(row => {
-                    const teamName = row['school'] || row['teamname'] || row['team'];
-                    const logoUrl = row['logourl'] || row['logo'];
-                    if (teamName && logoUrl) {
-                        teamLogoDictionary[teamName.toUpperCase().replace(/[^A-Z0-9]/g, '')] = logoUrl.trim();
-                    }
-                });
-                if(currentPosts.length > 0) window.renderFeed();
-            }
+            transformHeader: h => h.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            complete: r => { r.data.forEach(row => { const name = row['school'] || row['teamname']; const logo = row['logourl']; if (name && logo) teamLogoDictionary[name.toUpperCase().replace(/[^A-Z0-9]/g, '')] = logo.trim(); }); if(currentPosts.length > 0) window.renderFeed(); }
         });
 
-        const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-        Papa.parse(directoryUrl, {
+        Papa.parse("https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory", {
             download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
+            complete: results => {
                 const datalist = document.getElementById('teamTagList');
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
@@ -520,12 +440,8 @@
                 
                 cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School'])).forEach(team => {
                     if(!validTeams.has(team['School'])) {
-                        const option = document.createElement('option');
-                        option.value = team['School'];
-                        datalist.appendChild(option);
-                        validTeams.add(team['School']);
-
-                        const colorData = parseColors(team['Colors'] || team['Color'] || '');
+                        const option = document.createElement('option'); opt.value = team['School']; datalist.appendChild(option); validTeams.add(team['School']);
+                        const colorData = parseColors(team['Colors'] || team['Color']);
                         if (colorData.p) teamColorDictionary[team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '')] = colorData.p;
                     }
                 });
@@ -533,15 +449,12 @@
             }
         });
 
-        // *** AUTHENTICATION LISTENER ***
         onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
             const createBtn = document.getElementById('createPostAction');
             const loginPrompt = document.getElementById('loggedOutPrompt');
-            
             if (user) {
-                currentUser = user;
-                createBtn.classList.remove('hidden');
-                loginPrompt.classList.add('hidden');
+                createBtn.classList.remove('hidden'); loginPrompt.classList.add('hidden');
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) {
@@ -550,14 +463,11 @@
                     }
                 } catch(e) {}
             } else {
-                currentUser = null;
-                currentUserProfile = null;
-                createBtn.classList.add('hidden');
-                loginPrompt.classList.remove('hidden');
+                createBtn.classList.add('hidden'); loginPrompt.classList.remove('hidden');
             }
+            window.renderFeed(); 
         });
 
-        // *** REFRESH BUTTON LISTENER ***
         document.getElementById('refreshFeedBtn').addEventListener('click', () => {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
@@ -565,7 +475,6 @@
             setTimeout(() => { icon.classList.remove('fa-spin'); }, 500);
         });
 
-        // *** FILTER TOGGLE LOGIC ***
         window.toggleClearBtn = function() {
             const input = document.getElementById('feedTeamFilter');
             const btn = document.getElementById('clearFilterBtn');
@@ -579,36 +488,23 @@
             window.renderFeed();
         };
 
-        // *** FIREBASE REALTIME DB LISTENER ***
         function startFirebaseListener() {
-            const postsRef = ref(dbRealtime, 'fanzone_posts');
-            
-            onValue(postsRef, async (snapshot) => {
+            onValue(ref(dbRealtime, 'fanzone_posts'), async (snapshot) => {
                 const loader = document.getElementById('feedLoading');
                 if (loader) loader.style.display = 'none';
-                
                 currentPosts = [];
-                window.authorPointsCache = {}; // Reset the dynamic points cache
+                window.authorPointsCache = {};
                 
                 const data = snapshot.val();
                 if (data) {
                     Object.keys(data).forEach(key => {
-                        const post = data[key];
-                        post.postId = key; 
-                        
-                        let likesArray = [];
-                        if (post.likes) likesArray = Object.keys(post.likes);
+                        const post = data[key]; post.postId = key;
+                        let likesArray = post.likes ? Object.keys(post.likes) : [];
                         post.likes = likesArray;
-
                         currentPosts.push(post);
-
-                        // --- ZERO-COST DYNAMIC POINTS TALLY ---
-                        if (post.authorId) {
-                            window.authorPointsCache[post.authorId] = (window.authorPointsCache[post.authorId] || 0) + likesArray.length;
-                        }
+                        if (post.authorId) window.authorPointsCache[post.authorId] = (window.authorPointsCache[post.authorId] || 0) + likesArray.length;
                     });
 
-                    // --- PRE-FETCH UNKNOWN USERS FOR PROFILES ---
                     const uniqueUids = [...new Set(currentPosts.map(p => p.authorId))];
                     const fetchPromises = uniqueUids.map(async (uid) => {
                         if (!window.userCache[uid] && uid) {
@@ -618,14 +514,10 @@
                             } catch(e) { window.userCache[uid] = { points: 0 }; }
                         }
                     });
-                    
-                    // Wait for all unseen profiles to load so we don't render blank badges
                     await Promise.all(fetchPromises);
                 }
-                
                 window.renderFeed();
                 
-                // Deep Link Check
                 if (!initialDeepLinkChecked) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const targetPost = urlParams.get('post');
@@ -638,11 +530,8 @@
                 if (container) container.innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
             });
         }
-        
         startFirebaseListener();
 
-
-        // *** OPEN USER PROFILE MODAL ***
         window.openUserProfile = async function(e, authorId) {
             if(e) e.stopPropagation();
 
@@ -650,7 +539,6 @@
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('active'), 10);
 
-            // Set loading states
             document.getElementById('upm-username').innerText = "Loading...";
             document.getElementById('upm-rank').innerText = "...";
             document.getElementById('upm-about').innerText = "...";
@@ -659,25 +547,22 @@
 
             try {
                 let userData = window.userCache[authorId];
-                
-                // Fetch from Firestore if we don't have the full profile in cache yet
                 if (!userData || typeof userData.followedTeams === 'undefined') {
                     const uSnap = await getDoc(doc(db, "users", authorId));
                     if(uSnap.exists()) {
                         userData = uSnap.data();
-                        window.userCache[authorId] = userData; // Save to cache
+                        window.userCache[authorId] = userData; 
                     } else {
                         userData = { username: "Unknown", followedTeams: [], aboutMe: "This user does not have a profile set up yet." };
                     }
                 }
 
-                // Rank Logic
                 const pts = window.authorPointsCache[authorId] || 0;
-                let bIcon = '<i class="fa-solid fa-user text-gray-400"></i>', bClass = 'bg-gray-100 border-gray-300', bTitle = 'Fan';
-                if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; bClass = 'bg-yellow-50 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]'; bTitle = 'Hall of Fame'; }
-                else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
-                else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
-                else if (pts >= 10) { bIcon = '<i class="fa-solid fa-bullhorn text-amber-700"></i>'; bClass = 'bg-amber-50 border-amber-200'; bTitle = 'Super Fan'; }
+                let bIcon = '<i class="fa-solid fa-football text-slate-500 text-sm"></i>', bClass = 'bg-slate-100 border-slate-300', bTitle = 'Fan';
+                if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; bClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; bTitle = 'Hall of Fame'; }
+                else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
+                else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
+                else if (pts >= 10) { bIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; bClass = 'bg-amber-50 border-amber-200'; bTitle = 'Super Fan'; }
 
                 const badgeContainer = document.getElementById('upm-badge-container');
                 badgeContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center border-4 shadow-md mb-4 text-4xl ${bClass}`;
@@ -694,7 +579,6 @@
                     teamsContainer.innerHTML = `<span class="text-xs text-gray-500 italic">No teams followed.</span>`;
                 }
 
-                // Setup Follow Button
                 const followBtn = document.getElementById('upm-follow-btn');
                 if (!currentUser || currentUser.uid === authorId) {
                     followBtn.style.display = 'none';
@@ -702,7 +586,7 @@
                     followBtn.style.display = 'block';
                     followBtn.disabled = false;
                     
-                    const myFollowing = (currentUserProfile && currentUserProfile.following) ? currentUserProfile.following : [];
+                    const myFollowing = (window.currentUserProfile && window.currentUserProfile.following) ? window.currentUserProfile.following : [];
                     const isFollowing = myFollowing.includes(authorId);
 
                     if (isFollowing) {
@@ -730,7 +614,7 @@
         };
 
         window.toggleFollow = async function(targetUid, isFollowingNow) {
-            if (!currentUser || !currentUserProfile) return;
+            if (!currentUser || !window.currentUserProfile) return;
 
             const myRef = doc(db, "users", currentUser.uid);
             const btn = document.getElementById('upm-follow-btn');
@@ -740,14 +624,13 @@
             try {
                 if (isFollowingNow) {
                     await updateDoc(myRef, { following: arrayUnion(targetUid) });
-                    if(!currentUserProfile.following) currentUserProfile.following = [];
-                    currentUserProfile.following.push(targetUid);
+                    if(!window.currentUserProfile.following) window.currentUserProfile.following = [];
+                    window.currentUserProfile.following.push(targetUid);
                 } else {
                     await updateDoc(myRef, { following: arrayRemove(targetUid) });
-                    currentUserProfile.following = currentUserProfile.following.filter(id => id !== targetUid);
+                    window.currentUserProfile.following = window.currentUserProfile.following.filter(id => id !== targetUid);
                 }
                 
-                // Re-render modal and feed to show updated status
                 window.openUserProfile(null, targetUid);
                 window.renderFeed(); 
             } catch(err) {
@@ -756,7 +639,6 @@
                 btn.innerText = "Error";
             }
         };
-
 
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
@@ -785,7 +667,7 @@
             if (post.taggedTeam2) tagsHtml += buildTag(post.taggedTeam2);
 
             const pts = window.authorPointsCache[post.authorId] || 0;
-            let bIcon = '<i class="fa-solid fa-user text-gray-500 text-sm"></i>', bClass = 'bg-gray-200 border-gray-300', bTitle = 'Fan';
+            let bIcon = '<i class="fa-solid fa-football text-slate-500 text-sm"></i>', bClass = 'bg-slate-100 border-slate-300 shadow-sm', bTitle = 'Fan (0+ Likes)';
             if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; bClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; bTitle = 'Hall of Fame'; }
             else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
             else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
@@ -806,7 +688,9 @@
                 html: `
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2 cursor-pointer group" onclick="window.openUserProfile(event, '${post.authorId}')" title="View Profile">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${bClass}" title="${bTitle}">${bIcon}</div>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${bClass}" title="${bTitle}">
+                                ${bIcon}
+                            </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors">@${post.authorUsername}</h4>
                                 <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
@@ -837,12 +721,9 @@
             const sharedPostGuestHeader = document.getElementById('sharedPostGuestHeader');
             const feedControls = document.getElementById('feedControls');
 
-            if (!feedContainer) return;
-
             const urlParams = new URLSearchParams(window.location.search);
             const targetPostId = urlParams.get('post');
 
-            // --- GUEST SHARED POST MODE ---
             if (targetPostId && !currentUser) {
                 const post = currentPosts.find(p => p.postId === targetPostId);
                 if (post) {
@@ -859,7 +740,6 @@
                 }
             }
 
-            // --- STANDARD MODE ---
             sharedPostGuestHeader.classList.add('hidden');
             sharedPostGuestContainer.classList.add('hidden');
             sharedPostGuestCTA.classList.add('hidden');
@@ -867,7 +747,7 @@
             feedControls.classList.remove('hidden');
 
             feedContainer.innerHTML = '';
-            if (currentPosts.length === 0) { feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet.</div>`; return; }
+            if (currentPosts.length === 0) { feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`; return; }
             
             let postsToRender = [...currentPosts];
             const filterElem = document.getElementById('feedTeamFilter');
@@ -875,17 +755,15 @@
             const scopeElem = document.getElementById('feedScope');
             const scope = scopeElem ? scopeElem.value : 'global';
 
-            // --- "FOLLOWING" FEED LOGIC ---
             if (scope === 'following') {
                 if (!currentUser || !currentUserProfile) {
-                    // Logged out but somehow switched to following? Only show admin.
                     postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
                 } else {
                     const followingList = currentUserProfile.following || [];
                     postsToRender = postsToRender.filter(p => 
-                        p.authorUsername === 'PAHSFOOTBALL' || // Admin Override (Always show)
-                        p.authorId === currentUser.uid ||      // Show own posts
-                        followingList.includes(p.authorId)     // Show followed users
+                        p.authorUsername === 'PAHSFOOTBALL' || 
+                        p.authorId === currentUser.uid ||      
+                        followingList.includes(p.authorId)     
                     );
                 }
             }
@@ -934,7 +812,6 @@
             }
         };
 
-        // BUTTON ACTIONS
         window.openCreatePostModal = () => { document.getElementById('createPostModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('createPostModalOverlay').classList.add('active'), 10); };
         window.closeCreatePostModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('createPostModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('createPostModalOverlay').style.display='none', 300); } };
         
@@ -943,79 +820,12 @@
             if(!content || content.length > 500 || containsProhibitedDomain(content)) return alert("Invalid post content.");
             const team1 = document.getElementById('teamTagInput').value.trim();
             const team2 = document.getElementById('teamTagInput2').value.trim();
-            
-            const btn = document.getElementById('submitPostBtn'); 
-            const origText = btn.innerText;
-            btn.innerText = "Posting..."; 
-            btn.disabled = true;
-
-            const username = currentUserProfile ? currentUserProfile.username : "Fan";
-            
-            let finalTeamTag = "";
-            if (team1 !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === team1.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid team tag. Please select a valid team from the dropdown list."); }
-            }
-            
-            let finalTeamTag2 = "";
-            if (team2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === team2.toLowerCase());
-                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list."); }
-            }
-
-            try {
-                const newRef = push(ref(dbRealtime, 'fanzone_posts'));
-                await set(newRef, { 
-                    authorId: currentUser.uid, 
-                    authorUsername: username, 
-                    content: filterProfanity(content), 
-                    taggedTeam: finalTeamTag, 
-                    taggedTeam2: finalTeamTag2, 
-                    timestamp: new Date().toISOString() 
-                });
-                document.getElementById('postContent').value = ''; 
-                document.getElementById('teamTagInput').value = '';
-                document.getElementById('teamTagInput2').value = '';
-                window.closeCreatePostModal(null, true); 
-            } catch (err) {
-                console.error(err);
-                alert("Failed to post.");
-            } finally {
-                btn.innerText = origText; 
-                btn.disabled = false;
-            }
+            const btn = document.getElementById('submitPostBtn'); btn.disabled = true;
+            const newRef = push(ref(dbRealtime, 'fanzone_posts'));
+            await set(newRef, { authorId: currentUser.uid, authorUsername: currentUserProfile.username, content: filterProfanity(content), taggedTeam: team1, taggedTeam2: team2, timestamp: new Date().toISOString() });
+            document.getElementById('postContent').value = ''; window.closeCreatePostModal(null, true); btn.disabled = false;
         };
 
-        window.toggleLike = async (e, id) => {
-            if(e) e.stopPropagation(); if(!currentUser) return alert("Log in to like posts!");
-            const post = currentPosts.find(p => p.postId === id);
-            const hasLiked = post.likes.includes(currentUser.uid);
-            const likeRef = ref(dbRealtime, `fanzone_posts/${id}/likes/${currentUser.uid}`);
-            if (hasLiked) await remove(likeRef); else await set(likeRef, true);
-        };
-
-        window.sharePost = (e, id) => {
-            if(e) e.stopPropagation();
-            const url = window.location.origin + window.location.pathname + "?post=" + id;
-            if (navigator.share) navigator.share({ title: 'Fan Zone Post', url: url });
-            else { navigator.clipboard.writeText(url); alert("Link copied!"); }
-        };
-
-        window.openPostModal = (id) => {
-            const post = currentPosts.find(p => p.postId === id);
-            if (!post || !currentUser) return;
-            window.history.replaceState({}, '', window.location.pathname + "?post=" + id);
-            const data = buildPostHTML(post, true);
-            document.getElementById('postModalBody').innerHTML = data.html;
-            document.getElementById('postModalOverlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('postModalOverlay').classList.add('active'), 10);
-        };
-
-        window.closePostModal = (e, f) => { if(f || e.target.id.includes('Overlay')) { window.history.replaceState({}, '', window.location.pathname); document.getElementById('postModalOverlay').classList.remove('active'); setTimeout(() => document.getElementById('postModalOverlay').style.display='none', 300); } };
-
-        // EDIT & DELETE LOGIC
         window.openEditModal = (e, id) => {
             e.stopPropagation(); window.currentEditPostId = id;
             const p = currentPosts.find(x => x.postId === id);
@@ -1032,42 +842,8 @@
             const c = document.getElementById('editPostContent').value.trim();
             const t1 = document.getElementById('editTeamTagInput').value.trim();
             const t2 = document.getElementById('editTeamTagInput2').value.trim();
-            
-            if(!c || c.length > 500 || containsProhibitedDomain(c)) return alert("Invalid post content.");
-
-            const btn = document.getElementById('submitEditBtn');
-            const origText = btn.innerText;
-            btn.innerText = "Saving..."; 
-            btn.disabled = true;
-
-            let finalTeamTag = "";
-            if (t1 !== "") {
-                const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === t1.toLowerCase());
-                if (matchedTeam) finalTeamTag = matchedTeam;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid team tag. Please select a valid team from the dropdown list."); }
-            }
-            
-            let finalTeamTag2 = "";
-            if (t2 !== "") {
-                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === t2.toLowerCase());
-                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
-                else { btn.innerText = origText; btn.disabled = false; return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list."); }
-            }
-
-            try {
-                await update(ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId), { 
-                    content: filterProfanity(c), 
-                    taggedTeam: finalTeamTag, 
-                    taggedTeam2: finalTeamTag2 
-                });
-                window.closeEditModal(null, true);
-            } catch (err) {
-                console.error("Edit error:", err);
-                alert("Failed to update.");
-            } finally {
-                btn.innerText = origText;
-                btn.disabled = false;
-            }
+            await update(ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId), { content: filterProfanity(c), taggedTeam: t1, taggedTeam2: t2 });
+            window.closeEditModal(null, true);
         };
 
         window.deletePost = (e, id) => { e.stopPropagation(); window.currentDeletePostId = id; document.getElementById('deleteModalOverlay').style.display = 'flex'; setTimeout(() => document.getElementById('deleteModalOverlay').classList.add('active'), 10); };
@@ -1099,9 +875,6 @@
             fetch('https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse', { method: 'POST', mode: 'no-cors', body: params });
             alert("Report sent to admins!"); window.closeReportModal(null, true);
         };
-
-        window.openExternalLink = (e, url) => { e.stopPropagation(); document.getElementById('warningUrlText').innerText = url; document.getElementById('continueLinkBtn').href = url; document.getElementById('linkWarningModal').style.display = 'flex'; setTimeout(() => document.getElementById('linkWarningModal').classList.add('active'), 10); };
-        window.closeLinkWarning = (e, f) => { if(f || e.target.id.includes('Overlay')) { document.getElementById('linkWarningModal').classList.remove('active'); setTimeout(() => document.getElementById('linkWarningModal').style.display='none', 300); } };
     </script>
 </body>
 </html>
