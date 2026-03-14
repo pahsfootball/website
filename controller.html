@@ -166,7 +166,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -188,11 +188,13 @@
         let myTeamObj = null;
         let oppTeamObj = null;
 
+        // --- HELPER TO SCRUB ASTERISKS FROM CSV DATA ---
         function cleanText(str) {
             if (!str) return "";
             return str.replace(/\*/g, '').trim(); 
         }
 
+        // --- LOAD DIRECTORY CSV ---
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         
         Papa.parse(MASTER_TEAMS_CSV, {
@@ -219,6 +221,7 @@
             }
         });
 
+        // --- AUTH & ADMIN CHECK ---
         onAuthStateChanged(auth, async (user) => {
             const loading = document.getElementById('loadingState');
             const denied = document.getElementById('deniedState');
@@ -254,22 +257,79 @@
             }
         });
 
-        function initDashboard() {
+        // --- INIT DASHBOARD LOGIC (WITH PRE-FILL) ---
+        async function initDashboard() {
+            // 1. Find Admin's Team in Directory
             myTeamObj = directoryData.find(t => t.school.toLowerCase() === adminTeamName.toLowerCase());
+            
             if (myTeamObj && myTeamObj.logo) {
                 const logoEl = document.getElementById('myTeamLogo');
                 logoEl.src = myTeamObj.logo;
                 document.getElementById('myTeamLogoContainer').classList.remove('hidden');
             }
-            updateLocationFields();
+
+            // 2. FETCH EXISTING GAME DATA FROM FIREBASE
+            const safeKey = adminTeamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            try {
+                const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
+                const existingData = snapshot.val();
+
+                if (existingData) {
+                    // Populate the form fields with existing data
+                    document.getElementById('myTeamRecord').value = existingData.yourTeamRecord || "";
+                    document.getElementById('oppSelect').value = existingData.opponent || "";
+                    document.getElementById('oppRecord').value = existingData.oppRecord || "";
+                    document.getElementById('gameDate').value = existingData.date || "";
+                    document.getElementById('gameTime').value = existingData.time || "";
+                    document.getElementById('gameTheme').value = existingData.theme === "No Theme" ? "" : (existingData.theme || "");
+
+                    // Find opponent object for location switching later
+                    if (existingData.opponent) {
+                        oppTeamObj = directoryData.find(t => t.school.toLowerCase() === existingData.opponent.toLowerCase());
+                    }
+
+                    // Handle Location Radio Buttons
+                    const locType = existingData.homeAway || "Home";
+                    if (locType === "Home") document.getElementById('locHome').checked = true;
+                    else if (locType === "Away") document.getElementById('locAway').checked = true;
+                    else if (locType === "Neutral") document.getElementById('locNeutral').checked = true;
+
+                    // Populate custom location fields directly (important for preserving custom neutral sites)
+                    document.getElementById('stadiumName').value = existingData.stadium || "";
+                    document.getElementById('stadiumAddress').value = existingData.address || "";
+
+                    // Set read-only states appropriately
+                    if (locType !== 'Neutral') {
+                        document.getElementById('stadiumName').setAttribute('readonly', true);
+                        document.getElementById('stadiumAddress').setAttribute('readonly', true);
+                    } else {
+                        document.getElementById('stadiumName').removeAttribute('readonly');
+                        document.getElementById('stadiumAddress').removeAttribute('readonly');
+                    }
+
+                    // Change button text to indicate an update
+                    document.getElementById('submitGameBtn').innerText = "Update Game Day";
+
+                } else {
+                    // If no existing data, default to Home location logic
+                    updateLocationFields();
+                }
+            } catch (err) {
+                console.error("Error fetching existing config:", err);
+                updateLocationFields(); // Fallback
+            }
         }
 
+        // --- OPPONENT SELECTION LISTENER ---
         document.getElementById('oppSelect').addEventListener('input', function(e) {
             const selectedSchool = e.target.value.trim();
             oppTeamObj = directoryData.find(t => t.school.toLowerCase() === selectedSchool.toLowerCase());
+            
+            // Auto-trigger location update in case "Away" is selected
             updateLocationFields();
         });
 
+        // --- LOCATION RADIO LISTENER ---
         document.querySelectorAll('input[name="locationType"]').forEach(radio => {
             radio.addEventListener('change', updateLocationFields);
         });
@@ -298,19 +358,24 @@
             }
         }
 
+        // --- SUBMIT GAME DAY CONFIG TO FIREBASE ---
         document.getElementById('matchupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitGameBtn');
             const msg = document.getElementById('statusMessage');
+            const isUpdate = btn.innerText.includes("Update");
             
-            btn.innerText = "Publishing...";
+            btn.innerText = isUpdate ? "Updating..." : "Publishing...";
             btn.disabled = true;
             btn.classList.add('opacity-70');
 
             const oppName = document.getElementById('oppSelect').value.trim();
             if (!oppName) {
                 alert("Please select an opponent.");
-                btn.innerText = "Publish Game Day"; btn.disabled = false; btn.classList.remove('opacity-70'); return;
+                btn.innerText = isUpdate ? "Update Game Day" : "Publish Game Day"; 
+                btn.disabled = false; 
+                btn.classList.remove('opacity-70'); 
+                return;
             }
 
             const payload = {
@@ -337,11 +402,12 @@
             };
 
             try {
+                // 1. Save Matchup to 'gameday_config'
                 const safeKey = adminTeamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const configRef = ref(dbRealtime, 'gameday_config/' + safeKey);
                 await set(configRef, payload);
 
-                // --- CRITICAL FIX: "Neutral" now treats the Admin's team as Home ---
+                // 2. Initialize the Scoreboard to 0-0 in 'live_scores'
                 const isHome = payload.homeAway.toLowerCase() !== 'away'; 
                 
                 const hName = (isHome ? payload.yourTeam : payload.opponent).replace(/[^a-zA-Z0-9]/g, '');
@@ -359,13 +425,13 @@
                     quarter: "PREGAME"
                 });
 
-                msg.innerText = "Game Day Published Successfully!";
+                msg.innerText = isUpdate ? "Game Day Updated Successfully!" : "Game Day Published Successfully!";
                 msg.classList.replace('text-red-500', 'text-green-500');
                 msg.classList.remove('hidden');
 
                 setTimeout(() => {
                     msg.classList.add('hidden');
-                    btn.innerText = "Publish Game Day";
+                    btn.innerText = "Update Game Day"; // Stays as Update after first publish
                     btn.disabled = false;
                     btn.classList.remove('opacity-70');
                 }, 3000);
@@ -376,7 +442,7 @@
                 msg.classList.replace('text-green-500', 'text-red-500');
                 msg.classList.remove('hidden');
                 
-                btn.innerText = "Publish Game Day";
+                btn.innerText = isUpdate ? "Update Game Day" : "Publish Game Day";
                 btn.disabled = false;
                 btn.classList.remove('opacity-70');
             }
