@@ -48,13 +48,6 @@
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
         }
-
-        .pulse-live { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red {
-            0% { transform: scale(0.95); opacity: 0.9; }
-            50% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.9; }
-        }
     </style>
 </head>
 <body class="antialiased selection:bg-pahs-gold selection:text-black">
@@ -71,16 +64,15 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4 w-full md:w-auto">
                     <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
-                        <span class="text-sm font-bold font-head text-lg pt-0.5">BACK</span>
+                        <i class="fa-solid fa-house text-xs"></i>
+                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Home</span>
                     </a>
-                    <h1 class="text-3xl font-bold font-head text-white tracking-wide uppercase">Statewide <span class="text-pahs-gold">Teams</span></h1>
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-list-ol text-xs"></i>
+                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Scores</span>
+                    </a>
                 </div>
-
-                <a href="all-scores.html" class="flex items-center justify-center gap-3 bg-pahs-gold text-black px-6 py-2 rounded-full font-head text-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-lg hover:scale-105 w-full md:w-auto">
-                    <i class="fa-solid fa-tower-broadcast pulse-live text-red-600"></i>
-                    SEE PAHSFOOTBALL SCORES & LIVE GAMES
-                </a>
+                <h1 class="text-3xl font-bold font-head text-white tracking-wide uppercase hidden md:block">Statewide <span class="text-pahs-gold">Teams</span></h1>
             </div>
 
             <div class="relative w-full group">
@@ -273,7 +265,6 @@
         </div>
     </div>
 </div>
-
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
