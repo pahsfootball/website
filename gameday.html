@@ -371,13 +371,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // *** REPLACE THIS URL IF YOU CREATED A NEW DEPLOYMENT ***
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
-        
-        // This is the URL connecting to your new Fan Zone App Script
-        const FAN_ZONE_API_URL = "https://script.google.com/macros/s/AKfycbxjTtDJqrj5i3IN30y24xmUoguXdlXUbF3V80rimYHz8aIv5hPZfmil98iUje-tB24i/exec";
 
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
 
@@ -443,7 +440,7 @@
             });
         }
 
-        // *** PROFANITY FILTER ADDED HERE ***
+        // *** PROFANITY FILTER ***
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
             let filteredText = text;
@@ -480,71 +477,65 @@
             });
         }
 
-        // --- FETCH EMBEDDED FAN ZONE POSTS ---
-        async function fetchEmbeddedPosts(homeTeam, awayTeam) {
+        // --- FETCH EMBEDDED FAN ZONE POSTS (FIREBASE) ---
+        function listenToEmbeddedPosts(homeTeam, awayTeam) {
             const container = document.getElementById('embedFeedContainer');
+            const postsRef = ref(dbRealtime, 'fanzone_posts');
             
-            try {
-                // Fetch the posts
-                const response = await fetch(FAN_ZONE_API_URL + "?t=" + new Date().getTime(), { cache: 'no-store' });
-                const rawText = await response.text(); 
-                const data = JSON.parse(rawText);
+            onValue(postsRef, (snapshot) => {
+                const data = snapshot.val();
+                let filteredPosts = [];
                 
-                if (data.status === "success" && data.data && data.data.length > 0) {
-                    
-                    // Filter down to only posts that tag the Home OR Away team
-                    const filteredPosts = data.data.filter(post => {
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const post = data[key];
                         const tag = post.taggedTeam || "";
-                        return (homeTeam && tag.toLowerCase() === homeTeam.toLowerCase()) || 
-                               (awayTeam && tag.toLowerCase() === awayTeam.toLowerCase());
+                        if ((homeTeam && tag.toLowerCase() === homeTeam.toLowerCase()) || 
+                            (awayTeam && tag.toLowerCase() === awayTeam.toLowerCase())) {
+                            filteredPosts.push(post);
+                        }
                     });
-
-                    // Sort newest first
-                    filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-                    // Show top 3 max
-                    const postsToRender = filteredPosts.slice(0, 3);
-
-                    if (postsToRender.length === 0) {
-                        container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
-                        return;
+                }
+                
+                if (filteredPosts.length === 0) {
+                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
+                    return;
+                }
+                
+                // Sort newest first
+                filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Limit to 3
+                const postsToRender = filteredPosts.slice(0, 3);
+                
+                container.innerHTML = '';
+                
+                postsToRender.forEach(post => {
+                    let timeString = "Recently";
+                    if (post.timestamp) {
+                        const date = new Date(post.timestamp);
+                        timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     }
 
-                    container.innerHTML = ''; // clear loader
-
-                    postsToRender.forEach(post => {
-                        let timeString = "Recently";
-                        if (post.timestamp) {
-                            const date = new Date(post.timestamp);
-                            timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        }
-
-                        const safeContent = linkify(escapeHTML(post.content));
-                        
-                        const postCard = document.createElement('div');
-                        postCard.className = "embed-post-card rounded-xl p-4 shadow-sm mb-3";
-                        postCard.innerHTML = `
-                            <div class="flex items-center gap-2 mb-1.5">
-                                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                                    <i class="fa-solid fa-user text-gray-400 text-xs"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-800 leading-none text-xs font-body">@${post.authorUsername}</h4>
-                                    <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
-                                </div>
+                    const safeContent = linkify(escapeHTML(post.content));
+                    
+                    const postCard = document.createElement('div');
+                    postCard.className = "embed-post-card rounded-xl p-4 shadow-sm mb-3";
+                    postCard.innerHTML = `
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                <i class="fa-solid fa-user text-gray-400 text-xs"></i>
                             </div>
-                            <div class="text-gray-700 font-body text-sm leading-relaxed whitespace-pre-wrap break-words">${safeContent}</div>
-                        `;
-                        container.appendChild(postCard);
-                    });
-
-                } else {
-                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
-                }
-            } catch (err) {
-                console.error("Error loading embedded feed:", err);
-                container.innerHTML = `<div class="text-center py-6 text-red-500 font-body text-sm font-bold">Could not load community feed.</div>`;
-            }
+                            <div>
+                                <h4 class="font-bold text-gray-800 leading-none text-xs font-body">@${post.authorUsername}</h4>
+                                <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                            </div>
+                        </div>
+                        <div class="text-gray-700 font-body text-sm leading-relaxed whitespace-pre-wrap break-words">${safeContent}</div>
+                    `;
+                    container.appendChild(postCard);
+                });
+            });
         }
 
 
@@ -716,6 +707,7 @@
             }
         };
 
+        // --- FIREBASE SUBMIT SCORE TO FANZONE ---
         window.submitSharedScore = async function() {
             const btn = document.getElementById('submitShareScoreBtn');
             const content = document.getElementById('shareScoreContent').value.trim();
@@ -730,35 +722,20 @@
             const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
             const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
 
-            const payload = { 
-                action: "add_post", 
-                authorId: auth.currentUser.uid, 
-                authorUsername: username, 
-                content: cleanContent, 
-                taggedTeam: teamToTag 
-            };
-
             try {
-                const response = await fetch(FAN_ZONE_API_URL, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                    body: JSON.stringify(payload) 
+                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
+                await set(newPostRef, {
+                    authorId: auth.currentUser.uid,
+                    authorUsername: username,
+                    content: cleanContent,
+                    taggedTeam: teamToTag,
+                    timestamp: new Date().toISOString()
                 });
-                const rawText = await response.text();
-                try {
-                    const data = JSON.parse(rawText);
-                    if(data.status === "success") {
-                        window.closeShareScoreModal(null, true);
-                        // Refresh the embed feed to show their new post
-                        if (window.currentMatchupData) {
-                            fetchEmbeddedPosts(window.currentMatchupData.yourTeam, window.currentMatchupData.opponent);
-                        }
-                        alert("Score shared to the Fan Zone successfully!");
-                    } else {
-                        alert("Database Error: " + data.message);
-                    }
-                } catch(e) { alert("Permissions Error."); }
+                
+                window.closeShareScoreModal(null, true);
+                alert("Score shared to the Fan Zone successfully!");
             } catch (error) { 
+                console.error(error);
                 alert("Failed to communicate with server."); 
             } finally {
                 btn.innerText = "Post to Fan Zone";
@@ -777,6 +754,7 @@
             const statusBadge = document.getElementById('sb-status');
             const liveDot = document.getElementById('sb-live-dot');
             const updaterText = document.getElementById('sb-updated-by');
+            const sbClock = document.getElementById('sb-clock');
 
             onValue(ref(dbRealtime, 'live_scores/' + gameKey), (snapshot) => {
                 document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
@@ -801,7 +779,7 @@
                 if (data) {
                     document.getElementById('sb-home-score').innerText = data.homeScore || 0;
                     document.getElementById('sb-away-score').innerText = data.awayScore || 0;
-                    document.getElementById('sb-clock').innerText = data.clock || "12:00";
+                    sbClock.innerText = data.clock || "12:00";
                     updaterText.innerText = data.updatedBy ? `@${data.updatedBy}` : "System";
 
                     hFall.innerText = (data.home || "HOM").substring(0,3).toUpperCase();
@@ -834,17 +812,21 @@
                         liveDot.className = "w-3 h-3 rounded-full bg-pahs-gold"; 
                         sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
+                        sbClock.style.display = '';
                     } else if (qtr === "HALF") {
                         statusBadge.innerText = "HALFTIME"; statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
+                        sbClock.style.display = '';
                     } else if (qtr === "FINAL" || data.status === "FINAL") {
                         statusBadge.innerText = "FINAL"; statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
+                        sbClock.style.display = 'none'; // HIDES CLOCK ENTIRELY ON FINAL
                     } else {
                         statusBadge.innerText = "QTR " + qtr; statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                        sbClock.style.display = '';
                     }
                 }
             });
@@ -1049,13 +1031,8 @@
 
                 listenToLiveScore(game);
                 
-                // TRIGGER EMBEDDED FAN ZONE
-                fetchEmbeddedPosts(game.yourTeam, game.opponent);
-                
-                // Silently update the feed every 60 seconds
-                setInterval(() => {
-                    fetchEmbeddedPosts(game.yourTeam, game.opponent);
-                }, 60000);
+                // TRIGGER EMBEDDED FAN ZONE VIA FIREBASE
+                listenToEmbeddedPosts(game.yourTeam, game.opponent);
 
             } catch (error) {
                 console.error(error);
