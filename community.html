@@ -116,7 +116,7 @@
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
             </h3>
-            <div class="flex flex-wrap items-center gap-2 self-end">
+            <div class="flex items-center gap-2 self-end">
                 
                 <div class="relative flex items-center">
                     <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
@@ -124,11 +124,6 @@
                         <i class="fa-solid fa-circle-xmark text-sm"></i>
                     </button>
                 </div>
-
-                <select id="feedScope" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-blue-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-blue-500 transition-colors">
-                    <option value="global">Global Feed</option>
-                    <option value="following">Following</option>
-                </select>
                 
                 <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
                     <option value="newest">Latest</option>
@@ -180,35 +175,6 @@
                         Post
                     </button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="userProfileModalOverlay" class="modal-overlay" onclick="closeUserProfileModal(event)">
-        <div class="modal-content border-t-8 border-pahs-gold">
-            <button onclick="closeUserProfileModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
-            
-            <div class="p-8 text-center bg-white relative">
-                <div id="upm-badge-container" class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-md mb-4 text-4xl">
-                    <i class="fa-solid fa-user text-gray-400"></i>
-                </div>
-                <h3 id="upm-username" class="font-head text-4xl uppercase tracking-wide text-gray-900 leading-none">@User</h3>
-                <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Fan (0 Points)</p>
-                
-                <div class="text-left bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">About Me</p>
-                    <p id="upm-about" class="text-sm text-gray-800 font-body leading-relaxed">Loading bio...</p>
-                </div>
-
-                <div class="text-left">
-                    <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Followed Teams</p>
-                    <div id="upm-teams" class="flex flex-wrap gap-2">
-                        </div>
-                </div>
-
-                <button id="upm-follow-btn" style="display:none;" class="w-full bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow-md mt-6">
-                    <i class="fa-solid fa-user-plus mr-1"></i> Follow User
-                </button>
             </div>
         </div>
     </div>
@@ -346,7 +312,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // *** GOOGLE FORM FOR REPORTING ONLY ***
@@ -379,7 +345,6 @@
         let initialDeepLinkChecked = false;
         
         window.authorPointsCache = {}; // Local Dynamic Points Calculator
-        window.userCache = {}; // Profile cache
 
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
@@ -528,10 +493,7 @@
                 loginPrompt.classList.add('hidden');
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        currentUserProfile = userDoc.data();
-                        window.userCache[user.uid] = currentUserProfile; // Cache self
-                    }
+                    if (userDoc.exists()) currentUserProfile = userDoc.data();
                 } catch(e) {}
             } else {
                 currentUser = null;
@@ -567,7 +529,7 @@
         function startFirebaseListener() {
             const postsRef = ref(dbRealtime, 'fanzone_posts');
             
-            onValue(postsRef, async (snapshot) => {
+            onValue(postsRef, (snapshot) => {
                 const loader = document.getElementById('feedLoading');
                 if (loader) loader.style.display = 'none';
                 
@@ -591,20 +553,6 @@
                             window.authorPointsCache[post.authorId] = (window.authorPointsCache[post.authorId] || 0) + likesArray.length;
                         }
                     });
-
-                    // --- NEW: PRE-FETCH UNKNOWN USERS FOR PROFILES ---
-                    const uniqueUids = [...new Set(currentPosts.map(p => p.authorId))];
-                    const fetchPromises = uniqueUids.map(async (uid) => {
-                        if (!window.userCache[uid] && uid) {
-                            try {
-                                const uSnap = await getDoc(doc(db, "users", uid));
-                                window.userCache[uid] = uSnap.exists() ? uSnap.data() : { points: 0 };
-                            } catch(e) { window.userCache[uid] = { points: 0 }; }
-                        }
-                    });
-                    
-                    // Wait for all unseen profiles to load so we don't render blank badges
-                    await Promise.all(fetchPromises);
                 }
                 
                 window.renderFeed();
@@ -624,122 +572,6 @@
         }
         
         startFirebaseListener();
-
-
-        // *** OPEN USER PROFILE MODAL ***
-        window.openUserProfile = async function(e, authorId) {
-            if(e) e.stopPropagation();
-
-            const modal = document.getElementById('userProfileModalOverlay');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('active'), 10);
-
-            // Set loading states
-            document.getElementById('upm-username').innerText = "Loading...";
-            document.getElementById('upm-rank').innerText = "...";
-            document.getElementById('upm-about').innerText = "...";
-            document.getElementById('upm-teams').innerHTML = "";
-            document.getElementById('upm-follow-btn').style.display = 'none';
-
-            try {
-                let userData = window.userCache[authorId];
-                
-                // Fetch from Firestore if we don't have the full profile in cache yet
-                if (!userData || typeof userData.followedTeams === 'undefined') {
-                    const uSnap = await getDoc(doc(db, "users", authorId));
-                    if(uSnap.exists()) {
-                        userData = uSnap.data();
-                        window.userCache[authorId] = userData; // Save to cache
-                    } else {
-                        userData = { username: "Unknown", followedTeams: [], aboutMe: "This user does not have a profile set up yet." };
-                    }
-                }
-
-                // Rank Logic
-                const pts = window.authorPointsCache[authorId] || 0;
-                let bIcon = '<i class="fa-solid fa-user text-gray-400"></i>', bClass = 'bg-gray-100 border-gray-300', bTitle = 'Fan';
-                if (pts >= 500) { bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; bClass = 'bg-yellow-50 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]'; bTitle = 'Hall of Fame'; }
-                else if (pts >= 150) { bIcon = '<i class="fa-solid fa-trophy text-orange-400"></i>'; bClass = 'bg-orange-50 border-orange-300'; bTitle = 'All-State'; }
-                else if (pts >= 50) { bIcon = '<i class="fa-solid fa-star text-gray-400"></i>'; bClass = 'bg-gray-100 border-gray-300'; bTitle = 'Varsity'; }
-                else if (pts >= 10) { bIcon = '<i class="fa-solid fa-bullhorn text-amber-700"></i>'; bClass = 'bg-amber-50 border-amber-200'; bTitle = 'Super Fan'; }
-
-                const badgeContainer = document.getElementById('upm-badge-container');
-                badgeContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center border-4 shadow-md mb-4 text-4xl ${bClass}`;
-                badgeContainer.innerHTML = bIcon;
-
-                document.getElementById('upm-username').innerText = '@' + (userData.username || 'Unknown');
-                document.getElementById('upm-rank').innerText = `${bTitle} (${pts} Points)`;
-                document.getElementById('upm-about').innerText = userData.aboutMe || "This user hasn't added a bio yet.";
-
-                const teamsContainer = document.getElementById('upm-teams');
-                if (userData.followedTeams && userData.followedTeams.length > 0) {
-                    teamsContainer.innerHTML = userData.followedTeams.map(t => `<span class="bg-gray-200 text-xs px-2 py-1 rounded font-bold">${t}</span>`).join(' ');
-                } else {
-                    teamsContainer.innerHTML = `<span class="text-xs text-gray-500 italic">No teams followed.</span>`;
-                }
-
-                // Setup Follow Button
-                const followBtn = document.getElementById('upm-follow-btn');
-                if (!currentUser || currentUser.uid === authorId) {
-                    followBtn.style.display = 'none';
-                } else {
-                    followBtn.style.display = 'block';
-                    followBtn.disabled = false;
-                    
-                    const myFollowing = (window.currentUserProfile && window.currentUserProfile.following) ? window.currentUserProfile.following : [];
-                    const isFollowing = myFollowing.includes(authorId);
-
-                    if (isFollowing) {
-                        followBtn.innerHTML = `<i class="fa-solid fa-user-minus mr-1"></i> Unfollow`;
-                        followBtn.className = "w-full bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow-md mt-6";
-                        followBtn.onclick = () => window.toggleFollow(authorId, false);
-                    } else {
-                        followBtn.innerHTML = `<i class="fa-solid fa-user-plus mr-1"></i> Follow User`;
-                        followBtn.className = "w-full bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow-md mt-6";
-                        followBtn.onclick = () => window.toggleFollow(authorId, true);
-                    }
-                }
-            } catch(err) {
-                console.error(err);
-                document.getElementById('upm-username').innerText = "Error loading profile";
-            }
-        };
-
-        window.closeUserProfileModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'userProfileModalOverlay')) {
-                const overlay = document.getElementById('userProfileModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            }
-        };
-
-        window.toggleFollow = async function(targetUid, isFollowingNow) {
-            if (!currentUser || !window.currentUserProfile) return;
-
-            const myRef = doc(db, "users", currentUser.uid);
-            const btn = document.getElementById('upm-follow-btn');
-            btn.disabled = true;
-            btn.innerText = "Updating...";
-
-            try {
-                if (isFollowingNow) {
-                    await updateDoc(myRef, { following: arrayUnion(targetUid) });
-                    if(!window.currentUserProfile.following) window.currentUserProfile.following = [];
-                    window.currentUserProfile.following.push(targetUid);
-                } else {
-                    await updateDoc(myRef, { following: arrayRemove(targetUid) });
-                    window.currentUserProfile.following = window.currentUserProfile.following.filter(id => id !== targetUid);
-                }
-                
-                // Re-render modal and feed to show updated status
-                window.openUserProfile(null, targetUid);
-                window.renderFeed(); 
-            } catch(err) {
-                console.error(err);
-                btn.disabled = false;
-                btn.innerText = "Error";
-            }
-        };
 
 
         // *** HTML TEMPLATE GENERATOR FOR POSTS ***
@@ -829,8 +661,6 @@
             
             let safeContent = escapeHTML(post.content);
             safeContent = linkify(safeContent);
-            
-            // --- NEW: User Tagging Detection ---
             safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
 
             let authorActionsHtml = '';
@@ -850,12 +680,12 @@
                 timestamp: postTime,
                 html: `
                     <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2 cursor-pointer group" onclick="window.openUserProfile(event, '${post.authorId}')" title="View Profile">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${badgeClass}" title="${badgeTitle}">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border ${badgeClass}" title="${badgeTitle}">
                                 ${badgeIcon}
                             </div>
                             <div>
-                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors">@${post.authorUsername}</h4>
+                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body">@${post.authorUsername}</h4>
                                 <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
                             </div>
                         </div>
@@ -888,40 +718,8 @@
         // *** RENDER POSTS TO SCREEN ***
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
-            const sharedPostContainer = document.getElementById('sharedPostGuestContainer');
-            const sharedPostGuestCTA = document.getElementById('sharedPostGuestCTA');
-            const sharedPostGuestHeader = document.getElementById('sharedPostGuestHeader');
-            const feedControls = document.getElementById('feedControls');
-
             if (!feedContainer) return;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetPostId = urlParams.get('post');
-
-            // --- GUEST SHARED POST MODE ---
-            if (targetPostId && !currentUser) {
-                const post = currentPosts.find(p => p.postId === targetPostId);
-                if (post) {
-                    feedContainer.classList.add('hidden');
-                    feedControls.classList.add('hidden');
-                    
-                    sharedPostGuestHeader.classList.remove('hidden');
-                    sharedPostGuestContainer.classList.remove('hidden');
-                    sharedPostGuestCTA.classList.remove('hidden');
-                    
-                    const postData = buildPostHTML(post, true);
-                    sharedPostGuestContainer.innerHTML = `<div class="post-card rounded-2xl p-6 bg-white border-2" style="border-color: ${postData.color}">${postData.html}</div>`;
-                    return;
-                }
-            }
-
-            // --- STANDARD MODE ---
-            sharedPostGuestHeader.classList.add('hidden');
-            sharedPostGuestContainer.classList.add('hidden');
-            sharedPostGuestCTA.classList.add('hidden');
-            feedContainer.classList.remove('hidden');
-            feedControls.classList.remove('hidden');
-
+            
             feedContainer.innerHTML = '';
             
             if (currentPosts.length === 0) {
@@ -932,23 +730,6 @@
             let postsToRender = [...currentPosts]; 
             
             const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
-            const scope = document.getElementById('feedScope') ? document.getElementById('feedScope').value : 'global';
-
-            // --- "FOLLOWING" FEED LOGIC ---
-            if (scope === 'following') {
-                if (!currentUser || !currentUserProfile) {
-                    // Logged out but somehow switched to following? Only show admin.
-                    postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
-                } else {
-                    const followingList = currentUserProfile.following || [];
-                    postsToRender = postsToRender.filter(p => 
-                        p.authorUsername === 'PAHSFOOTBALL' || // Admin Override (Always show)
-                        p.authorId === currentUser.uid ||      // Show own posts
-                        followingList.includes(p.authorId)     // Show followed users
-                    );
-                }
-            }
-
             if (filterTeam !== "") {
                 postsToRender = postsToRender.filter(post => {
                     const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
@@ -958,7 +739,7 @@
             }
 
             if (postsToRender.length === 0) {
-                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found in this view.</div>`;
+                feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found for this team.</div>`;
                 return;
             }
 
