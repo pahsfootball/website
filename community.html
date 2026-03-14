@@ -491,7 +491,6 @@
                 createBtn.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
-            startFirebaseListener(); 
         });
 
         // *** REFRESH BUTTON LISTENER ***
@@ -521,7 +520,9 @@
             const postsRef = ref(dbRealtime, 'fanzone_posts');
             
             onValue(postsRef, (snapshot) => {
-                document.getElementById('feedLoading').style.display = 'none';
+                const loader = document.getElementById('feedLoading');
+                if (loader) loader.style.display = 'none';
+                
                 currentPosts = [];
                 
                 const data = snapshot.val();
@@ -552,9 +553,13 @@
                 }
             }, (error) => {
                 console.error("Firebase read failed:", error);
-                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
+                const container = document.getElementById('feedContainer');
+                if (container) container.innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
             });
         }
+        
+        // Start listening to the database instantly on page load
+        startFirebaseListener();
 
 
         // *** HTML TEMPLATE GENERATOR FOR POSTS ***
@@ -659,6 +664,8 @@
         // *** RENDER POSTS TO SCREEN ***
         window.renderFeed = function() {
             const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) return;
+            
             feedContainer.innerHTML = '';
             
             if (currentPosts.length === 0) {
