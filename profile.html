@@ -45,10 +45,7 @@
         /* --- STATS & BADGE ROW --- */
         .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); }
         .badge-container { display: flex; align-items: center; }
-        
-        /* Adjusted badge-icon to let Tailwind handle the dynamic colors */
         .badge-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 15px; border-width: 2px; border-style: solid; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
         .badge-text { display: flex; flex-direction: column; }
         .badge-title { font-family: var(--font-head); font-size: 28px; text-transform: uppercase; line-height: 1; margin: 0; color: var(--text-main); }
         .badge-sub { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
@@ -173,7 +170,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayRemove, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -208,8 +205,36 @@
 
         let currentUserUid = null;
         let currentSavedUsername = ""; 
+        window.currentUserProfile = null; // Store globally for unfollow access
 
-        // ZERO-COST REALTIME POINTS CALCULATOR
+        // UNFOLLOW FUNCTION 
+        window.unfollowUser = async function(targetUid) {
+            if (!confirm("Are you sure you want to unfollow this user?")) return;
+            
+            const myRef = doc(db, "users", currentUserUid);
+            try {
+                // Update database
+                await updateDoc(myRef, { following: arrayRemove(targetUid) });
+                
+                // Update local memory
+                if(window.currentUserProfile && window.currentUserProfile.following) {
+                    window.currentUserProfile.following = window.currentUserProfile.following.filter(id => id !== targetUid);
+                }
+                
+                // Hide badge on screen
+                const badge = document.getElementById('follow-badge-' + targetUid);
+                if (badge) badge.remove();
+                
+                // Update number
+                const currentCount = parseInt(followingCount.innerText);
+                followingCount.innerText = currentCount - 1;
+                
+            } catch(err) {
+                console.error(err);
+                alert("Failed to unfollow. Check connection.");
+            }
+        };
+
         function loadRealtimePoints(uid) {
             const postsRef = ref(dbRealtime, 'fanzone_posts');
             onValue(postsRef, (snapshot) => {
@@ -226,9 +251,9 @@
                 
                 userPoints.innerText = totalLikes;
                 
-                let bIcon = '<i class="fa-solid fa-user text-gray-400"></i>';
-                let bClass = 'badge-icon bg-gray-100 border-gray-300';
-                let bTitle = 'Fan';
+                let bIcon = '<i class="fa-solid fa-football text-slate-500"></i>';
+                let bClass = 'badge-icon bg-slate-100 border-slate-300 shadow-sm';
+                let bTitle = 'Fan (0+ Likes)';
 
                 if (totalLikes >= 500) { 
                     bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; 
@@ -259,7 +284,6 @@
                 currentUserUid = user.uid;
                 displayEmail.innerText = user.email;
 
-                // Fetch dynamic points from RTDB instantly
                 loadRealtimePoints(currentUserUid);
 
                 try {
@@ -268,10 +292,10 @@
 
                     if (docSnap.exists()) {
                         const data = docSnap.data();
+                        window.currentUserProfile = data; 
                         
                         usernameInput.value = data.username || "";
                         currentSavedUsername = data.username || "";
-                        
                         aboutMeInput.value = data.aboutMe || "";
 
                         // TEAM WATCHLIST
@@ -294,13 +318,19 @@
                             followedUsersList.innerHTML = '<span class="text-xs text-gray-500">Loading members...</span>';
                             let followingHtml = '';
                             
-                            // Fetch usernames for the people they follow
                             for (const uid of followingArray) {
                                 try {
                                     const uSnap = await getDoc(doc(db, "users", uid));
                                     if (uSnap.exists()) {
                                         const uData = uSnap.data();
-                                        followingHtml += `<span class="inline-flex items-center bg-pahs-dark text-pahs-gold text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border border-pahs-gold">@${uData.username || 'Unknown'}</span>`;
+                                        const isPahs = uData.username && uData.username.toUpperCase() === 'PAHSFOOTBALL';
+                                        
+                                        // The Unfollow X Button (Hide if PAHSFOOTBALL)
+                                        const unfollowBtn = isPahs 
+                                            ? '' 
+                                            : `<button type="button" onclick="window.unfollowUser('${uid}')" class="ml-2 text-pahs-gold hover:text-white transition-colors" title="Unfollow"><i class="fa-solid fa-xmark"></i></button>`;
+                                        
+                                        followingHtml += `<span id="follow-badge-${uid}" class="inline-flex items-center bg-pahs-dark text-pahs-gold text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border border-pahs-gold">@${uData.username || 'Unknown'} ${unfollowBtn}</span>`;
                                     }
                                 } catch(e) { console.error(e); }
                             }
