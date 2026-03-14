@@ -3,137 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Day Controller - PAHSFootball</title>
+    <title>Game Day Controller | PAHS Football</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script>
-        tailwind.config = { theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } }, fontFamily: { head: ['Teko', 'sans-serif'], body: ['Inter', 'sans-serif'] } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' } },
+                    fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
+                }
+            }
+        }
     </script>
+
+    <style>
+        body { background-color: #e4e4e7; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
+        .input-box:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+        .input-box[readonly] { background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; border-color: #e5e7eb; }
+        .dashboard-card { background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 6px solid #fbbf24; overflow: hidden; }
+        
+        /* Custom Radio Buttons */
+        .loc-radio:checked + label { background-color: #0f0f0f; color: #fbbf24; border-color: #0f0f0f; }
+    </style>
 </head>
-<body class="bg-gray-200 min-h-screen text-gray-800 font-body p-4 md:p-8">
+<body class="antialiased pb-20">
 
-    <div id="auth-check" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-xl text-center mt-20 border-t-4 border-pahs-gold">
-        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-pahs-gold mb-4"></i>
-        <h2 class="text-2xl font-bold font-head tracking-wide uppercase" id="loading-title">Authenticating...</h2>
-        <p class="text-gray-500" id="loading-desc">Checking your admin permissions.</p>
-    </div>
-
-    <div id="admin-panel" class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-xl hidden border-t-4 border-pahs-gold">
-        <div class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6 gap-4">
-            <div class="flex items-center gap-3">
-                <a href="profile.html" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition"><i class="fa-solid fa-arrow-left"></i> Back</a>
-                <h1 class="text-3xl md:text-4xl font-bold font-head uppercase tracking-wide">Game Day Controller</h1>
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10 py-4 px-4 sm:px-8">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="profile.html" class="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Exit</span>
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-bold font-head tracking-wide uppercase">Admin Controller</h1>
             </div>
-            <span id="team-badge" class="bg-pahs-dark text-pahs-gold px-4 py-1.5 rounded font-bold uppercase tracking-widest text-sm shadow-md border border-pahs-gold">
-                Team: Loading...
-            </span>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-sliders text-pahs-gold"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        
+        <div id="loadingState" class="text-center py-20">
+            <i class="fa-solid fa-football fa-spin text-5xl text-pahs-gold mb-4"></i>
+            <h2 class="font-head text-3xl uppercase tracking-widest text-gray-700">Verifying Access...</h2>
         </div>
 
-        <form id="gameDataForm" class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                    <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-regular fa-calendar mr-2"></i> Game Info</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Week</label><input type="text" id="week" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="e.g., Week 1"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Date & Time</label><input type="datetime-local" id="dateTime" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Home or Away?</label>
-                        <select id="homeAway" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none">
-                            <option value="Home">Home</option>
-                            <option value="Away">Away</option>
-                        </select>
-                    </div>
-                </div>
+        <div id="deniedState" class="hidden text-center py-20 bg-white rounded-2xl shadow-lg border-t-4 border-red-500 mt-10">
+            <i class="fa-solid fa-lock text-6xl text-gray-300 mb-4"></i>
+            <h2 class="font-head text-4xl uppercase tracking-widest text-gray-900 mb-2">Access Denied</h2>
+            <p class="text-gray-600 font-body mb-6">You do not have manager privileges for any team.</p>
+            <a href="profile.html" class="bg-pahs-dark text-pahs-gold font-bold font-head text-xl py-3 px-8 rounded-lg uppercase tracking-wider">Return to Profile</a>
+        </div>
 
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                    <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-solid fa-helmet-safety mr-2"></i> Opponent Info</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Name</label><input type="text" id="opponent" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none" placeholder="e.g., Mount Carmel"></div>
-                    <div class="flex gap-4">
-                        <div class="flex-1"><label class="block text-sm font-bold text-gray-700 mb-1">Mascot</label><input type="text" id="oppMascot" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Record</label><input type="text" id="oppRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    </div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Opponent Logo URL</label><input type="url" id="oppLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+        <div id="adminDashboard" class="hidden space-y-6">
+            
+            <div class="bg-pahs-dark text-white rounded-xl p-6 shadow-lg flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Managing Team</p>
+                    <h2 id="managedTeamDisplay" class="font-head text-4xl text-pahs-gold tracking-wide m-0 leading-none">Loading...</h2>
                 </div>
-
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                    <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-solid fa-shield-halved mr-2"></i> Your Team</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Your Team Name</label><input type="text" id="yourTeam" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    <div class="flex gap-4">
-                        <div class="flex-1"><label class="block text-sm font-bold text-gray-700 mb-1">Your Mascot</label><input type="text" id="yourTeamMascot" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-1">Your Record</label><input type="text" id="yourTeamRecord" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    </div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Your Logo URL</label><input type="url" id="yourTeamLogo" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                <div id="myTeamLogoContainer" class="w-16 h-16 bg-white rounded-full flex items-center justify-center p-1 hidden border-2 border-pahs-gold">
+                    <img id="myTeamLogo" src="" class="w-full h-full object-contain rounded-full">
                 </div>
+            </div>
 
-                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                    <h3 class="font-bold font-head text-xl uppercase tracking-wide border-b border-gray-300 pb-2 text-pahs-dark"><i class="fa-solid fa-map-location-dot mr-2"></i> Logistics</h3>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Stadium Name</label><input type="text" id="stadium" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Full Address</label><input type="text" id="address" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Student Section Theme</label><input type="text" id="theme" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+            <form id="matchupForm" class="space-y-6">
+                
+                <div class="dashboard-card p-6 sm:p-8">
+                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-200 pb-2 mb-5 flex items-center gap-2">
+                        <span class="bg-pahs-gold text-black w-6 h-6 rounded-full inline-flex items-center justify-center text-sm">1</span> Select Matchup
+                    </h3>
                     
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Buy Tickets Link <span class="text-red-500 font-normal text-xs">(Requires Approval)</span></label>
-                        <div class="flex gap-2">
-                            <input type="url" id="ticketLink" class="w-full border border-gray-300 rounded p-2 bg-gray-200 text-gray-500 cursor-not-allowed outline-none" readonly placeholder="No approved link set">
-                            <button type="button" onclick="window.openTicketModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition shrink-0 text-sm shadow flex items-center justify-center">
-                                <i class="fa-solid fa-paper-plane mr-1.5"></i> Request
-                            </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Your Team's Current Record</label>
+                            <input type="text" id="myTeamRecord" placeholder="e.g. 5-0" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg" required>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                            <label class="block text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Select Opponent</label>
+                            <div class="relative">
+                                <input type="text" id="oppSelect" list="teamDirectoryList" placeholder="🔍 Search opponent..." class="input-box w-full p-3 font-bold rounded-lg mb-3" required autocomplete="off">
+                                <datalist id="teamDirectoryList"></datalist>
+                            </div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Opponent's Record</label>
+                            <input type="text" id="oppRecord" placeholder="e.g. 4-1" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg" required>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-8 pt-6 border-t border-gray-300 flex flex-col items-center">
-                <button type="submit" id="submitBtn" class="bg-pahs-dark hover:bg-gray-800 text-pahs-gold font-bold font-head tracking-wider text-2xl py-3 px-12 rounded-lg shadow-lg transition duration-200 uppercase w-full md:w-auto border border-pahs-gold">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Push to Game Day Live
+                <div class="dashboard-card p-6 sm:p-8">
+                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-200 pb-2 mb-5 flex items-center gap-2">
+                        <span class="bg-pahs-gold text-black w-6 h-6 rounded-full inline-flex items-center justify-center text-sm">2</span> Game Info
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Date</label>
+                            <input type="date" id="gameDate" class="input-box w-full p-3 rounded-lg font-bold" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Time</label>
+                            <input type="time" id="gameTime" class="input-box w-full p-3 rounded-lg font-bold" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Theme (Optional)</label>
+                            <input type="text" id="gameTheme" placeholder="e.g. Blackout" class="input-box w-full p-3 rounded-lg font-bold">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card p-6 sm:p-8">
+                    <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-200 pb-2 mb-5 flex items-center gap-2">
+                        <span class="bg-pahs-gold text-black w-6 h-6 rounded-full inline-flex items-center justify-center text-sm">3</span> Location
+                    </h3>
+
+                    <div class="flex gap-2 mb-6">
+                        <div class="flex-1">
+                            <input type="radio" name="locationType" id="locHome" value="Home" class="loc-radio hidden" checked>
+                            <label for="locHome" class="block w-full text-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer font-bold text-gray-500 uppercase tracking-wider transition-colors hover:bg-gray-100">Home</label>
+                        </div>
+                        <div class="flex-1">
+                            <input type="radio" name="locationType" id="locAway" value="Away" class="loc-radio hidden">
+                            <label for="locAway" class="block w-full text-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer font-bold text-gray-500 uppercase tracking-wider transition-colors hover:bg-gray-100">Away</label>
+                        </div>
+                        <div class="flex-1">
+                            <input type="radio" name="locationType" id="locNeutral" value="Neutral" class="loc-radio hidden">
+                            <label for="locNeutral" class="block w-full text-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer font-bold text-gray-500 uppercase tracking-wider transition-colors hover:bg-gray-100">Neutral</label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Stadium / Field Name</label>
+                            <input type="text" id="stadiumName" class="input-box w-full p-3 rounded-lg font-bold" required readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Street Address, City, State, Zip</label>
+                            <input type="text" id="stadiumAddress" class="input-box w-full p-3 rounded-lg font-bold" required readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitGameBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-3xl uppercase tracking-widest py-4 rounded-xl shadow-xl hover:brightness-110 transition-all border-2 border-pahs-gold mt-4">
+                    Publish Game Day to Firebase
                 </button>
-                <p id="statusMsg" class="font-bold mt-4 text-lg h-6"></p>
-            </div>
-        </form>
-    </div>
+                <div id="statusMessage" class="hidden text-center mt-4 font-bold text-lg uppercase tracking-wide"></div>
 
-    <div id="ticketModalOverlay" class="fixed inset-0 bg-black/80 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
-        <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
-            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
-                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
-                    <i class="fa-solid fa-ticket text-blue-600"></i> Request Ticket Link
-                </h2>
-                <button onclick="window.closeTicketModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
-            </div>
-            <div class="p-6 bg-white">
-                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
-                    To protect our community from scams, all ticket links must be manually verified by site admins. Please submit your official ticketing URL below.
-                </p>
-                <form id="ticketReqForm">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Requested Link URL <span class="text-red-500">*</span></label>
-                    <input type="url" id="ticketReqUrl" required placeholder="https://..." class="w-full border-2 border-gray-300 rounded p-3 mb-4 text-gray-800 font-body text-sm outline-none focus:border-blue-500 transition-colors">
-
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
-                            <input type="text" id="ticketReqFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
-                            <input type="text" id="ticketReqLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
-                        </div>
-                    </div>
-
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
-                    <input type="email" id="ticketReqEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
-                    
-                    <button type="submit" id="submitTicketReqBtn" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
-                        Submit for Review
-                    </button>
-                    <div id="ticketReqStatus" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
-                </form>
-            </div>
+            </form>
         </div>
-    </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -147,238 +180,206 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const dbRealtime = getDatabase(app);
 
-        // Scripts & Form Hooks
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
-        const CONTACT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ'; 
-        const CONTACT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + CONTACT_FORM_ID + '/formResponse';
-        
-        let userTeam = "";
-        let globalUser = null;
-        let globalUserData = null;
+        // --- GLOBAL STATE ---
+        let adminTeamName = "";
+        let directoryData = [];
+        let myTeamObj = null;
+        let oppTeamObj = null;
 
-        // Function to pull existing data from the Google Sheet
-        async function fetchExistingData(team) {
-            document.getElementById('loading-title').innerText = "Loading Data...";
-            document.getElementById('loading-desc').innerText = "Pulling current setup information, one moment please.";
-            
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL + "?team=" + encodeURIComponent(team));
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    const d = result.data;
-                    
-                    document.getElementById('week').value = d.week || "";
-                    document.getElementById('yourTeam').value = d.yourTeam || "";
-                    document.getElementById('yourTeamLogo').value = d.yourTeamLogo || "";
-                    document.getElementById('yourTeamRecord').value = d.yourTeamRecord || "";
-                    document.getElementById('yourTeamMascot').value = d.yourTeamMascot || "";
-                    
-                    document.getElementById('opponent').value = d.opponent || "";
-                    document.getElementById('oppLogo').value = d.oppLogo || "";
-                    document.getElementById('oppRecord').value = d.oppRecord || "";
-                    document.getElementById('oppMascot').value = d.oppMascot || "";
-                    
-                    const haSelect = document.getElementById('homeAway');
-                    if (d.homeAway.toLowerCase().includes('away')) haSelect.value = "Away";
-                    else haSelect.value = "Home";
-
-                    document.getElementById('theme').value = d.theme || "";
-                    document.getElementById('stadium').value = d.stadium || "";
-                    document.getElementById('address').value = d.address || "";
-                    
-                    // Populate readonly ticket link
-                    document.getElementById('ticketLink').value = d.ticketLink || "";
-
-                    if (d.date && d.time) {
-                        try {
-                            const dateParts = d.date.split('/'); 
-                            if (dateParts.length === 3) {
-                                const yyyy = dateParts[2];
-                                const mm = dateParts[0].padStart(2, '0');
-                                const dd = dateParts[1].padStart(2, '0');
-                                
-                                let timeMatch = d.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                                let HH = "00"; let MM = "00";
-                                if (timeMatch) {
-                                    let hrs = parseInt(timeMatch[1]);
-                                    const mins = timeMatch[2];
-                                    const ampm = timeMatch[3].toUpperCase();
-                                    if (ampm === "PM" && hrs < 12) hrs += 12;
-                                    if (ampm === "AM" && hrs === 12) hrs = 0;
-                                    HH = hrs.toString().padStart(2, '0');
-                                    MM = mins;
-                                }
-                                document.getElementById('dateTime').value = `${yyyy}-${mm}-${dd}T${HH}:${MM}`;
-                            }
-                        } catch(e) { console.warn("Could not auto-format date/time", e); }
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to load sheet data:", error);
-            }
-
-            document.getElementById('auth-check').classList.add('hidden');
-            document.getElementById('admin-panel').classList.remove('hidden');
+        // --- HELPER TO SCRUB ASTERISKS FROM CSV DATA ---
+        function cleanText(str) {
+            if (!str) return "";
+            return str.replace(/\*/g, '').trim(); 
         }
 
-        onAuthStateChanged(auth, async (user) => {
-            const authCheck = document.getElementById('auth-check');
+        // --- LOAD DIRECTORY CSV ---
+        const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+        
+        Papa.parse(MASTER_TEAMS_CSV, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                // Map and clean headers based on user's exact structure
+                directoryData = results.data.map(row => ({
+                    school: cleanText(row['School']),
+                    mascot: cleanText(row['Team']),
+                    logo: cleanText(row['Logo']),
+                    field: cleanText(row['FieldName']),
+                    address: cleanText(row['FieldLocation'])
+                })).filter(t => t.school !== "");
 
-            if (user) {
-                globalUser = user; // Save for modal
-                try {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const docSnap = await getDoc(userDocRef);
+                // Populate Datalist for Opponent Dropdown
+                const datalist = document.getElementById('teamDirectoryList');
+                directoryData.sort((a,b) => a.school.localeCompare(b.school)).forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.school;
+                    datalist.appendChild(option);
+                });
 
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        globalUserData = data; // Save for modal
-                        
-                        if (data.role === 'admin' && data.managedTeam) {
-                            userTeam = data.managedTeam; 
-                            document.getElementById('team-badge').innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Admin: ${userTeam}`;
-                            fetchExistingData(userTeam);
-                        } else {
-                            authCheck.innerHTML = `<i class="fa-solid fa-ban text-red-600 text-5xl mb-4"></i><h2 class="text-2xl font-bold font-head uppercase mb-2">Access Denied</h2><p class="text-gray-600">You do not have Game Day admin permissions.</p><a href="profile.html" class="inline-block mt-4 text-blue-600 underline">Return to Profile</a>`;
-                        }
-                    } else {
-                        authCheck.innerHTML = `<h2 class="text-2xl font-bold text-red-600 mb-2">Error</h2><p>User profile not found.</p>`;
-                    }
-                } catch (error) {
-                    console.error("Error fetching permissions:", error);
-                    authCheck.innerHTML = `<h2 class="text-2xl font-bold text-red-600 mb-2">Error</h2><p>Could not connect to database.</p>`;
-                }
-            } else {
-                window.location.href = "login.html"; 
+                // If auth already resolved, initialize the form
+                if (adminTeamName) initDashboard();
             }
         });
 
-        // --- MAIN FORM SUBMISSION ---
-        document.getElementById('gameDataForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const statusMsg = document.getElementById('statusMsg');
-            
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating...';
-            btn.disabled = true;
-            statusMsg.innerText = "";
+        // --- AUTH & ADMIN CHECK ---
+        onAuthStateChanged(auth, async (user) => {
+            const loading = document.getElementById('loadingState');
+            const denied = document.getElementById('deniedState');
+            const dash = document.getElementById('adminDashboard');
 
-            const payload = {
-                teamName: userTeam,
-                week: document.getElementById('week').value,
-                yourTeam: document.getElementById('yourTeam').value,
-                yourTeamLogo: document.getElementById('yourTeamLogo').value,
-                yourTeamRecord: document.getElementById('yourTeamRecord').value,
-                yourTeamMascot: document.getElementById('yourTeamMascot').value,
-                opponent: document.getElementById('opponent').value,
-                oppLogo: document.getElementById('oppLogo').value,
-                oppRecord: document.getElementById('oppRecord').value,
-                oppMascot: document.getElementById('oppMascot').value,
-                homeAway: document.getElementById('homeAway').value,
-                dateTime: document.getElementById('dateTime').value,
-                theme: document.getElementById('theme').value,
-                stadium: document.getElementById('stadium').value,
-                address: document.getElementById('address').value,
-                // Passing back the existing approved link so it isn't wiped out
-                ticketLink: document.getElementById('ticketLink').value
-            };
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Push to Game Day Live';
-                btn.disabled = false;
-                statusMsg.innerText = "Success! The Game Day page is now updated.";
-                statusMsg.className = "text-center font-bold mt-4 text-green-600 text-lg";
-                setTimeout(() => { statusMsg.innerText = ""; }, 5000);
-            }).catch(error => {
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Push to Game Day Live';
-                btn.disabled = false;
-                statusMsg.innerText = "Error updating sheet. Check console.";
-                statusMsg.className = "text-center font-bold mt-4 text-red-600 text-lg";
-                console.error(error);
-            });
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        if (data.role === 'admin' && data.managedTeam) {
+                            adminTeamName = data.managedTeam;
+                            document.getElementById('managedTeamDisplay').innerText = adminTeamName;
+                            
+                            loading.classList.add('hidden');
+                            dash.classList.remove('hidden');
+                            
+                            // If CSV is already loaded, init form
+                            if (directoryData.length > 0) initDashboard();
+                        } else {
+                            loading.classList.add('hidden'); denied.classList.remove('hidden');
+                        }
+                    } else {
+                        loading.classList.add('hidden'); denied.classList.remove('hidden');
+                    }
+                } catch(e) {
+                    console.error(e);
+                    loading.innerHTML = "Error checking permissions.";
+                }
+            } else {
+                window.location.href = "login.html";
+            }
         });
 
-        // --- TICKET LINK REQUEST LOGIC ---
-        window.openTicketModal = function() {
-            if (!globalUser || !globalUserData) return;
+        // --- INIT DASHBOARD LOGIC ---
+        function initDashboard() {
+            // 1. Find Admin's Team in Directory
+            myTeamObj = directoryData.find(t => t.school.toLowerCase() === adminTeamName.toLowerCase());
             
-            document.getElementById('ticketReqFirstName').value = globalUserData.firstName || "N/A";
-            document.getElementById('ticketReqLastName').value = globalUserData.lastName || "N/A";
-            document.getElementById('ticketReqEmail').value = globalUser.email || "N/A";
+            if (myTeamObj && myTeamObj.logo) {
+                const logoEl = document.getElementById('myTeamLogo');
+                logoEl.src = myTeamObj.logo;
+                document.getElementById('myTeamLogoContainer').classList.remove('hidden');
+            }
+
+            // 2. Set Initial Location (Defaults to Home)
+            updateLocationFields();
+        }
+
+        // --- OPPONENT SELECTION LISTENER ---
+        document.getElementById('oppSelect').addEventListener('input', function(e) {
+            const selectedSchool = e.target.value.trim();
+            oppTeamObj = directoryData.find(t => t.school.toLowerCase() === selectedSchool.toLowerCase());
             
-            const overlay = document.getElementById('ticketModalOverlay');
-            overlay.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                overlay.children[0].classList.remove('scale-95');
-                overlay.children[0].classList.add('scale-100');
-            }, 10);
-        };
+            // Auto-trigger location update in case "Away" is selected
+            updateLocationFields();
+        });
 
-        window.closeTicketModal = function() {
-            const overlay = document.getElementById('ticketModalOverlay');
-            overlay.classList.add('opacity-0');
-            overlay.children[0].classList.add('scale-95');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                document.getElementById('ticketReqForm').reset();
-                document.getElementById('ticketReqStatus').classList.add('hidden');
-                document.getElementById('submitTicketReqBtn').style.display = 'block';
-                document.getElementById('submitTicketReqBtn').disabled = false;
-            }, 300);
-        };
+        // --- LOCATION RADIO LISTENER ---
+        document.querySelectorAll('input[name="locationType"]').forEach(radio => {
+            radio.addEventListener('change', updateLocationFields);
+        });
 
-        document.getElementById('ticketReqForm').addEventListener('submit', function(e) {
+        function updateLocationFields() {
+            const stadiumInput = document.getElementById('stadiumName');
+            const addressInput = document.getElementById('stadiumAddress');
+            const locType = document.querySelector('input[name="locationType"]:checked').value;
+
+            if (locType === 'Home') {
+                stadiumInput.value = myTeamObj ? myTeamObj.field : "Not found in directory";
+                addressInput.value = myTeamObj ? myTeamObj.address : "Not found in directory";
+                stadiumInput.setAttribute('readonly', true);
+                addressInput.setAttribute('readonly', true);
+            } else if (locType === 'Away') {
+                stadiumInput.value = oppTeamObj ? oppTeamObj.field : (document.getElementById('oppSelect').value ? "Not found in directory" : "Select an opponent first");
+                addressInput.value = oppTeamObj ? oppTeamObj.address : "Select an opponent first";
+                stadiumInput.setAttribute('readonly', true);
+                addressInput.setAttribute('readonly', true);
+            } else if (locType === 'Neutral') {
+                stadiumInput.value = "";
+                addressInput.value = "";
+                stadiumInput.removeAttribute('readonly');
+                addressInput.removeAttribute('readonly');
+                stadiumInput.focus();
+            }
+        }
+
+        // --- SUBMIT GAME DAY CONFIG TO FIREBASE ---
+        document.getElementById('matchupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitTicketReqBtn'); 
-            const msg = document.getElementById('ticketReqStatus');
+            const btn = document.getElementById('submitGameBtn');
+            const msg = document.getElementById('statusMessage');
             
-            btn.innerText = 'Submitting...'; 
-            btn.disabled = true; 
-            btn.style.opacity = '0.7'; 
-            
-            const requestedUrl = document.getElementById('ticketReqUrl').value;
-            const username = globalUserData?.username || "Unknown";
-            const uid = globalUser.uid;
-            
-            const combinedMessage = `*** TICKET LINK APPROVAL REQUEST ***\n` +
-                                    `Team: ${userTeam}\n\n` +
-                                    `Requested Link: ${requestedUrl}\n\n` +
-                                    `*** USER INFO ***\n` +
-                                    `Username: @${username}\n` +
-                                    `User ID: ${uid}`;
-            
-            const params = new URLSearchParams();
-            params.append("entry.1967997366", combinedMessage); 
-            params.append("entry.1990515734", document.getElementById('ticketReqFirstName').value); 
-            params.append("entry.1429224270", document.getElementById('ticketReqLastName').value); 
-            params.append("entry.1778241553", document.getElementById('ticketReqEmail').value); 
-            
-            fetch(CONTACT_SUBMIT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                body: params.toString() 
-            })
-            .then(() => {
-                 btn.style.display = 'none'; 
-                 msg.classList.remove('hidden'); 
-                 msg.style.color = '#10b981'; 
-                 msg.innerText = 'Request Sent for Review!';
-                 setTimeout(() => { window.closeTicketModal(); }, 2000);
-            }).catch(() => { 
-                btn.innerText = 'Try Again'; 
-                btn.disabled = false; 
-                btn.style.opacity = '1'; 
-                msg.classList.remove('hidden'); 
-                msg.style.color = '#ef4444'; 
-                msg.innerText = 'Error sending request.'; 
-            });
+            btn.innerText = "Publishing...";
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+
+            // Collect Data
+            const oppName = document.getElementById('oppSelect').value.trim();
+            if (!oppName) {
+                alert("Please select an opponent.");
+                btn.innerText = "Publish Game Day to Firebase"; btn.disabled = false; btn.classList.remove('opacity-70'); return;
+            }
+
+            const payload = {
+                yourTeam: adminTeamName,
+                yourTeamMascot: myTeamObj ? myTeamObj.mascot : "",
+                yourTeamLogo: myTeamObj ? myTeamObj.logo : "",
+                yourTeamRecord: document.getElementById('myTeamRecord').value.trim(),
+                
+                opponent: oppName,
+                oppMascot: oppTeamObj ? oppTeamObj.mascot : "",
+                oppLogo: oppTeamObj ? oppTeamObj.logo : "",
+                oppRecord: document.getElementById('oppRecord').value.trim(),
+                
+                date: document.getElementById('gameDate').value,
+                time: document.getElementById('gameTime').value,
+                theme: document.getElementById('gameTheme').value.trim() || "No Theme",
+                
+                homeAway: document.querySelector('input[name="locationType"]:checked').value,
+                stadium: document.getElementById('stadiumName').value.trim(),
+                address: document.getElementById('stadiumAddress').value.trim(),
+                
+                status: "UPCOMING",
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                // Save to 'gameday_config/{team_safe_name}'
+                const safeKey = adminTeamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const configRef = ref(dbRealtime, 'gameday_config/' + safeKey);
+                
+                await set(configRef, payload);
+
+                msg.innerText = "Game Day Published Successfully!";
+                msg.classList.replace('text-red-500', 'text-green-500');
+                msg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    msg.classList.add('hidden');
+                    btn.innerText = "Publish Game Day to Firebase";
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70');
+                }, 3000);
+
+            } catch (err) {
+                console.error(err);
+                msg.innerText = "Error publishing. Try again.";
+                msg.classList.replace('text-green-500', 'text-red-500');
+                msg.classList.remove('hidden');
+                
+                btn.innerText = "Publish Game Day to Firebase";
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
+            }
         });
     </script>
 </body>
