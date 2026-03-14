@@ -282,11 +282,23 @@
                 games.forEach(game => {
                     if(!game.home || !game.away) return;
                     
-                    let statusText = game.quarter === "PREGAME" ? "PREGAME" : (game.quarter === "FINAL" ? "FINAL" : `QTR ${game.quarter}`);
-                    if(game.quarter === "HALF") statusText = "HALFTIME";
+                    let isPregame = (game.quarter === "PREGAME" || game.status === "UPCOMING");
+                    let isFinal = (game.quarter === "FINAL" || game.status === "FINAL");
+                    let isHalf = (game.quarter === "HALF");
+
+                    let statusText = "QTR " + game.quarter;
+                    if(isPregame) statusText = "PREGAME";
+                    if(isFinal) statusText = "FINAL";
+                    if(isHalf) statusText = "HALFTIME";
+
+                    let clockText = "";
+                    if (isPregame) clockText = game.clock || "TBA";
+                    else if (!isFinal && !isHalf) clockText = game.clock || "12:00";
                     
-                    let scoreText = (game.quarter === "PREGAME" || game.status === "UPCOMING") ? (game.clock || "TBA") : `${game.awayScore} - ${game.homeScore}`;
-                    let statusColor = (game.quarter === "PREGAME" || game.quarter === "FINAL") ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
+                    let statusColor = (isPregame || isFinal) ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
+
+                    let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
+                    let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
 
                     const finalHomeLogo = teamLogoDictionary[(game.home || '').trim()] || game.homeLogo || '';
                     const finalAwayLogo = teamLogoDictionary[(game.away || '').trim()] || game.awayLogo || '';
@@ -294,12 +306,14 @@
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
                         <span class="team-name">${game.away}</span>
+                        ${awayScoreHtml}
                         <span class="vs">VS</span>
                         <img src="${finalHomeLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalHomeLogo ? '' : 'display:none;'}" alt="Logo">
                         <span class="team-name">${game.home}</span>
+                        ${homeScoreHtml}
                         <div class="game-info">
                             <span class="game-date" style="${statusColor}">${statusText}</span>
-                            <span class="game-time">${scoreText}</span>
+                            ${clockText ? `<span class="game-time">${clockText}</span>` : ''}
                         </div>
                     </a>`;
                 });
