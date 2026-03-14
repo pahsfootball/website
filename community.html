@@ -67,7 +67,7 @@
         
         input[list]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
-        /* --- NEW SOLID GLOW --- */
+        /* --- SOLID GLOW --- */
         .new-post-solid-glow {
             box-shadow: 0 0 15px 3px #fbbf24 !important;
             border-color: #fbbf24 !important;
@@ -113,9 +113,10 @@
         </div>
 
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
-            <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900">Community Feed</h3>
+            <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
+                Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
+            </h3>
             <div class="flex items-center gap-2 self-end">
-                
                 <div class="relative flex items-center">
                     <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-32 sm:w-40" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
                     <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
@@ -127,9 +128,6 @@
                     <option value="newest">Latest</option>
                     <option value="top">Most Hyped</option>
                 </select>
-                <button id="refreshFeedBtn" class="text-gray-600 hover:text-pahs-gold transition-colors p-2" title="Refresh Feed">
-                    <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xl"></i>
-                </button>
             </div>
         </div>
 
@@ -297,9 +295,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // *** YOUR GOOGLE SCRIPT URLS ***
-        const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyI9FQ1KMtBL33XzTD6NsAO-PHEEhT8sQGFYJQ7blJR2m5FhPKlu17vfn5oWflfypE/exec";
+        // *** GOOGLE FORM FOR REPORTING ONLY ***
         const REPORT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
         const REPORT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + REPORT_FORM_ID + '/formResponse';
 
@@ -307,6 +305,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
+            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/",
             projectId: "pahs-football",
             storageBucket: "pahs-football.firebasestorage.app",
             messagingSenderId: "260294523190",
@@ -316,6 +315,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const dbRealtime = getDatabase(app);
 
         // *** GLOBAL VARIABLES ***
         let currentUser = null;
@@ -326,7 +326,6 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
 
-        // Variables for Modals
         window.currentReportedPostId = null;
         window.currentReportedPostContent = null;
         window.currentReportedPostAuthor = null;
@@ -372,19 +371,27 @@
             return filteredText;
         }
 
-        // Checks if text contains prohibited domain names
         function containsProhibitedDomain(text) {
             const lowerText = text.toLowerCase();
             return prohibitedDomains.some(domain => lowerText.includes(domain));
         }
 
-        // *** LINKIFY LOGIC (URLs and YouTube) ***
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
                 
-                // Detect YouTube
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
                     return `
@@ -393,7 +400,6 @@
                         </div>`;
                 }
 
-                // Standard External Link
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
                 return `
                     <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
@@ -402,13 +408,10 @@
             });
         }
 
-        // *** EXTERNAL LINK MODAL CONTROLS ***
         window.openExternalLink = function(e, url) {
             if (e) e.stopPropagation(); 
-            
             document.getElementById('warningUrlText').innerText = url;
             document.getElementById('continueLinkBtn').href = url;
-            
             const overlay = document.getElementById('linkWarningModal');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -419,69 +422,48 @@
             if (force || (e && e.target.id === 'linkWarningModal')) {
                 const overlay = document.getElementById('linkWarningModal');
                 overlay.classList.remove('active');
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
-        // *** LOAD MASTER TEAM LOGOS ***
+        // *** LOAD CSV DATA ***
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
         Papa.parse(MASTER_TEAMS_CSV, {
-            download: true, 
-            header: true, 
-            skipEmptyLines: true,
-            transformHeader: function(header) { 
-                return header.toLowerCase().replace(/[^a-z0-9]/g, ''); 
-            },
+            download: true, header: true, skipEmptyLines: true,
+            transformHeader: header => header.toLowerCase().replace(/[^a-z0-9]/g, ''),
             complete: function(logoRes) {
                 logoRes.data.forEach(row => {
                     const teamName = row['school'] || row['teamname'] || row['team'];
                     const logoUrl = row['logourl'] || row['logo'];
-                    
                     if (teamName && logoUrl) {
-                        const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                        teamLogoDictionary[safeKey] = logoUrl.trim();
+                        teamLogoDictionary[teamName.toUpperCase().replace(/[^A-Z0-9]/g, '')] = logoUrl.trim();
                     }
                 });
-                
-                // If posts loaded before the logos finished downloading, re-render
                 if(currentPosts.length > 0) window.renderFeed();
             }
         });
 
-        // *** LOAD TEAM DIRECTORY (DROPDOWN & COLORS) ***
         const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         Papa.parse(directoryUrl, {
-            download: true, 
-            header: true, 
-            skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 const datalist = document.getElementById('teamTagList');
-                
                 const cleanData = results.data.map(row => {
                     if(row['School']) row['School'] = row['School'].replace(/^\*+|\*+$/g, '').trim();
                     return row;
                 });
                 
-                const teams = cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School']));
-                
-                teams.forEach(team => {
+                cleanData.filter(r => r['School']).sort((a,b) => a['School'].localeCompare(b['School'])).forEach(team => {
                     if(!validTeams.has(team['School'])) {
-                        // Populate Dropdown
                         const option = document.createElement('option');
                         option.value = team['School'];
                         datalist.appendChild(option);
                         validTeams.add(team['School']);
 
-                        // Grab Team Color
-                        const safeKey = team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const colorData = parseColors(team['Colors'] || team['Color'] || '');
-                        if (colorData.p) teamColorDictionary[safeKey] = colorData.p;
+                        if (colorData.p) teamColorDictionary[team['School'].toUpperCase().replace(/[^A-Z0-9]/g, '')] = colorData.p;
                     }
                 });
-                
                 if(currentPosts.length > 0) window.renderFeed(); 
             }
         });
@@ -505,83 +487,63 @@
                 createBtn.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
-            window.loadPosts(true); 
-        });
-
-        // *** REFRESH BUTTON LISTENER ***
-        document.getElementById('refreshFeedBtn').addEventListener('click', () => {
-            window.loadPosts(true);
+            startFirebaseListener(); 
         });
 
         // *** FILTER TOGGLE LOGIC ***
         window.toggleClearBtn = function() {
             const input = document.getElementById('feedTeamFilter');
             const btn = document.getElementById('clearFilterBtn');
-            if (input.value.length > 0) {
-                btn.classList.remove('hidden');
-            } else {
-                btn.classList.add('hidden');
-            }
+            if (input.value.length > 0) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
         };
 
         window.clearFeedFilter = function() {
-            const input = document.getElementById('feedTeamFilter');
-            input.value = "";
+            document.getElementById('feedTeamFilter').value = "";
             window.toggleClearBtn();
             window.renderFeed();
         };
 
-        // *** FETCH POSTS FROM GOOGLE SCRIPT ***
-        window.loadPosts = async function(showLoader = true) {
-            const refreshIcon = document.getElementById('refreshIcon');
+        // *** FIREBASE REALTIME DB LISTENER ***
+        function startFirebaseListener() {
+            const postsRef = ref(dbRealtime, 'fanzone_posts');
             
-            if (showLoader) {
-                if(refreshIcon) refreshIcon.classList.add('fa-spin');
-                document.getElementById('feedContainer').innerHTML = `
-                    <div id="feedLoading" class="text-center py-12">
-                        <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
-                        <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
-                    </div>`;
-            }
-
-            try {
-                // Add timestamp to force bypass browser cache
-                const cacheBusterUrl = GOOGLE_SHEET_API_URL + "?t=" + new Date().getTime();
-                const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
-                const rawText = await response.text(); 
+            onValue(postsRef, (snapshot) => {
+                document.getElementById('feedLoading').style.display = 'none';
+                currentPosts = [];
                 
-                try {
-                    const data = JSON.parse(rawText);
-                    
-                    if (data.status === "success") {
-                        currentPosts = data.data;
-                        window.renderFeed();
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const post = data[key];
+                        post.postId = key; // Save Firebase key as postId
                         
-                        // Check if the user came here via a shared deep-link
-                        if (!initialDeepLinkChecked) {
-                            const urlParams = new URLSearchParams(window.location.search);
-                            const targetPost = urlParams.get('post');
-                            if (targetPost) {
-                                window.openPostModal(targetPost);
-                            }
-                            initialDeepLinkChecked = true;
+                        // Convert Firebase likes object into an array of UIDs for compatibility
+                        let likesArray = [];
+                        if (post.likes) {
+                            likesArray = Object.keys(post.likes);
                         }
+                        post.likes = likesArray;
 
-                    } else if (showLoader) {
-                        document.getElementById('feedContainer').innerHTML = `<p class="text-center text-red-600 font-bold py-10">Database Error: ${data.message}</p>`;
-                    }
-                } catch (jsonErr) {
-                    if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-600 font-bold py-10">Access Denied.</p>';
+                        currentPosts.push(post);
+                    });
                 }
-            } catch (error) {
-                if (showLoader) document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
-            } finally {
-                if (showLoader && refreshIcon) refreshIcon.classList.remove('fa-spin');
-            }
-        };
+                
+                window.renderFeed();
+                
+                // Deep Link Check
+                if (!initialDeepLinkChecked) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const targetPost = urlParams.get('post');
+                    if (targetPost) window.openPostModal(targetPost);
+                    initialDeepLinkChecked = true;
+                }
+            }, (error) => {
+                console.error("Firebase read failed:", error);
+                document.getElementById('feedContainer').innerHTML = '<p class="text-center text-red-500 font-bold py-10">Error communicating with servers.</p>';
+            });
+        }
 
-        // Auto-refresh every 30 seconds silently
-        setInterval(() => { window.loadPosts(false); }, 30000);
 
         // *** HTML TEMPLATE GENERATOR FOR POSTS ***
         function buildPostHTML(post, isModal = false) {
@@ -594,7 +556,7 @@
             }
 
             const realLikes = post.likes.length;
-            const artificialLikes = post.artificialLikes || 0;
+            const artificialLikes = post.artificialLikes || 0; // Legacy support if needed
             const totalLikes = realLikes + artificialLikes;
             
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
@@ -606,7 +568,6 @@
             let tagHtml = '';
             let postColor = '#fbbf24'; 
 
-            // Handle Tagged Team UI (Logo and Color)
             if (post.taggedTeam) {
                 const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -628,11 +589,9 @@
                 `;
             }
 
-            // Clean the text and find links
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
             const safeContent = linkify(escapeHTML(post.content));
 
-            // Show Edit & Delete Button if Author
             let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
                 authorActionsHtml = `
@@ -697,7 +656,6 @@
             
             let postsToRender = [...currentPosts]; 
             
-            // --- FILTER LOGIC ---
             const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
             if (filterTeam !== "") {
                 postsToRender = postsToRender.filter(post => post.taggedTeam && post.taggedTeam.toLowerCase().includes(filterTeam));
@@ -710,7 +668,6 @@
 
             const sortType = document.getElementById('feedSort').value;
             
-            // Sorting Logic (Includes Artificial Likes)
             if (sortType === 'top') {
                 postsToRender.sort((a, b) => {
                     const aTotal = a.likes.length + (a.artificialLikes || 0);
@@ -728,25 +685,16 @@
                 const postCard = document.createElement('div');
                 postCard.className = "post-card rounded-2xl p-5 flex flex-col relative bg-white";
                 
-                // --- NEW POST GLOW LOGIC (10 Seconds, Solid) ---
                 const secondsOld = (now - postData.timestamp) / 1000;
-                
-                // Check if post is between 10 seconds old and -30 seconds (to account for clock lag)
                 if (secondsOld < 10 && secondsOld >= -30) {
                     postCard.classList.add('new-post-solid-glow');
-                    
                     const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
-                    
-                    // Remove the class after the 10 seconds total time elapses
-                    setTimeout(() => { 
-                        postCard.classList.remove('new-post-solid-glow'); 
-                    }, timeRemaining * 1000);
+                    setTimeout(() => { postCard.classList.remove('new-post-solid-glow'); }, timeRemaining * 1000);
                 }
 
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
-                // Color border top based on team
                 if (post.taggedTeam) {
                     postCard.style.border = `3px solid ${postData.color}`;
                     postCard.style.borderTop = `4px solid ${postData.color}`;
@@ -768,14 +716,11 @@
             if (force || (e && e.target.id === 'createPostModalOverlay')) {
                 const overlay = document.getElementById('createPostModalOverlay');
                 overlay.classList.remove('active');
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
-        // *** CREATE POST SUBMISSION ***
+        // *** CREATE POST SUBMISSION (Firebase) ***
         document.getElementById('submitPostBtn').addEventListener('click', async () => {
             if (!currentUser) return alert("You must be logged in to post.");
             
@@ -786,7 +731,6 @@
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
             
-            // --- PROHIBITED LINK CHECK ---
             if (containsProhibitedDomain(rawContent)) {
                 return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
             }
@@ -794,54 +738,38 @@
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) {
-                    finalTeamTag = matchedTeam;
-                } else {
-                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
-                }
+                if (matchedTeam) finalTeamTag = matchedTeam;
+                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
             
             const btn = document.getElementById('submitPostBtn');
-            btn.innerText = "Posting..."; 
-            btn.disabled = true;
+            btn.innerText = "Posting..."; btn.disabled = true;
             
             const cleanContent = filterProfanity(rawContent);
             const username = currentUserProfile ? currentUserProfile.username : "Fan";
-            const payload = { 
-                action: "add_post", 
-                authorId: currentUser.uid, 
-                authorUsername: username, 
-                content: cleanContent, 
-                taggedTeam: finalTeamTag 
-            };
             
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                    body: JSON.stringify(payload) 
+                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
+                await set(newPostRef, {
+                    authorId: currentUser.uid,
+                    authorUsername: username,
+                    content: cleanContent,
+                    taggedTeam: finalTeamTag,
+                    timestamp: new Date().toISOString()
                 });
-                const rawText = await response.text();
-                try {
-                    const data = JSON.parse(rawText);
-                    if(data.status === "success") {
-                        contentBox.value = "";
-                        document.getElementById('teamTagInput').value = "";
-                        window.closeCreatePostModal(null, true);
-                        window.loadPosts(true);
-                    } else {
-                        alert("Database Error: " + data.message);
-                    }
-                } catch(e) { alert("Permissions Error."); }
+                
+                contentBox.value = "";
+                document.getElementById('teamTagInput').value = "";
+                window.closeCreatePostModal(null, true);
             } catch (error) { 
-                alert("Failed to communicate with server."); 
+                console.error(error);
+                alert("Failed to post to server."); 
             } finally { 
-                btn.innerText = "Post"; 
-                btn.disabled = false; 
+                btn.innerText = "Post"; btn.disabled = false; 
             }
         });
 
-        // *** EDIT POST SUBMISSION ***
+        // *** EDIT POST SUBMISSION (Firebase) ***
         document.getElementById('submitEditBtn').addEventListener('click', async () => {
             if (!currentUser || !window.currentEditPostId) return;
             
@@ -852,7 +780,6 @@
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
             
-            // --- PROHIBITED LINK CHECK ---
             if (containsProhibitedDomain(rawContent)) {
                 return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
             }
@@ -860,51 +787,32 @@
             let finalTeamTag = "";
             if (teamTagInput !== "") {
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
-                if (matchedTeam) {
-                    finalTeamTag = matchedTeam;
-                } else {
-                    return alert("Invalid team tag. Please select a valid team from the dropdown list.");
-                }
+                if (matchedTeam) finalTeamTag = matchedTeam;
+                else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
             
             const btn = document.getElementById('submitEditBtn');
-            btn.innerText = "Saving..."; 
-            btn.disabled = true;
+            btn.innerText = "Saving..."; btn.disabled = true;
             
             const cleanContent = filterProfanity(rawContent);
-            const payload = { 
-                action: "edit_post", 
-                postId: window.currentEditPostId, 
-                userId: currentUser.uid, 
-                newContent: cleanContent, 
-                newTaggedTeam: finalTeamTag 
-            };
             
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                    body: JSON.stringify(payload) 
+                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentEditPostId);
+                await update(postRef, {
+                    content: cleanContent,
+                    taggedTeam: finalTeamTag,
+                    lastEdited: new Date().toISOString()
                 });
-                const rawText = await response.text();
-                try {
-                    const data = JSON.parse(rawText);
-                    if(data.status === "success") { 
-                        window.closeEditModal(null, true); 
-                        window.loadPosts(true); 
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                } catch(e) { alert("Permissions Error."); }
+                window.closeEditModal(null, true); 
             } catch (error) { 
-                alert("Failed to communicate with server."); 
+                console.error(error);
+                alert("Failed to update post."); 
             } finally { 
-                btn.innerText = "Save Changes"; 
-                btn.disabled = false; 
+                btn.innerText = "Save Changes"; btn.disabled = false; 
             }
         });
 
-        // *** DELETE POST LOGIC ***
+        // *** DELETE POST LOGIC (Firebase) ***
         window.deletePost = function(e, postId) {
             if (e) e.stopPropagation();
             if (!currentUser) return;
@@ -914,7 +822,6 @@
 
             window.currentDeletePostId = postId;
 
-            // Close the post viewer modal if they clicked delete from inside it
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
@@ -931,11 +838,7 @@
             if (force || (e && e.target.id === 'deleteModalOverlay')) {
                 const overlay = document.getElementById('deleteModalOverlay');
                 overlay.classList.remove('active');
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                    window.currentDeletePostId = null;
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; window.currentDeletePostId = null; }, 300);
             }
         };
 
@@ -943,85 +846,63 @@
             if (!currentUser || !window.currentDeletePostId) return;
 
             const btn = document.getElementById('confirmDeleteBtn');
-            btn.innerText = "Deleting...";
-            btn.disabled = true;
-
-            const payload = { 
-                action: "delete_post", 
-                postId: window.currentDeletePostId,
-                userId: currentUser.uid
-            };
+            btn.innerText = "Deleting..."; btn.disabled = true;
 
             try {
-                const response = await fetch(GOOGLE_SHEET_API_URL, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                    body: JSON.stringify(payload) 
-                });
-                const rawText = await response.text();
-                try {
-                    const data = JSON.parse(rawText);
-                    if(data.status === "success") {
-                        window.closeDeleteModal(null, true);
-                        window.loadPosts(true); // Force reload the feed to remove the post
-                    } else {
-                        alert("Error: " + data.message);
-                        window.closeDeleteModal(null, true);
-                    }
-                } catch(err) { 
-                    alert("Permissions Error."); 
-                    window.closeDeleteModal(null, true);
-                }
+                const postRef = ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId);
+                await remove(postRef);
+                window.closeDeleteModal(null, true);
             } catch (error) {
-                alert("Failed to communicate with server.");
+                console.error(error);
+                alert("Failed to delete post.");
                 window.closeDeleteModal(null, true);
             } finally {
-                btn.innerText = "Yes, Delete";
-                btn.disabled = false;
+                btn.innerText = "Yes, Delete"; btn.disabled = false;
             }
         };
 
-        // *** TOGGLE LIKE ***
+        // *** TOGGLE LIKE (Firebase) ***
         window.toggleLike = async function(e, postId) {
             if (e) e.stopPropagation(); 
             if (!currentUser) return alert("You must be logged in to like posts.");
             
             const postIndex = currentPosts.findIndex(p => p.postId === postId);
+            if (postIndex === -1) return;
+
+            const post = currentPosts[postIndex];
+            const hasLiked = post.likes.includes(currentUser.uid);
             
-            if (postIndex > -1) {
-                const post = currentPosts[postIndex];
-                const uidIndex = post.likes.indexOf(currentUser.uid);
-                
-                const feedIcon = document.getElementById(`heart-${postId}`);
-                const feedCount = document.getElementById(`count-${postId}`);
-                const modalIcon = document.getElementById(`modal-heart-${postId}`);
-                const modalCount = document.getElementById(`modal-count-${postId}`);
-                
-                if (uidIndex > -1) {
-                    post.likes.splice(uidIndex, 1); 
-                    if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
-                    if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
-                } else {
-                    post.likes.push(currentUser.uid); 
-                    if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
-                    if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
-                }
-                
-                const totalLikes = post.likes.length + (post.artificialLikes || 0);
-                const newCountText = totalLikes > 0 ? totalLikes : 'Like';
-                
-                if(feedCount) feedCount.innerText = newCountText;
-                if(modalCount) modalCount.innerText = newCountText;
+            // Optimistic UI Update
+            const feedIcon = document.getElementById(`heart-${postId}`);
+            const feedCount = document.getElementById(`count-${postId}`);
+            const modalIcon = document.getElementById(`modal-heart-${postId}`);
+            const modalCount = document.getElementById(`modal-count-${postId}`);
+            
+            let currentLikeCount = post.likes.length + (post.artificialLikes || 0);
+
+            if (hasLiked) {
+                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
+                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon text-gray-400 text-xl";
+                currentLikeCount--;
+            } else {
+                if(feedIcon) feedIcon.className = "fa-solid fa-football like-icon liked text-xl";
+                if(modalIcon) modalIcon.className = "fa-solid fa-football like-icon liked text-xl";
+                currentLikeCount++;
             }
             
-            const payload = { action: "toggle_like", postId: postId, userId: currentUser.uid };
+            const newCountText = currentLikeCount > 0 ? currentLikeCount : 'Like';
+            if(feedCount) feedCount.innerText = newCountText;
+            if(modalCount) modalCount.innerText = newCountText;
+
+            // Database Update
             try { 
-                fetch(GOOGLE_SHEET_API_URL, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                    body: JSON.stringify(payload) 
-                }); 
-            } catch(err) {}
+                const likeRef = ref(dbRealtime, `fanzone_posts/${postId}/likes/${currentUser.uid}`);
+                if (hasLiked) {
+                    await remove(likeRef);
+                } else {
+                    await set(likeRef, true);
+                }
+            } catch(err) { console.error(err); }
         };
 
         // *** SHARE POST NATIVE ***
@@ -1077,47 +958,8 @@
             if (force || (e && e.target.id === 'postModalOverlay')) {
                 const overlay = document.getElementById('postModalOverlay');
                 overlay.classList.remove('active');
-                
                 window.history.replaceState({}, document.title, window.location.pathname);
-                
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                }, 300);
-            }
-        };
-
-        // *** EDIT MODAL CONTROLS ***
-        window.openEditModal = function(e, postId) {
-            if (e) e.stopPropagation();
-            
-            const post = currentPosts.find(p => p.postId === postId);
-            if (!post || !currentUser || post.authorId !== currentUser.uid) return;
-            
-            window.currentEditPostId = postId;
-            document.getElementById('editPostContent').value = post.content;
-            document.getElementById('editTeamTagInput').value = post.taggedTeam || "";
-            
-            const postOverlay = document.getElementById('postModalOverlay');
-            if (postOverlay.style.display === 'flex') {
-                postOverlay.classList.remove('active');
-                setTimeout(() => { postOverlay.style.display = 'none'; }, 300);
-            }
-            
-            const overlay = document.getElementById('editModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeEditModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'editModalOverlay')) {
-                const overlay = document.getElementById('editModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                }, 300);
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
             }
         };
 
