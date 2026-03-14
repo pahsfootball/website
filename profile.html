@@ -21,8 +21,6 @@
             --border-light: rgba(0, 0, 0, 0.1);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
-            --green-active: #10b981; 
-            --green-hover: #059669;  
         }
 
         body { margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
@@ -66,8 +64,11 @@
         .btn-primary { width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 10px; }
         .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
 
-        .btn-logout { background-color: #ef4444; color: white; font-family: var(--font-head); font-size: 16px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; display: inline-block; margin-top: 25px; }
+        .btn-logout { background-color: #ef4444; color: white; font-family: var(--font-head); font-size: 18px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; flex: 1; }
         .btn-logout:hover { background-color: #dc2626; }
+
+        .btn-home { background-color: #000000; color: white; font-family: var(--font-head); font-size: 18px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; flex: 1; text-align: center; text-decoration: none; }
+        .btn-home:hover { background-color: #333333; }
 
         /* TEAM BADGE STYLING */
         .team-link { display: inline-flex; align-items: center; background: #e4e4e7; padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 20px; margin: 4px; font-size: 12px; font-weight: 700; color: #18181b; text-decoration: none; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -161,8 +162,13 @@
 
                 <button type="submit" id="saveBtn" class="btn-primary">Update Profile</button>
                 
-                <div style="text-align: center;">
-                    <button type="button" id="logoutBtn" class="btn-logout">Sign Out</button>
+                <div class="flex gap-4 mt-6">
+                    <a href="index.html" class="btn-home">
+                        <i class="fa-solid fa-house mr-2"></i> Home
+                    </a>
+                    <button type="button" id="logoutBtn" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i> Sign Out
+                    </button>
                 </div>
                 
                 <div id="statusMsg" class="status-msg"></div>
@@ -336,7 +342,7 @@
                         currentSavedUsername = data.username || "";
                         aboutMeInput.value = data.aboutMe || "";
 
-                        // TEAM WATCHLIST (Updated to link to livescoreboards.html hub)
+                        // TEAM WATCHLIST
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
@@ -348,7 +354,7 @@
                             followedTeamsList.innerHTML = '<span class="text-xs text-gray-500">Not following any teams yet. Head over to the Directory to add some!</span>';
                         }
 
-                        // MEMBER WATCHLIST & SOCIAL STATS
+                        // MEMBER WATCHLIST
                         const followingArray = data.following || [];
                         followingCount.innerText = followingArray.length;
 
@@ -387,10 +393,9 @@
                             followersCount.innerText = "-";
                         }
 
-                        // ADMIN CONTROLS (Updated logic)
+                        // ADMIN CONTROLS
                         if (data.role === 'admin') {
                             document.getElementById('admin-controls').classList.remove('hidden');
-                            
                             const teamName = data.managedTeam || "Unknown Team"; 
                             document.getElementById('adminTeamNameLabel').innerText = teamName;
                             document.getElementById('adminGamedayLink').href = `gameday.html?team=${encodeURIComponent(teamName)}`;
@@ -416,7 +421,7 @@
             overlay.classList.remove('hidden');
             overlay.style.display = 'flex'; 
             setTimeout(() => {
-                overlay.classList.remove('opacity-0');
+                overlay.classList.add('active');
                 overlay.children[0].classList.remove('scale-95');
             }, 10);
         };
@@ -424,7 +429,7 @@
         window.closeRelinquishModal = function(e, force = false) {
             if (force || (e && e.target.id === 'relinquishModalOverlay')) {
                 const overlay = document.getElementById('relinquishModalOverlay');
-                overlay.classList.add('opacity-0');
+                overlay.classList.remove('active');
                 overlay.children[0].classList.add('scale-95');
                 setTimeout(() => { 
                     overlay.classList.add('hidden');
@@ -451,12 +456,7 @@
             const username = window.currentUserProfile?.username || "User";
             const uid = auth.currentUser.uid;
             
-            const combinedMessage = `*** ADMIN REMOVAL REQUEST ***\n` +
-                                    `Team to Remove: ${teamName}\n\n` +
-                                    `Reason: ${reason}\n\n` +
-                                    `*** USER INFO ***\n` +
-                                    `Username: @${username}\n` +
-                                    `User ID: ${uid}`;
+            const combinedMessage = `*** ADMIN REMOVAL REQUEST ***\nTeam to Remove: ${teamName}\n\nReason: ${reason}\n\n*** USER INFO ***\nUsername: @${username}\nUser ID: ${uid}`;
             
             const params = new URLSearchParams();
             params.append("entry.1967997366", combinedMessage); 
