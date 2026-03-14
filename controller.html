@@ -69,7 +69,16 @@
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Stadium Name</label><input type="text" id="stadium" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Full Address</label><input type="text" id="address" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">Student Section Theme</label><input type="text" id="theme" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">Buy Tickets Link</label><input type="url" id="ticketLink" class="w-full border rounded p-2 focus:ring-2 focus:ring-pahs-gold outline-none"></div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Buy Tickets Link <span class="text-red-500 font-normal text-xs">(Requires Approval)</span></label>
+                        <div class="flex gap-2">
+                            <input type="url" id="ticketLink" class="w-full border border-gray-300 rounded p-2 bg-gray-200 text-gray-500 cursor-not-allowed outline-none" readonly placeholder="No approved link set">
+                            <button type="button" onclick="window.openTicketModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition shrink-0 text-sm shadow flex items-center justify-center">
+                                <i class="fa-solid fa-paper-plane mr-1.5"></i> Request
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -80,6 +89,45 @@
                 <p id="statusMsg" class="font-bold mt-4 text-lg h-6"></p>
             </div>
         </form>
+    </div>
+
+    <div id="ticketModalOverlay" class="fixed inset-0 bg-black/80 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+        <div class="bg-white border border-gray-200 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-ticket text-blue-600"></i> Request Ticket Link
+                </h2>
+                <button onclick="window.closeTicketModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    To protect our community from scams, all ticket links must be manually verified by site admins. Please submit your official ticketing URL below.
+                </p>
+                <form id="ticketReqForm">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Requested Link URL <span class="text-red-500">*</span></label>
+                    <input type="url" id="ticketReqUrl" required placeholder="https://..." class="w-full border-2 border-gray-300 rounded p-3 mb-4 text-gray-800 font-body text-sm outline-none focus:border-blue-500 transition-colors">
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
+                            <input type="text" id="ticketReqFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
+                            <input type="text" id="ticketReqLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                        </div>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
+                    <input type="email" id="ticketReqEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                    
+                    <button type="submit" id="submitTicketReqBtn" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                        Submit for Review
+                    </button>
+                    <div id="ticketReqStatus" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -100,10 +148,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- PASTE YOUR DEPLOYED WEB APP URL HERE ---
+        // Scripts & Form Hooks
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
+        const CONTACT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ'; 
+        const CONTACT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + CONTACT_FORM_ID + '/formResponse';
         
         let userTeam = "";
+        let globalUser = null;
+        let globalUserData = null;
 
         // Function to pull existing data from the Google Sheet
         async function fetchExistingData(team) {
@@ -111,7 +163,6 @@
             document.getElementById('loading-desc').innerText = "Pulling current setup information, one moment please.";
             
             try {
-                // Calls the doGet function in Apps Script
                 const response = await fetch(GOOGLE_SCRIPT_URL + "?team=" + encodeURIComponent(team));
                 const result = await response.json();
                 
@@ -129,7 +180,6 @@
                     document.getElementById('oppRecord').value = d.oppRecord || "";
                     document.getElementById('oppMascot').value = d.oppMascot || "";
                     
-                    // Set Home/Away dropdown
                     const haSelect = document.getElementById('homeAway');
                     if (d.homeAway.toLowerCase().includes('away')) haSelect.value = "Away";
                     else haSelect.value = "Home";
@@ -137,18 +187,19 @@
                     document.getElementById('theme').value = d.theme || "";
                     document.getElementById('stadium').value = d.stadium || "";
                     document.getElementById('address').value = d.address || "";
+                    
+                    // Populate readonly ticket link
                     document.getElementById('ticketLink').value = d.ticketLink || "";
 
-                    // Combine Date & Time back into HTML datetime-local format (YYYY-MM-DDTHH:mm)
                     if (d.date && d.time) {
                         try {
-                            const dateParts = d.date.split('/'); // Expected: MM/DD/YYYY
+                            const dateParts = d.date.split('/'); 
                             if (dateParts.length === 3) {
                                 const yyyy = dateParts[2];
                                 const mm = dateParts[0].padStart(2, '0');
                                 const dd = dateParts[1].padStart(2, '0');
                                 
-                                let timeMatch = d.time.match(/(\d+):(\d+)\s*(AM|PM)/i); // Expected: 7:00 PM
+                                let timeMatch = d.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
                                 let HH = "00"; let MM = "00";
                                 if (timeMatch) {
                                     let hrs = parseInt(timeMatch[1]);
@@ -168,7 +219,6 @@
                 console.error("Failed to load sheet data:", error);
             }
 
-            // Hide loader, show form
             document.getElementById('auth-check').classList.add('hidden');
             document.getElementById('admin-panel').classList.remove('hidden');
         }
@@ -177,20 +227,19 @@
             const authCheck = document.getElementById('auth-check');
 
             if (user) {
+                globalUser = user; // Save for modal
                 try {
                     const userDocRef = doc(db, 'users', user.uid);
                     const docSnap = await getDoc(userDocRef);
 
                     if (docSnap.exists()) {
                         const data = docSnap.data();
+                        globalUserData = data; // Save for modal
                         
                         if (data.role === 'admin' && data.managedTeam) {
                             userTeam = data.managedTeam; 
                             document.getElementById('team-badge').innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Admin: ${userTeam}`;
-                            
-                            // Trigger the fetch function
                             fetchExistingData(userTeam);
-
                         } else {
                             authCheck.innerHTML = `<i class="fa-solid fa-ban text-red-600 text-5xl mb-4"></i><h2 class="text-2xl font-bold font-head uppercase mb-2">Access Denied</h2><p class="text-gray-600">You do not have Game Day admin permissions.</p><a href="profile.html" class="inline-block mt-4 text-blue-600 underline">Return to Profile</a>`;
                         }
@@ -206,6 +255,7 @@
             }
         });
 
+        // --- MAIN FORM SUBMISSION ---
         document.getElementById('gameDataForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -231,6 +281,7 @@
                 theme: document.getElementById('theme').value,
                 stadium: document.getElementById('stadium').value,
                 address: document.getElementById('address').value,
+                // Passing back the existing approved link so it isn't wiped out
                 ticketLink: document.getElementById('ticketLink').value
             };
 
@@ -249,6 +300,84 @@
                 statusMsg.innerText = "Error updating sheet. Check console.";
                 statusMsg.className = "text-center font-bold mt-4 text-red-600 text-lg";
                 console.error(error);
+            });
+        });
+
+        // --- TICKET LINK REQUEST LOGIC ---
+        window.openTicketModal = function() {
+            if (!globalUser || !globalUserData) return;
+            
+            document.getElementById('ticketReqFirstName').value = globalUserData.firstName || "N/A";
+            document.getElementById('ticketReqLastName').value = globalUserData.lastName || "N/A";
+            document.getElementById('ticketReqEmail').value = globalUser.email || "N/A";
+            
+            const overlay = document.getElementById('ticketModalOverlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.children[0].classList.remove('scale-95');
+                overlay.children[0].classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeTicketModal = function() {
+            const overlay = document.getElementById('ticketModalOverlay');
+            overlay.classList.add('opacity-0');
+            overlay.children[0].classList.add('scale-95');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                document.getElementById('ticketReqForm').reset();
+                document.getElementById('ticketReqStatus').classList.add('hidden');
+                document.getElementById('submitTicketReqBtn').style.display = 'block';
+                document.getElementById('submitTicketReqBtn').disabled = false;
+            }, 300);
+        };
+
+        document.getElementById('ticketReqForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitTicketReqBtn'); 
+            const msg = document.getElementById('ticketReqStatus');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
+            const requestedUrl = document.getElementById('ticketReqUrl').value;
+            const username = globalUserData?.username || "Unknown";
+            const uid = globalUser.uid;
+            
+            const combinedMessage = `*** TICKET LINK APPROVAL REQUEST ***\n` +
+                                    `Team: ${userTeam}\n\n` +
+                                    `Requested Link: ${requestedUrl}\n\n` +
+                                    `*** USER INFO ***\n` +
+                                    `Username: @${username}\n` +
+                                    `User ID: ${uid}`;
+            
+            const params = new URLSearchParams();
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", document.getElementById('ticketReqFirstName').value); 
+            params.append("entry.1429224270", document.getElementById('ticketReqLastName').value); 
+            params.append("entry.1778241553", document.getElementById('ticketReqEmail').value); 
+            
+            fetch(CONTACT_SUBMIT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Request Sent for Review!';
+                 setTimeout(() => { window.closeTicketModal(); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending request.'; 
             });
         });
     </script>
