@@ -235,6 +235,7 @@
                     let badgeClass = "";
                     let dotClass = "hidden";
                     let cardBorder = "border-gray-300 shadow-md";
+                    let clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>`;
 
                     const statusUpper = (game.status || "").toUpperCase();
                     const qtrUpper = (game.quarter || "").toUpperCase();
@@ -252,6 +253,7 @@
                         badgeText = "FINAL";
                         badgeClass = "bg-gray-800 text-white";
                         cardBorder = "border-gray-400 shadow-sm opacity-80"; 
+                        clockHtml = ""; // Hides the clock completely
                     } else {
                         badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + game.quarter;
                         badgeClass = "bg-red-600 text-white animate-pulse";
@@ -301,7 +303,7 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
-                                    <span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>
+                                    ${clockHtml}
                                 </div>
                             </div>
 
