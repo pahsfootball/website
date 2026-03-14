@@ -188,13 +188,11 @@
         let myTeamObj = null;
         let oppTeamObj = null;
 
-        // --- HELPER TO SCRUB ASTERISKS FROM CSV DATA ---
         function cleanText(str) {
             if (!str) return "";
             return str.replace(/\*/g, '').trim(); 
         }
 
-        // --- LOAD DIRECTORY CSV ---
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         
         Papa.parse(MASTER_TEAMS_CSV, {
@@ -202,7 +200,6 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                // Map and clean headers based on user's exact structure
                 directoryData = results.data.map(row => ({
                     school: cleanText(row['School']),
                     mascot: cleanText(row['Mascot'] || row['Team']),
@@ -211,7 +208,6 @@
                     address: cleanText(row['FieldLocation'] || row['City'])
                 })).filter(t => t.school !== "");
 
-                // Populate Datalist for Opponent Dropdown
                 const datalist = document.getElementById('teamDirectoryList');
                 directoryData.sort((a,b) => a.school.localeCompare(b.school)).forEach(team => {
                     const option = document.createElement('option');
@@ -219,12 +215,10 @@
                     datalist.appendChild(option);
                 });
 
-                // If auth already resolved, initialize the form
                 if (adminTeamName) initDashboard();
             }
         });
 
-        // --- AUTH & ADMIN CHECK ---
         onAuthStateChanged(auth, async (user) => {
             const loading = document.getElementById('loadingState');
             const denied = document.getElementById('deniedState');
@@ -239,13 +233,11 @@
                             adminTeamName = data.managedTeam;
                             document.getElementById('managedTeamDisplay').innerText = adminTeamName;
                             
-                            // SET THE EXIT BUTTON LINK TO THEIR TEAM'S GAMEDAY PAGE
                             document.getElementById('btnExitController').href = `gameday.html?team=${encodeURIComponent(adminTeamName)}`;
                             
                             loading.classList.add('hidden');
                             dash.classList.remove('hidden');
                             
-                            // If CSV is already loaded, init form
                             if (directoryData.length > 0) initDashboard();
                         } else {
                             loading.classList.add('hidden'); denied.classList.remove('hidden');
@@ -262,31 +254,22 @@
             }
         });
 
-        // --- INIT DASHBOARD LOGIC ---
         function initDashboard() {
-            // 1. Find Admin's Team in Directory
             myTeamObj = directoryData.find(t => t.school.toLowerCase() === adminTeamName.toLowerCase());
-            
             if (myTeamObj && myTeamObj.logo) {
                 const logoEl = document.getElementById('myTeamLogo');
                 logoEl.src = myTeamObj.logo;
                 document.getElementById('myTeamLogoContainer').classList.remove('hidden');
             }
-
-            // 2. Set Initial Location (Defaults to Home)
             updateLocationFields();
         }
 
-        // --- OPPONENT SELECTION LISTENER ---
         document.getElementById('oppSelect').addEventListener('input', function(e) {
             const selectedSchool = e.target.value.trim();
             oppTeamObj = directoryData.find(t => t.school.toLowerCase() === selectedSchool.toLowerCase());
-            
-            // Auto-trigger location update in case "Away" is selected
             updateLocationFields();
         });
 
-        // --- LOCATION RADIO LISTENER ---
         document.querySelectorAll('input[name="locationType"]').forEach(radio => {
             radio.addEventListener('change', updateLocationFields);
         });
@@ -315,7 +298,6 @@
             }
         }
 
-        // --- SUBMIT GAME DAY CONFIG TO FIREBASE ---
         document.getElementById('matchupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitGameBtn');
@@ -325,14 +307,12 @@
             btn.disabled = true;
             btn.classList.add('opacity-70');
 
-            // Collect Data
             const oppName = document.getElementById('oppSelect').value.trim();
             if (!oppName) {
                 alert("Please select an opponent.");
                 btn.innerText = "Publish Game Day"; btn.disabled = false; btn.classList.remove('opacity-70'); return;
             }
 
-            // Explicitly cast to Strings to prevent Firebase 'undefined' crashes
             const payload = {
                 yourTeam: String(adminTeamName),
                 yourTeamMascot: String(myTeamObj ? myTeamObj.mascot : ""),
@@ -357,21 +337,19 @@
             };
 
             try {
-                // 1. Save Matchup to 'gameday_config'
                 const safeKey = adminTeamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const configRef = ref(dbRealtime, 'gameday_config/' + safeKey);
                 await set(configRef, payload);
 
-                // 2. Initialize the Scoreboard to 0-0 in 'live_scores'
-                const isHome = payload.homeAway.toLowerCase() === 'home';
+                // --- CRITICAL FIX: "Neutral" now treats the Admin's team as Home ---
+                const isHome = payload.homeAway.toLowerCase() !== 'away'; 
+                
                 const hName = (isHome ? payload.yourTeam : payload.opponent).replace(/[^a-zA-Z0-9]/g, '');
                 const aName = (isHome ? payload.opponent : payload.yourTeam).replace(/[^a-zA-Z0-9]/g, '');
                 const gameKey = [hName, aName].sort().join('_');
                 
                 const scoreRef = ref(dbRealtime, 'live_scores/' + gameKey);
                 
-                // We use update here so we don't accidentally overwrite an active score 
-                // if they are just fixing a typo in the controller.
                 await update(scoreRef, {
                     home: isHome ? payload.yourTeam : payload.opponent,
                     away: !isHome ? payload.yourTeam : payload.opponent,
@@ -394,7 +372,6 @@
 
             } catch (err) {
                 console.error(err);
-                // Reveal exact error to user for debugging Firebase Rules
                 msg.innerText = "Error: " + err.message;
                 msg.classList.replace('text-green-500', 'text-red-500');
                 msg.classList.remove('hidden');
