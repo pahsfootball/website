@@ -36,7 +36,6 @@
         /* --- PROFILE CONTAINER --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
         
-        /* Added position: relative here for the close button */
         .profile-card { position: relative; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); overflow: hidden; border-top: 5px solid var(--gold-base); padding: 30px; box-sizing: border-box; margin-bottom: 20px; }
 
         /* Custom Close Button for the Card */
@@ -44,7 +43,7 @@
         .close-profile-btn:hover { color: #ef4444; transform: scale(1.1); }
 
         /* --- STATS & BADGE ROW --- */
-        .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); }
+        .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); }
         .badge-container { display: flex; align-items: center; }
         .badge-icon { width: 60px; height: 60px; border-radius: 50%; background: var(--dark-header); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--gold-base); border: 2px solid var(--gold-base); box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-right: 15px; }
         .badge-text { display: flex; flex-direction: column; }
@@ -94,7 +93,7 @@
     <div class="content-area">
         <div class="profile-card">
             
-            <a href="https://pahsfootball.com" class="close-profile-btn" title="Close Profile">
+            <a href="index.html" class="close-profile-btn" title="Close Profile">
                 <i class="fa-solid fa-xmark"></i>
             </a>
 
@@ -112,6 +111,17 @@
                 </div>
             </div>
 
+            <div class="flex justify-around bg-gray-100 rounded-xl p-3 mb-6 border border-gray-200 text-center shadow-inner">
+                <div class="w-1/2 border-r border-gray-300">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Followers</p>
+                    <p class="text-2xl font-head font-bold text-gray-900 leading-none" id="followersCount">0</p>
+                </div>
+                <div class="w-1/2">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Following</p>
+                    <p class="text-2xl font-head font-bold text-gray-900 leading-none" id="followingCount">0</p>
+                </div>
+            </div>
+
             <form id="profileForm">
                 <label>Email Address</label>
                 <div class="readonly-text" id="displayEmail">loading...</div>
@@ -122,9 +132,14 @@
                 <label for="aboutMeInput">About Me / Bio</label>
                 <textarea id="aboutMeInput" rows="3" placeholder="Tell us about yourself..."></textarea>
 
-                <label>Teams I'm Following (Click to view info)</label>
+                <label>Teams I'm Following</label>
                 <div id="followedTeamsList" class="py-2 mb-4" style="min-height: 40px;">
                     <span class="text-xs text-gray-500 italic">Checking your watchlist...</span>
+                </div>
+
+                <label>Members I'm Following</label>
+                <div id="followedUsersList" class="py-2 mb-4 flex flex-wrap gap-2" style="min-height: 40px;">
+                    <span class="text-xs text-gray-500 italic">Checking your network...</span>
                 </div>
 
                 <div id="admin-controls" class="hidden mt-4 mb-8 border-t border-gray-300 pt-6">
@@ -176,6 +191,9 @@
         const usernameInput = document.getElementById('usernameInput');
         const aboutMeInput = document.getElementById('aboutMeInput');
         const followedTeamsList = document.getElementById('followedTeamsList');
+        const followedUsersList = document.getElementById('followedUsersList');
+        const followersCount = document.getElementById('followersCount');
+        const followingCount = document.getElementById('followingCount');
         const userPoints = document.getElementById('userPoints');
         const userBadgeTitle = document.getElementById('userBadgeTitle');
         const userBadgeIcon = document.getElementById('userBadgeIcon');
@@ -186,10 +204,13 @@
         let currentUserUid = null;
         let currentSavedUsername = ""; 
 
+        // UPDATED BADGE LOGIC TO MATCH COMMUNITY.HTML
         function calculateBadge(points) {
-            if (points >= 500) return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
-            if (points >= 100) return { title: "Varsity", icon: '<i class="fa-solid fa-medal"></i>' };
-            return { title: "Rookie", icon: '<i class="fa-solid fa-shield-halved"></i>' };
+            if (points >= 500) return { title: "Hall of Fame", icon: '<i class="fa-solid fa-crown"></i>' };
+            if (points >= 150) return { title: "All-State", icon: '<i class="fa-solid fa-trophy"></i>' };
+            if (points >= 50) return { title: "Varsity", icon: '<i class="fa-solid fa-star"></i>' };
+            if (points >= 10) return { title: "Super Fan", icon: '<i class="fa-solid fa-bullhorn"></i>' };
+            return { title: "Fan", icon: '<i class="fa-solid fa-user"></i>' };
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -214,6 +235,7 @@
                         userBadgeTitle.innerText = badgeInfo.title;
                         userBadgeIcon.innerHTML = badgeInfo.icon;
 
+                        // TEAM WATCHLIST
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
@@ -225,6 +247,41 @@
                             followedTeamsList.innerHTML = '<span class="text-xs text-gray-500">Not following any teams yet. Head over to the Directory to add some!</span>';
                         }
 
+                        // MEMBER WATCHLIST & SOCIAL STATS
+                        const followingArray = data.following || [];
+                        followingCount.innerText = followingArray.length;
+
+                        if (followingArray.length > 0) {
+                            followedUsersList.innerHTML = '<span class="text-xs text-gray-500">Loading members...</span>';
+                            let followingHtml = '';
+                            
+                            // Fetch usernames for the people they follow
+                            for (const uid of followingArray) {
+                                try {
+                                    const uSnap = await getDoc(doc(db, "users", uid));
+                                    if (uSnap.exists()) {
+                                        const uData = uSnap.data();
+                                        followingHtml += `<span class="inline-flex items-center bg-pahs-dark text-pahs-gold text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border border-pahs-gold">@${uData.username || 'Unknown'}</span>`;
+                                    }
+                                } catch(e) { console.error(e); }
+                            }
+                            followedUsersList.innerHTML = followingHtml || '<span class="text-xs text-gray-500 italic">No active members found.</span>';
+                        } else {
+                            followedUsersList.innerHTML = '<span class="text-xs text-gray-500 italic">You are not following anyone yet. Head to the Fan Zone to find friends!</span>';
+                        }
+
+                        // CALCULATE HOW MANY USERS ARE FOLLOWING THEM
+                        try {
+                            const usersRef = collection(db, "users");
+                            const followersQuery = query(usersRef, where("following", "array-contains", currentUserUid));
+                            const followersSnap = await getDocs(followersQuery);
+                            followersCount.innerText = followersSnap.size;
+                        } catch(e) {
+                            console.error("Failed to load followers count:", e);
+                            followersCount.innerText = "-";
+                        }
+
+                        // ADMIN CONTROLS
                         if (data.role === 'admin') {
                             document.getElementById('admin-controls').classList.remove('hidden');
                             
@@ -244,7 +301,7 @@
                     console.error("Load error:", error);
                 }
             } else {
-                window.location.href = "login.html"; // Ensure login.html is your actual login page
+                window.location.href = "login.html"; 
             }
         });
 
