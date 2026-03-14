@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions | PAHS Football</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            background-color: #adadad; 
+            color: #18181b; 
+            font-family: 'Inter', sans-serif; 
+            min-height: 100vh; 
+        }
+        .content-card { 
+            background: #f4f4f5; 
+            border: 1px solid rgba(0, 0, 0, 0.1); 
+            border-top: 5px solid #fbbf24; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10 py-4 px-4 sm:px-8">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="javascript:history.back()" class="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-bold font-head tracking-wide uppercase">Terms & Conditions</h1>
+            </div>
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <i class="fa-solid fa-scale-balanced text-pahs-gold"></i>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-4 py-10">
+        <div class="content-card rounded-2xl p-6 sm:p-10 bg-white">
+            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2 border-b border-gray-300 pb-4">Community Guidelines & Terms of Service</h2>
+            <p class="text-sm text-gray-500 mb-8 italic">Last Updated: Today</p>
+
+            <div class="space-y-6 font-body text-gray-800 leading-relaxed text-sm sm:text-base">
+                
+                <section>
+                    <h3 class="font-bold text-xl text-pahs-dark mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> 1. A Family-Friendly Environment</h3>
+                    <p>PAHS Football and the Fan Zone are designed to be a supportive, fun, and safe environment for fans, students, parents, and athletes of all ages. By creating an account and participating in our community, you agree to treat others with respect and good sportsmanship.</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-xl text-pahs-dark mb-2"><i class="fa-solid fa-ban text-red-600 mr-2"></i> 2. Prohibited Content & Behavior</h3>
+                    <p>To maintain a safe environment, the following behaviors are strictly prohibited. Engaging in any of these will result in immediate moderation action:</p>
+                    <ul class="list-disc pl-6 mt-2 space-y-1 text-gray-700">
+                        <li><strong>Profanity & Vulgarity:</strong> The use of explicit language, slurs, or highly offensive terminology.</li>
+                        <li><strong>Filter Evasion:</strong> Intentionally misspelling, substituting characters (e.g., using numbers for letters), or otherwise attempting to bypass our automated profanity and username filters.</li>
+                        <li><strong>Inappropriate Usernames:</strong> Usernames must be family-friendly. Names containing suggestive, offensive, or vulgar terminology will result in an immediate ban.</li>
+                        <li><strong>Harassment & Bullying:</strong> Threatening, targeting, mocking, or attacking players, coaches, officials, or other fans.</li>
+                        <li><strong>Spam & Scams:</strong> Posting fake ticket links, unauthorized merchandise sales, malicious websites, or repetitive spam messages.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-xl text-pahs-dark mb-2"><i class="fa-solid fa-gavel text-pahs-gold mr-2"></i> 3. Account Suspensions & Bans</h3>
+                    <p>PAHS Football administrators reserve the right to moderate the Fan Zone at their sole discretion. We actively monitor posts and user reports.</p>
+                    <p class="mt-2">Violating these Terms and Conditions may result in the immediate removal of your content, a temporary suspension of your posting privileges, or a <strong>permanent ban</strong> of your account and IP address without prior warning.</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-xl text-pahs-dark mb-2"><i class="fa-solid fa-shield-halved text-pahs-gold mr-2"></i> 4. User Responsibility</h3>
+                    <p>You are solely responsible for the content you post in the Fan Zone. PAHS Football is not liable for user-generated content, external links posted by users, or any damages resulting from interactions within the community.</p>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
