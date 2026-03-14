@@ -10,20 +10,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-
+    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        pahs: { dark: '#0f0f0f', gold: 'var(--team-primary, #fbbf24)' }
-                    },
-                    fontFamily: {
-                        'head': ['Teko', 'sans-serif'],
-                        'body': ['Inter', 'sans-serif'],
-                    }
-                }
-            }
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        pahs: { 
+                            dark: '#0f0f0f', 
+                            gold: 'var(--team-primary, #fbbf24)' 
+                        } 
+                    }, 
+                    fontFamily: { 
+                        'head': ['Teko', 'sans-serif'], 
+                        'body': ['Inter', 'sans-serif'] 
+                    } 
+                } 
+            } 
         }
     </script>
 
@@ -32,79 +35,23 @@
             --team-primary: #fbbf24;
             --team-text: #000000;
         }
-        body { 
-            background-color: #adadad; 
-            font-family: 'Inter', sans-serif; 
-            color: #18181b; 
-            margin: 0; padding: 0; 
-            min-height: 100vh; 
-        }
+        body { background-color: #adadad; font-family: 'Inter', sans-serif; color: #18181b; margin: 0; padding: 0; min-height: 100vh; }
+        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .countdown-box { background: #18181b; color: white; border-bottom: 3px solid var(--team-primary, #fbbf24); transition: border-color 0.3s; }
+        #loading-overlay { position: fixed; inset: 0; background: #adadad; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .content-card { 
-            background-color: #f4f4f5; 
-            border: 1px solid rgba(0, 0, 0, 0.1); 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
-        }
-        
-        .countdown-box { 
-            background: #18181b; 
-            color: white; 
-            border-bottom: 3px solid var(--team-primary, #fbbf24); 
-            transition: border-color 0.3s; 
-        }
-        
-        #loading-overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: #adadad; 
-            z-index: 100; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        
-        .modal-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.8); 
-            z-index: 150; 
-            backdrop-filter: blur(5px); 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
-        }
-        
-        .modal-content { 
-            background: white; 
-            width: 100%; max-width: 450px; 
-            border-radius: 16px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            overflow: hidden; 
-            animation: slideUp 0.3s ease-out; 
-            position: relative; 
-            border-top: 4px solid var(--team-primary, #fbbf24); 
-        }
-        
-        @keyframes slideUp { 
-            from { opacity: 0; transform: scale(0.95); } 
-            to { opacity: 1; transform: scale(1); } 
-        }
-        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 150; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; border-top: 4px solid var(--team-primary, #fbbf24); }
+        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .pulse-live { animation: pulseLive 2s infinite; }
-        @keyframes pulseLive { 
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 
-            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } 
-        }
+        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
         /* --- SCORE UPDATE ANIMATIONS --- */
         @keyframes scoreUpdateAnim {
             0% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
             15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
             50% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
-            100% { transform: scale(1); }
+            100% { transform: scale(1); } 
         }
         .anim-score-update {
             animation: scoreUpdateAnim 3.5s ease-out forwards;
@@ -131,7 +78,7 @@
 
     <div id="loading-overlay">
         <i class="fa-solid fa-football fa-spin text-4xl text-pahs-gold mb-4"></i>
-        <h2 class="font-head text-2xl text-gray-800" id="loading-text">Loading GameDay Data...</h2>
+        <h2 class="font-head text-2xl text-gray-800" id="loading-text">Loading GameDay Pages...</h2>
     </div>
 
     <div id="claim-team-prompt" class="hidden min-h-screen flex items-center justify-center p-4">
@@ -244,18 +191,56 @@
         </div>
     </div>
 
+    <div id="requestAdminModalOverlay" class="modal-overlay" onclick="closeRequestModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-pahs-dark flex justify-between items-center border-b border-gray-800">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-pahs-gold m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-crown"></i> Request Admin
+                </h2>
+                <button onclick="closeRequestModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    Requesting admin access for <strong id="reqTeamNameDisplay" class="text-gray-900">Team</strong>. Your account details will be attached to this request.
+                </p>
+                <form id="requestAdminForm">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Message / Reason</label>
+                    <textarea id="reqReason" rows="3" required placeholder="Why are you requesting access? (e.g. I am the head coach, booster club president, etc.)" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
+                            <input type="text" id="reqFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
+                            <input type="text" id="reqLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                        </div>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
+                    <input type="email" id="reqEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none cursor-not-allowed" readonly>
+                    
+                    <button type="submit" id="btnSubmitRequest" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                        Submit Request
+                    </button>
+                    <div id="requestStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="main-app" class="hidden">
         <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
             <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
-                
                 <div class="flex items-center gap-2 md:gap-4">
                     <a href="livescoreboards.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
                         <i class="fa-solid fa-arrow-left"></i>
-                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Scores</span>
+                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Back</span>
                     </a>
-                    <a href="community.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                        <i class="fa-solid fa-comments"></i>
-                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Fan Zone</span>
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-list-ol"></i>
+                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Scores</span>
                     </a>
                     <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2">Game Day Central</h1>
                 </div>
@@ -268,7 +253,6 @@
         </nav>
 
         <main class="max-w-4xl mx-auto px-4 py-8">
-            
             <div class="content-card rounded-2xl overflow-hidden mb-6 relative">
                 <div class="bg-[#18181b] p-6 text-center relative overflow-hidden border-b-4 border-pahs-gold transition-colors duration-500">
                     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
@@ -279,8 +263,8 @@
                     <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
                         <div class="text-center flex-1 flex flex-col items-center">
                             <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative transition-colors duration-500">
-                                <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='block';">
-                                <span id="ui-your-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute" style="display:none;">TEA</span>
+                                <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='flex';">
+                                <span id="ui-your-fallback" class="hidden text-2xl md:text-4xl font-black font-head text-black absolute">TEA</span>
                             </div>
                             <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
                             <div class="flex items-center justify-center gap-2 mt-2">
@@ -293,8 +277,8 @@
                         
                         <div class="text-center flex-1 flex flex-col items-center">
                             <div class="w-20 h-20 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative">
-                                <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='block';">
-                                <span id="ui-opp-fallback" class="text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
+                                <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='flex';">
+                                <span id="ui-opp-fallback" class="hidden text-2xl md:text-4xl font-black font-head text-black absolute">OPP</span>
                             </div>
                             <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
                             <div class="flex items-center justify-center gap-2 mt-2">
@@ -316,12 +300,12 @@
                 </div>
             </div>
 
-            <div id="claimActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-lg relative overflow-hidden transition-colors duration-500">
+            <div id="claimActionPanel" class="hidden content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-lg relative overflow-hidden transition-colors duration-500">
                 <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-crown text-pahs-gold mr-2"></i> Admin Needed</h3>
                 <p class="text-sm text-gray-300 mb-5 font-medium relative z-10">There is no matchup configured for this team. Request access to manage this team's Game Day page and push live scores!</p>
                 <div class="flex justify-center relative z-10">
-                    <button id="btn-request-admin" class="bg-pahs-gold text-black font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">
+                    <button onclick="openRequestAdminModal()" class="bg-pahs-gold text-[color:var(--team-text,#000)] font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">
                         Request Admin Access
                     </button>
                 </div>
@@ -331,33 +315,32 @@
                 <div class="content-card rounded-2xl p-6 flex flex-col justify-between">
                     <div>
                         <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
-                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Loading...</p></div></div>
-                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">Loading...</p></div></div>
-                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Check game week</p></div></div>
+                        <div class="space-y-4 text-sm font-body">
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-map-pin"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Status</p><p id="ui-homeaway" class="font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300">TBD</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-regular fa-clock"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">When</p><p id="ui-datetime" class="font-bold text-gray-900">Check schedule</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-shirt"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Theme</p><p id="ui-theme" class="font-bold text-gray-900 bg-black text-white px-2 py-0.5 rounded uppercase text-sm inline-block mt-1">TBD</p></div></div>
+                            <div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div><div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">TBD</p></div></div>
                         </div>
                     </div>
-                    <a id="ui-ticket" href="#" target="_blank" class="hidden text-center w-full mt-6 bg-pahs-gold text-[color:var(--team-text,#000)] font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:brightness-110 transition-all uppercase border border-pahs-gold"><i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online</a>
                 </div>
 
-                <div class="content-card rounded-2xl p-6 flex flex-col">
+                <div class="content-card rounded-2xl p-6 flex flex-col h-[350px]">
                     <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Location</h3>
                     <div class="flex items-center gap-4 mb-4">
                         <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-xl text-red-600"><i class="fa-solid fa-location-dot"></i></div>
                         <div><p id="ui-stadium" class="font-bold text-gray-900">Loading...</p><p id="ui-address" class="text-sm text-gray-600">Loading...</p></div>
                     </div>
-                    <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 min-h-[200px] bg-gray-200">
+                    <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 bg-gray-200 relative">
                         <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
                     </div>
                     <div class="mt-4 flex items-center justify-between gap-3">
-                        <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-solid fa-location-arrow"></i> Directions</a>
-                        <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden"><i class="fa-regular fa-copy"></i> Copy Address</button>
+                        <a id="btn-directions" href="#" target="_blank" class="flex-1 bg-red-600 text-white font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md hidden uppercase"><i class="fa-solid fa-location-arrow"></i> Directions</a>
+                        <button id="btn-copy-address" onclick="copyAddress()" class="flex-1 bg-gray-200 text-gray-800 font-bold text-sm py-2.5 px-4 rounded-lg text-center hover:bg-gray-300 transition flex justify-center items-center gap-2 shadow-md hidden uppercase"><i class="fa-regular fa-copy"></i> Copy Address</button>
                     </div>
                 </div>
             </div>
 
-            <div id="basicScoreboardCard" class="content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500">
+            <div id="basicScoreboardCard" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500">
                 <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
                     <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><span id="sb-live-dot" class="w-3 h-3 rounded-full bg-pahs-gold transition-colors duration-500"></span> Live Scoreboard</h3>
                     <div class="flex items-center gap-3">
@@ -402,14 +385,6 @@
                 </div>
             </div>
 
-            <div id="authActionPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 bg-gray-50 text-center shadow-md">
-                <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 mb-2"><i class="fa-solid fa-users text-pahs-gold mr-2"></i> Join the Action</h3>
-                <p class="text-sm text-gray-600 mb-4 font-medium">Log in or create an account today to post to the Fan Zone!</p>
-                <a href="login.html" class="inline-block bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 px-8 rounded-xl hover:brightness-110 transition-all shadow-lg border border-pahs-gold">
-                    Log In / Sign Up
-                </a>
-            </div>
-
             <div id="fanControlPanel" class="hidden content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold bg-[#18181b] text-center shadow-lg relative overflow-hidden transition-colors duration-500">
                 <div class="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 <h3 class="font-head text-3xl uppercase tracking-wide text-white mb-2 relative z-10"><i class="fa-solid fa-tower-broadcast text-pahs-gold mr-2 transition-colors duration-500"></i> Admin Controls</h3>
@@ -450,53 +425,65 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
-            authDomain: "pahs-football.firebaseapp.com",
-            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/",
-            projectId: "pahs-football",
-            storageBucket: "pahs-football.firebasestorage.app",
-            messagingSenderId: "260294523190",
-            appId: "1:260294523190:web:b3963804702d2a03749b97"
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM", 
+            authDomain: "pahs-football.firebaseapp.com", 
+            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/", 
+            projectId: "pahs-football", 
+            storageBucket: "pahs-football.firebasestorage.app", 
+            messagingSenderId: "260294523190", 
+            appId: "1:260294523190:web:b3963804702d2a03749b97" 
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const dbFirestore = getFirestore(app);   
         const dbRealtime = getDatabase(app);     
+
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+        const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
         
         window.currentUserProfile = null;
         window.currentMatchupData = null; 
 
-        // --- COLOR LOGIC ---
-        const colorNameMap = {
-            "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
-            "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
-            "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
-            "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
-            "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
-        };
+        // --- COLOR LOGIC (SMART CONTRAST) ---
+        const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
 
-        const normalizeColor = function(c) {
+        function normalizeColor(c) {
             if (!c) return null;
             return colorNameMap[c.toLowerCase().trim()] || c;
-        };
+        }
 
-        const getContrast = function(hex) {
-            if(!hex) return 'black';
-            let h = normalizeColor(hex).replace('#','');
-            if(h.length === 3) h = h.split('').map(x=>x+x).join('');
-            if(h.length !== 6) return 'black';
-            const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
-            return (((r*299)+(g*587)+(b*114))/1000 >= 128 ? 'black' : 'white');
-        };
+        function getContrastYIQ(hexcolor){
+            if (!hexcolor || hexcolor.startsWith('rgb')) return 'black';
+            let h = normalizeColor(hexcolor).replace("#", "");
+            if (h.length === 3) h = h.split('').map(s => s + s).join('');
+            if (h.length !== 6) return 'black';
+            var r = parseInt(h.substr(0,2),16);
+            var g = parseInt(h.substr(2,2),16);
+            var b = parseInt(h.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? 'black' : 'white';
+        }
 
-        const parseColors = function(str) {
-            const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
-            return { p: normalizeColor(p[0]) };
-        };
+        function getBestAccent(colorString) {
+            if (!colorString) return "#fbbf24";
+            const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
+            let primary = normalizeColor(parts[0]);
+            let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
+            // The Anti-Black Rule
+            if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
+            return primary;
+        }
+
+        function applyTeamColors(colorString) {
+            const accent = getBestAccent(colorString);
+            if (accent) {
+                const contrast = getContrastYIQ(accent);
+                document.documentElement.style.setProperty('--team-primary', accent);
+                document.documentElement.style.setProperty('--team-text', contrast);
+            }
+        }
 
         function cleanText(str) {
             if (!str) return "";
@@ -517,13 +504,7 @@
 
         function escapeHTML(str) {
             if (!str) return "";
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[tag]));
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[tag]));
         }
 
         function linkify(text) {
@@ -533,7 +514,7 @@
                 const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
                     return `<div class="mt-2 mb-2 rounded-lg overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
-                                <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allowfullscreen></iframe>
                             </div>`;
                 }
                 const displayUrl = cleanUrl.length > 30 ? cleanUrl.substring(0, 30) + '...' : cleanUrl;
@@ -542,11 +523,8 @@
         }
 
         window.sharePage = function() {
-            if (navigator.share) {
-                navigator.share({ title: document.title, url: window.location.href }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); });
-            }
+            if (navigator.share) { navigator.share({ title: document.title, url: window.location.href }).catch(console.error); } 
+            else { navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); }); }
         };
         
         window.copyAddress = function() {
@@ -591,13 +569,12 @@
                 }
                 
                 if (filteredPosts.length === 0) {
-                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this team yet. Be the first!</div>`;
+                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
                     return;
                 }
                 
                 filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 const postsToRender = filteredPosts.slice(0, 3);
-                
                 container.innerHTML = '';
                 
                 postsToRender.forEach(post => {
@@ -628,7 +605,231 @@
             });
         }
 
-        // --- LIVE SCORE LISTENER ---
+        // --- ADMIN DETECTION (Case Insensitive) ---
+        onAuthStateChanged(auth, async (user) => {
+            const teamParam = new URLSearchParams(window.location.search).get('team');
+            if (user && teamParam) {
+                try {
+                    const userDoc = await getDoc(doc(dbFirestore, "users", user.uid));
+                    if (userDoc.exists()) {
+                        window.currentUserProfile = userDoc.data();
+                        
+                        if (window.currentUserProfile.role === 'admin' && 
+                            window.currentUserProfile.managedTeam && 
+                            window.currentUserProfile.managedTeam.toLowerCase() === teamParam.toLowerCase()) {
+                            
+                            document.getElementById('fanControlPanel').classList.remove('hidden');
+                            
+                            // If matchup is active, show the Update Score button
+                            if (window.currentMatchupData) {
+                                document.getElementById('btn-update-score-admin').classList.remove('hidden');
+                            }
+                        }
+                    } else {
+                        window.currentUserProfile = { username: "Anonymous Fan" };
+                    }
+                } catch(e) { window.currentUserProfile = { username: "Fan" }; }
+            } else {
+                window.currentUserProfile = null;
+                document.getElementById('fanControlPanel').classList.add('hidden');
+            }
+        });
+
+        // --- MAIN DATA LOADER (CSV to UI) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const teamParam = new URLSearchParams(window.location.search).get('team');
+            if (!teamParam) { 
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('claim-team-prompt').classList.remove('hidden');
+                return; 
+            }
+
+            Papa.parse(CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: async function(results) {
+                    const teamRow = results.data.find(r => {
+                        const school = r['School'] ? cleanText(r['School']) : '';
+                        return school.toLowerCase() === teamParam.toLowerCase();
+                    });
+
+                    if (!teamRow) {
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        document.getElementById('claim-team-prompt').classList.remove('hidden');
+                        return;
+                    }
+
+                    // Apply Colors Smartly
+                    applyTeamColors(teamRow['Colors'] || teamRow['Color']);
+
+                    // Check Firebase for Active Game
+                    try {
+                        const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
+                        const game = snapshot.val();
+
+                        document.getElementById('loading-overlay').style.display = 'none';
+
+                        if (!game || !game.yourTeam) {
+                            // --- OFFSEASON FALLBACK STATE ---
+                            document.getElementById('main-app').classList.remove('hidden');
+                            document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
+                            
+                            document.getElementById('ui-your-name').innerText = cleanText(teamRow['School']);
+                            document.getElementById('ui-your-mascot').innerText = cleanText(teamRow['Mascot']) || "";
+                            document.getElementById('ui-your-record').innerText = "";
+                            
+                            const logoUrl = cleanText(teamRow['Logo']);
+                            const yourLogoEl = document.getElementById('ui-your-logo');
+                            const yourFallbackEl = document.getElementById('ui-your-fallback');
+                            
+                            if(logoUrl) { 
+                                yourLogoEl.src = logoUrl; 
+                                yourLogoEl.style.display = 'block'; 
+                                yourFallbackEl.style.display = 'none'; 
+                            } else { 
+                                yourLogoEl.style.display = 'none'; 
+                                yourFallbackEl.style.display = 'flex'; 
+                                yourFallbackEl.innerText = cleanText(teamRow['School']).substring(0,3).toUpperCase(); 
+                            }
+
+                            document.getElementById('ui-opp-name').innerText = "TBD";
+                            document.getElementById('ui-opp-mascot').innerText = "Awaiting Schedule";
+                            document.getElementById('ui-opp-record').innerText = "";
+                            document.getElementById('ui-opp-logo').style.display = 'none'; 
+                            document.getElementById('ui-opp-fallback').style.display = 'flex'; 
+                            document.getElementById('ui-opp-fallback').innerText = "TBD"; 
+
+                            document.getElementById('ui-homeaway').innerText = "TBD";
+                            document.getElementById('ui-theme').innerText = "TBD";
+                            
+                            const stadiumName = cleanText(teamRow['FieldName']);
+                            const stadiumLoc = cleanText(teamRow['FieldLocation']) || cleanText(teamRow['City']);
+                            
+                            document.getElementById('ui-stadium').innerText = stadiumName || "Stadium TBA";
+                            document.getElementById('ui-address').innerText = stadiumLoc || "Address TBA";
+                            document.getElementById('ui-datetime').innerText = "Check back for schedule updates";
+                            document.getElementById('ui-weather').innerText = "Too early for forecast";
+                            document.getElementById('countdown-section').style.display = 'none';
+                            
+                            if (stadiumLoc) {
+                                const encodedAddress = encodeURIComponent(stadiumLoc);
+                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&output=embed`;
+                                document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
+                                document.getElementById('btn-directions').style.display = 'block';
+                            }
+                            
+                            document.getElementById('basicScoreboardCard').style.display = 'none';
+                            document.getElementById('claimActionPanel').classList.remove('hidden');
+
+                            listenToEmbeddedPosts(cleanText(teamRow['School']), null);
+
+                        } else {
+                            // --- ACTIVE GAME DAY STATE ---
+                            window.currentMatchupData = game;
+                            document.getElementById('main-app').classList.remove('hidden');
+                            document.getElementById('ui-week').innerText = "MATCHUP";
+                            
+                            document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
+                            document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
+                            document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
+                            
+                            const yourLogoEl = document.getElementById('ui-your-logo');
+                            const yourFallbackEl = document.getElementById('ui-your-fallback');
+                            if(game.yourTeamLogo && game.yourTeamLogo.trim() !== "") { 
+                                yourLogoEl.src = game.yourTeamLogo; 
+                                yourLogoEl.style.display = 'block'; 
+                                yourFallbackEl.style.display = 'none'; 
+                            } else { 
+                                yourLogoEl.style.display = 'none'; 
+                                yourFallbackEl.style.display = 'flex'; 
+                                yourFallbackEl.innerText = game.yourTeam ? game.yourTeam.substring(0,3).toUpperCase() : "TEA"; 
+                            }
+
+                            document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
+                            document.getElementById('ui-opp-mascot').innerText = game.oppMascot || "";
+                            document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : "";
+                            
+                            const oppLogoEl = document.getElementById('ui-opp-logo');
+                            const oppFallbackEl = document.getElementById('ui-opp-fallback');
+                            if(game.oppLogo && game.oppLogo.trim() !== "") { 
+                                oppLogoEl.src = game.oppLogo; 
+                                oppLogoEl.style.display = 'block'; 
+                                oppFallbackEl.style.display = 'none'; 
+                            } else { 
+                                oppLogoEl.style.display = 'none'; 
+                                oppFallbackEl.style.display = 'flex'; 
+                                oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
+                            }
+
+                            let isHome = (game.homeAway || "").toLowerCase().includes('home');
+                            document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
+                            document.getElementById('ui-homeaway').className = isHome ? "font-bold bg-pahs-gold text-[color:var(--team-text,#000)] px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-pahs-gold" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
+                            
+                            document.getElementById('ui-theme').innerText = game.theme || "No Theme";
+                            document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
+                            document.getElementById('ui-address').innerText = game.address || "Address TBA";
+
+                            let gameDateObj = null;
+                            if (game.date && game.time) {
+                                try {
+                                    let dObj = new Date(`${game.date} ${game.time}`);
+                                    if(!isNaN(dObj)) {
+                                        gameDateObj = dObj;
+                                        document.getElementById('ui-datetime').innerText = `${dObj.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'})} • ${dObj.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}`;
+                                        startCountdown(dObj.getTime());
+                                    } else { throw new Error(); }
+                                } catch(e) { document.getElementById('ui-datetime').innerText = `${game.date} • ${game.time}`; }
+                            }
+
+                            if(game.address) {
+                                const encodedAddress = encodeURIComponent(game.address);
+                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&output=embed`;
+                                document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
+                                document.getElementById('btn-directions').style.display = 'block';
+                                document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
+                                document.getElementById('btn-copy-address').style.display = 'block';
+                                
+                                fetchWeather(game.address, gameDateObj);
+                            }
+
+                            // Force the admin button to show if auth loaded before game data
+                            if (window.currentUserProfile && window.currentUserProfile.role === 'admin' && window.currentUserProfile.managedTeam && window.currentUserProfile.managedTeam.toLowerCase() === teamParam.toLowerCase()) {
+                                document.getElementById('btn-update-score-admin').classList.remove('hidden');
+                            }
+
+                            document.getElementById('basicScoreboardCard').classList.remove('hidden');
+                            listenToLiveScore(game);
+                            listenToEmbeddedPosts(game.yourTeam, game.opponent);
+                        }
+
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>Connection Error</h2><p class='text-gray-600 mt-2'>Could not load data. Refresh the page.</p>";
+                    }
+                }
+            });
+        });
+
+        let timerInterval;
+        function startCountdown(kickoffTime) {
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(function() {
+                const distance = kickoffTime - new Date().getTime();
+                if (distance < 0) {
+                    clearInterval(timerInterval); document.getElementById("countdown-label").style.display = 'none';
+                    document.getElementById("countdown-container").innerHTML = `<div class='flex flex-col items-center justify-center py-2 w-full'><div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div></div>`;
+                    return;
+                }
+                document.getElementById("cd-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById("cd-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            }, 1000);
+        }
+
+        // --- SCOREBOARD LISTENER ---
         function listenToLiveScore(game) {
             const isHome = (game.homeAway || "").toLowerCase().includes('home');
             const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
@@ -641,14 +842,12 @@
             const updaterText = document.getElementById('sb-updated-by');
             const sbClock = document.getElementById('sb-clock');
 
-            onValue(ref(dbRealtime, 'live_scores/' + gameKey), (snapshot) => {
+            onValue(ref(dbR, 'live_scores/' + gameKey), (snapshot) => {
                 document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
                 document.getElementById('sb-away-name').innerText = !isHome ? game.yourTeam : game.opponent;
                 
-                const hLogo = document.getElementById('sb-home-logo'); 
-                const aLogo = document.getElementById('sb-away-logo');
-                const hFall = document.getElementById('sb-home-fall'); 
-                const aFall = document.getElementById('sb-away-fall');
+                const hLogo = document.getElementById('sb-home-logo'); const aLogo = document.getElementById('sb-away-logo');
+                const hFall = document.getElementById('sb-home-fall'); const aFall = document.getElementById('sb-away-fall');
                 
                 hFall.innerText = (isHome ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
                 aFall.innerText = (!isHome ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
@@ -656,10 +855,10 @@
                 let hUrl = isHome ? game.yourTeamLogo : game.oppLogo; 
                 let aUrl = !isHome ? game.yourTeamLogo : game.oppLogo;
                 
-                if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none'; }
+                if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
                 else { hLogo.style.display = 'none'; hFall.style.display='block'; }
                 
-                if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; aFall.style.display='none'; }
+                if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; aFall.style.display='none';}
                 else { aLogo.style.display = 'none'; aFall.style.display='block'; }
 
                 const data = snapshot.val();
@@ -675,16 +874,9 @@
                     const homePossIcon = document.getElementById('home-poss');
                     const awayPossIcon = document.getElementById('away-poss');
                     
-                    if (data.possession === 'home') {
-                        homePossIcon.classList.remove('hidden');
-                        awayPossIcon.classList.add('hidden');
-                    } else if (data.possession === 'away') {
-                        homePossIcon.classList.add('hidden');
-                        awayPossIcon.classList.remove('hidden');
-                    } else {
-                        homePossIcon.classList.add('hidden');
-                        awayPossIcon.classList.add('hidden');
-                    }
+                    if (data.possession === 'home') { homePossIcon.classList.remove('hidden'); awayPossIcon.classList.add('hidden'); } 
+                    else if (data.possession === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
+                    else { homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden'); }
 
                     if(data.homeLogo && data.homeLogo.trim() !== "") { hLogo.src = data.homeLogo; hLogo.style.display = 'block'; hFall.style.display='none';}
                     if(data.awayLogo && data.awayLogo.trim() !== "") { aLogo.src = data.awayLogo; aLogo.style.display = 'block'; aFall.style.display='none';}
@@ -695,37 +887,271 @@
                         statusBadge.className = "bg-pahs-gold text-[color:var(--team-text,#000)] text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-pahs-gold"; 
                         sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500";
-                        homePossIcon.classList.add('hidden'); 
-                        awayPossIcon.classList.add('hidden'); 
+                        homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "HALF") {
-                        statusBadge.innerText = "HALFTIME"; 
-                        statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
-                        homePossIcon.classList.add('hidden'); 
-                        awayPossIcon.classList.add('hidden'); 
+                        statusBadge.innerText = "HALFTIME"; statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
+                        homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "FINAL" || data.status === "FINAL") {
-                        statusBadge.innerText = "FINAL"; 
-                        statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
-                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-colors duration-500";
-                        homePossIcon.classList.add('hidden'); 
-                        awayPossIcon.classList.add('hidden'); 
+                        statusBadge.innerText = "FINAL"; statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
+                        liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-colors duration-500";
+                        homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = 'none'; 
                     } else {
-                        statusBadge.innerText = "QTR " + qtr; 
-                        statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
-                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
+                        statusBadge.innerText = "QTR " + qtr; statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
+                        liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
                         sbClock.style.display = '';
                     }
                 }
             });
         }
 
-        // --- WEATHER FETCH ---
+        // --- UPDATE SCORE MODAL CONTROLS ---
+        window.openScoreModal = async function() {
+            const game = window.currentMatchupData;
+            if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
+            
+            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            document.getElementById('lblHome').innerText = (isHome ? game.yourTeam : game.opponent) + " Score";
+            document.getElementById('lblAway').innerText = (!isHome ? game.yourTeam : game.opponent) + " Score";
+            document.getElementById('optPossHome').innerText = isHome ? game.yourTeam : game.opponent;
+            document.getElementById('optPossAway').innerText = (!isHome ? game.yourTeam : game.opponent);
+
+            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [homeName, awayName].sort().join('_');
+            
+            try {
+                const snapshot = await get(ref(dbR, 'live_scores/' + gameKey));
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('inpHomeScore').value = data.homeScore || 0;
+                    document.getElementById('inpAwayScore').value = data.awayScore || 0;
+                    document.getElementById('inpQuarter').value = data.quarter || '1';
+                    document.getElementById('inpTime').value = data.clock || '12:00';
+                    document.getElementById('inpPossession').value = data.possession || 'none';
+                }
+            } catch(e) { console.error(e); }
+            
+            document.getElementById('scoreUpdateModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeScoreModal = function() { 
+            document.getElementById('scoreUpdateModal').style.display = 'none'; 
+            document.body.style.overflow = '';
+        };
+
+        document.getElementById('scoreUpdateForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnPushScore');
+            const origText = btn.innerText;
+            btn.innerText = "Pushing..."; btn.disabled = true;
+
+            const game = window.currentMatchupData;
+            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            
+            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [homeName, awayName].sort().join('_');
+            
+            const qtr = document.getElementById('inpQuarter').value;
+            let status = "LIVE";
+            if (qtr === "FINAL") status = "FINAL";
+            if (qtr === "HALF") status = "HALF";
+            if (qtr === "PREGAME") status = "PREGAME";
+
+            const usernameToSave = window.currentUserProfile ? window.currentUserProfile.username : "Unknown Admin";
+
+            const updateData = {
+                home: isHome ? game.yourTeam : game.opponent,
+                away: !isHome ? game.yourTeam : game.opponent,
+                homeLogo: isHome ? game.yourTeamLogo : game.oppLogo,
+                awayLogo: !isHome ? game.yourTeamLogo : game.oppLogo,
+                homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
+                awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
+                quarter: qtr,
+                clock: document.getElementById('inpTime').value || "00:00",
+                possession: document.getElementById('inpPossession').value, 
+                status: status,
+                updatedBy: usernameToSave,
+                lastUpdated: new Date().toISOString()
+            };
+
+            update(ref(dbR, 'live_scores/' + gameKey), updateData).then(() => {
+                window.closeScoreModal(); 
+                btn.innerText = origText; 
+                btn.disabled = false;
+            }).catch(err => {
+                alert("Error updating score."); btn.innerText = origText; btn.disabled = false;
+            });
+        });
+
+        // --- SHARE SCORE MODAL ---
+        window.openShareScoreModal = function(e) {
+            if (e) e.stopPropagation();
+            if (!auth.currentUser) {
+                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
+                    window.location.href = "login.html";
+                }
+                return;
+            }
+
+            const homeName = document.getElementById('sb-home-name').innerText;
+            const homeScore = document.getElementById('sb-home-score').innerText;
+            const awayName = document.getElementById('sb-away-name').innerText;
+            const awayScore = document.getElementById('sb-away-score').innerText;
+            const status = document.getElementById('sb-status').innerText;
+            const clock = document.getElementById('sb-clock').innerText;
+
+            let timeStr = "";
+            if (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") { timeStr = ` | Time: ${clock}`; }
+
+            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}\n\n`;
+            
+            document.getElementById('shareScoreContent').value = shareText;
+
+            const overlay = document.getElementById('shareScoreModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeShareScoreModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
+                const overlay = document.getElementById('shareScoreModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+            }
+        };
+
+        window.submitSharedScore = async function() {
+            const btn = document.getElementById('submitShareScoreBtn');
+            const content = document.getElementById('shareScoreContent').value.trim();
+            const origText = btn.innerText;
+            
+            if (content === "") return alert("Post cannot be empty.");
+            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            btn.innerText = "Posting...";
+            btn.disabled = true;
+
+            const cleanContent = filterProfanity(content);
+            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
+            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
+            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
+
+            try {
+                const newPostRef = push(ref(dbR, 'fanzone_posts'));
+                await set(newPostRef, {
+                    authorId: auth.currentUser.uid,
+                    authorUsername: username,
+                    content: cleanContent,
+                    taggedTeam: teamToTag,
+                    taggedTeam2: opponentTeamToTag,
+                    timestamp: new Date().toISOString()
+                });
+                
+                window.closeShareScoreModal(null, true);
+                alert("Score shared to the Fan Zone successfully!");
+            } catch (error) { 
+                console.error(error);
+                alert("Failed to communicate with server."); 
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        };
+
+        // --- REQUEST ADMIN MODAL (RESTORED) ---
+        window.openRequestAdminModal = function() {
+            const user = auth.currentUser;
+            if (!user) {
+                if(confirm("You must be logged in to request Team Admin. Go to login?")) {
+                    window.location.href = "login.html";
+                }
+                return;
+            }
+
+            const teamParam = new URLSearchParams(window.location.search).get('team');
+            document.getElementById('reqTeamNameDisplay').innerText = teamParam;
+            document.getElementById('reqFirstName').value = window.currentUserProfile?.firstName || "Guest";
+            document.getElementById('reqLastName').value = window.currentUserProfile?.lastName || "N/A";
+            document.getElementById('reqEmail').value = user.email || "No Email";
+
+            const overlay = document.getElementById('requestAdminModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeRequestModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'requestAdminModalOverlay')) {
+                const overlay = document.getElementById('requestAdminModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = '';
+                    document.getElementById('requestAdminForm').reset();
+                    document.getElementById('requestStatusMessage').classList.add('hidden');
+                    document.getElementById('btnSubmitRequest').style.display = 'block';
+                    document.getElementById('btnSubmitRequest').disabled = false;
+                }, 300);
+            }
+        };
+
+        document.getElementById('requestAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitRequest'); 
+            const msg = document.getElementById('requestStatusMessage');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
+            const reason = document.getElementById('reqReason').value;
+            const school = new URLSearchParams(window.location.search).get('team');
+            const username = window.currentUserProfile?.username || "User";
+            const uid = auth.currentUser.uid;
+            
+            const combinedMessage = `*** TEAM ADMIN REQUEST ***\n` +
+                                    `Team Requested: ${school}\n\n` +
+                                    `Reason/Message: ${reason}\n\n` +
+                                    `*** USER INFO ***\n` +
+                                    `Username: @${username}\n` +
+                                    `User ID: ${uid}`;
+            
+            const params = new URLSearchParams();
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", document.getElementById('reqFirstName').value); 
+            params.append("entry.1429224270", document.getElementById('reqLastName').value); 
+            params.append("entry.1778241553", document.getElementById('reqEmail').value); 
+            
+            fetch(CONTACT_FORM_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Request Submitted Successfully!';
+                 setTimeout(() => { window.closeRequestModal(null, true); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending request.'; 
+            });
+        });
+
+        // --- WEATHER FETCH LOGIC (DATE & TIME AWARE) ---
         async function fetchWeather(address, gameDateObj) {
             const weatherEl = document.getElementById('ui-weather');
 
@@ -790,445 +1216,6 @@
                 weatherEl.innerText = "Check back closer to game day for up-to-date forecast information";
             }
         }
-
-        // --- AUTH CHECK & UI TOGGLES ---
-        onAuthStateChanged(auth, async (user) => {
-            const ctrlPanel = document.getElementById('fanControlPanel');
-            const loginPanel = document.getElementById('authActionPanel'); 
-            const urlParams = new URLSearchParams(window.location.search);
-            const teamParam = urlParams.get('team');
-
-            if (user) {
-                try {
-                    const userDoc = await getDoc(doc(dbFirestore, "users", user.uid));
-                    if (userDoc.exists()) {
-                        window.currentUserProfile = userDoc.data();
-                        
-                        // IF ADMIN OF THIS SPECIFIC TEAM, SHOW DASHBOARD
-                        if (window.currentUserProfile.role === 'admin' && window.currentUserProfile.managedTeam && window.currentUserProfile.managedTeam.toLowerCase() === teamParam.toLowerCase()) {
-                            if (ctrlPanel) {
-                                ctrlPanel.classList.remove('hidden');
-                            }
-                        }
-                    } else {
-                        window.currentUserProfile = { username: "Anonymous Fan" };
-                    }
-                } catch(e) { window.currentUserProfile = { username: "Fan" }; }
-
-                if (loginPanel) {
-                    loginPanel.classList.add('hidden');
-                }
-            } else {
-                window.currentUserProfile = null;
-                if (ctrlPanel) {
-                    ctrlPanel.classList.add('hidden');
-                }
-                if (loginPanel) {
-                    loginPanel.classList.remove('hidden');
-                }
-            }
-        });
-
-        // --- INITIAL DATA LOAD (CSV -> FIREBASE) ---
-        document.addEventListener("DOMContentLoaded", async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const teamParam = urlParams.get('team');
-
-            if (!teamParam) {
-                document.getElementById('loading-overlay').style.display = 'none';
-                document.getElementById('claim-team-prompt').classList.remove('hidden');
-                return;
-            }
-
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: async function(results) {
-                    const teamRow = results.data.find(r => {
-                        const school = r['School'] ? cleanText(r['School']) : '';
-                        return school.toLowerCase() === teamParam.toLowerCase();
-                    });
-
-                    if (!teamRow) {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        document.getElementById('claim-team-prompt').classList.remove('hidden');
-                        return;
-                    }
-
-                    // Apply Base Colors
-                    if (teamRow['Colors'] || teamRow['Color']) {
-                        const { p } = parseColors(teamRow['Colors'] || teamRow['Color']);
-                        if (p) {
-                            const contrast = getContrast(p);
-                            document.documentElement.style.setProperty('--team-primary', p);
-                            document.documentElement.style.setProperty('--team-text', contrast);
-                        }
-                    }
-
-                    // Check Firebase for Active Game
-                    try {
-                        const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
-                        const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
-                        const game = snapshot.val();
-
-                        document.getElementById('loading-overlay').style.display = 'none';
-
-                        if (!game || !game.yourTeam) {
-                            // --- OFFSEASON FALLBACK STATE ---
-                            document.getElementById('main-app').classList.remove('hidden');
-                            document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
-                            
-                            document.getElementById('ui-your-name').innerText = cleanText(teamRow['School']);
-                            document.getElementById('ui-your-mascot').innerText = cleanText(teamRow['Team']) || "";
-                            document.getElementById('ui-your-record').innerText = "";
-                            
-                            const logoUrl = cleanText(teamRow['Logo']);
-                            const yourLogoEl = document.getElementById('ui-your-logo');
-                            const yourFallbackEl = document.getElementById('ui-your-fallback');
-                            
-                            if(logoUrl) { 
-                                yourLogoEl.src = logoUrl; 
-                                yourLogoEl.style.display = 'block'; 
-                                yourFallbackEl.style.display = 'none'; 
-                            } else { 
-                                yourLogoEl.style.display = 'none'; 
-                                yourFallbackEl.style.display = 'block'; 
-                                yourFallbackEl.innerText = cleanText(teamRow['School']).substring(0,3).toUpperCase(); 
-                            }
-
-                            document.getElementById('ui-opp-name').innerText = "TBD";
-                            document.getElementById('ui-opp-mascot').innerText = "Awaiting Schedule";
-                            document.getElementById('ui-opp-record').innerText = "";
-                            document.getElementById('ui-opp-logo').style.display = 'none'; 
-                            document.getElementById('ui-opp-fallback').style.display = 'block'; 
-                            document.getElementById('ui-opp-fallback').innerText = "TBD"; 
-
-                            document.getElementById('ui-homeaway').innerText = "TBD";
-                            document.getElementById('ui-homeaway').className = "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-                            
-                            document.getElementById('ui-theme').innerText = "TBD";
-                            
-                            const stadiumName = cleanText(teamRow['FieldName']);
-                            const stadiumLoc = cleanText(teamRow['FieldLocation']) || cleanText(teamRow['City/Town']);
-                            
-                            document.getElementById('ui-stadium').innerText = stadiumName || "Stadium TBA";
-                            document.getElementById('ui-address').innerText = stadiumLoc || "Address TBA";
-                            document.getElementById('ui-datetime').innerText = "Check back for schedule updates";
-                            document.getElementById('ui-weather').innerText = "Too early for forecast";
-                            document.getElementById('countdown-section').style.display = 'none';
-                            
-                            if (stadiumLoc) {
-                                const encodedAddress = encodeURIComponent(stadiumLoc);
-                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&output=embed`;
-                                document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
-                                document.getElementById('btn-directions').style.display = 'flex';
-                            }
-                            
-                            document.getElementById('basicScoreboardCard').style.display = 'none';
-                            document.getElementById('claimActionPanel').classList.remove('hidden');
-                            document.getElementById('btn-request-admin').onclick = () => window.handleClaimTeamGameDay(cleanText(teamRow['School']));
-
-                            listenToEmbeddedPosts(cleanText(teamRow['School']), null);
-
-                        } else {
-                            // --- ACTIVE GAME DAY STATE ---
-                            window.currentMatchupData = game;
-                            document.getElementById('main-app').classList.remove('hidden');
-                            document.getElementById('ui-week').innerText = "MATCHUP";
-                            
-                            document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
-                            document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
-                            document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
-                            
-                            const yourLogoEl = document.getElementById('ui-your-logo');
-                            const yourFallbackEl = document.getElementById('ui-your-fallback');
-                            if(game.yourTeamLogo && game.yourTeamLogo.trim() !== "") { 
-                                yourLogoEl.src = game.yourTeamLogo; 
-                                yourLogoEl.style.display = 'block'; 
-                                yourFallbackEl.style.display = 'none'; 
-                            } else { 
-                                yourLogoEl.style.display = 'none'; 
-                                yourFallbackEl.style.display = 'block'; 
-                                yourFallbackEl.innerText = game.yourTeam ? game.yourTeam.substring(0,3).toUpperCase() : "TEA"; 
-                            }
-
-                            document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
-                            document.getElementById('ui-opp-mascot').innerText = game.oppMascot || "";
-                            document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : "";
-                            
-                            const oppLogoEl = document.getElementById('ui-opp-logo');
-                            const oppFallbackEl = document.getElementById('ui-opp-fallback');
-                            if(game.oppLogo && game.oppLogo.trim() !== "") { 
-                                oppLogoEl.src = game.oppLogo; 
-                                oppLogoEl.style.display = 'block'; 
-                                oppFallbackEl.style.display = 'none'; 
-                            } else { 
-                                oppLogoEl.style.display = 'none'; 
-                                oppFallbackEl.style.display = 'block'; 
-                                oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
-                            }
-
-                            let isHome = (game.homeAway || "").toLowerCase().includes('home');
-                            document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
-                            document.getElementById('ui-homeaway').className = isHome ? "font-bold bg-pahs-gold text-[color:var(--team-text,#000)] px-2 py-0.5 rounded uppercase text-sm inline-block mt-1" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-                            
-                            document.getElementById('ui-theme').innerText = game.theme || "No Theme";
-                            document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
-                            document.getElementById('ui-address').innerText = game.address || "Address TBA";
-
-                            let gameDateObj = null;
-                            if (game.date && game.time) {
-                                try {
-                                    let dObj = new Date(`${game.date} ${game.time}`);
-                                    if(!isNaN(dObj)) {
-                                        gameDateObj = dObj;
-                                        document.getElementById('ui-datetime').innerText = `${dObj.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'})} • ${dObj.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}`;
-                                        startCountdown(dObj.getTime());
-                                    } else { throw new Error(); }
-                                } catch(e) { document.getElementById('ui-datetime').innerText = `${game.date} • ${game.time}`; }
-                            }
-
-                            if(game.address) {
-                                const encodedAddress = encodeURIComponent(game.address);
-                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=13&output=embed`;
-                                document.getElementById('btn-directions').href = `https://maps.google.com/maps?q=${encodedAddress}`;
-                                document.getElementById('btn-directions').style.display = 'flex';
-                                document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
-                                document.getElementById('btn-copy-address').style.display = 'flex';
-                                
-                                fetchWeather(game.address, gameDateObj);
-                            }
-                            
-                            if (window.currentUserProfile && window.currentUserProfile.role === 'admin' && window.currentUserProfile.managedTeam && window.currentUserProfile.managedTeam.toLowerCase() === teamParam.toLowerCase()) {
-                                document.getElementById('btn-update-score-admin').classList.remove('hidden');
-                            }
-
-                            listenToLiveScore(game);
-                            listenToEmbeddedPosts(game.yourTeam, game.opponent);
-                        }
-
-                    } catch (error) {
-                        console.error(error);
-                        document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>Connection Error</h2><p class='text-gray-600 mt-2'>Could not load data. Refresh the page.</p>";
-                    }
-                }
-            });
-        });
-
-        // --- TIMER ---
-        let timerInterval;
-        function startCountdown(kickoffTime) {
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(function() {
-                const distance = kickoffTime - new Date().getTime();
-                if (distance < 0) {
-                    clearInterval(timerInterval); document.getElementById("countdown-label").style.display = 'none';
-                    document.getElementById("countdown-container").innerHTML = `<div class='flex flex-col items-center justify-center py-2 w-full'><div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div></div>`;
-                    return;
-                }
-                document.getElementById("cd-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById("cd-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            }, 1000);
-        }
-
-        // --- MODAL & BUTTON HANDLERS FOR UPDATE SCORE ---
-        window.openScoreModal = async function() {
-            const game = window.currentMatchupData;
-            if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
-            
-            const isHome = (game.homeAway || "").toLowerCase().includes('home');
-            
-            document.getElementById('lblHome').innerText = (isHome ? game.yourTeam : game.opponent) + " Score";
-            document.getElementById('lblAway').innerText = (!isHome ? game.yourTeam : game.opponent) + " Score";
-            
-            document.getElementById('optPossHome').innerText = isHome ? game.yourTeam : game.opponent;
-            document.getElementById('optPossAway').innerText = (!isHome ? game.yourTeam : game.opponent);
-
-            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const gameKey = [homeName, awayName].sort().join('_');
-            
-            try {
-                const snapshot = await get(ref(dbRealtime, 'live_scores/' + gameKey));
-                const data = snapshot.val();
-                if (data) {
-                    document.getElementById('inpHomeScore').value = data.homeScore || 0;
-                    document.getElementById('inpAwayScore').value = data.awayScore || 0;
-                    document.getElementById('inpQuarter').value = data.quarter || '1';
-                    document.getElementById('inpTime').value = data.clock || '12:00';
-                    document.getElementById('inpPossession').value = data.possession || 'none';
-                }
-            } catch(e) { console.error(e); }
-            
-            document.getElementById('scoreUpdateModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeScoreModal = function() { 
-            document.getElementById('scoreUpdateModal').style.display = 'none'; 
-            document.body.style.overflow = '';
-        };
-
-        document.getElementById('scoreUpdateForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnPushScore');
-            const origText = btn.innerText;
-            btn.innerText = "Pushing..."; 
-            btn.disabled = true;
-
-            const game = window.currentMatchupData;
-            const isHome = (game.homeAway || "").toLowerCase().includes('home');
-            
-            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const gameKey = [homeName, awayName].sort().join('_');
-            
-            const qtr = document.getElementById('inpQuarter').value;
-            let status = "LIVE";
-            if (qtr === "FINAL") status = "FINAL";
-            if (qtr === "HALF") status = "HALF";
-            if (qtr === "PREGAME") status = "PREGAME";
-
-            const usernameToSave = window.currentUserProfile ? window.currentUserProfile.username : "Unknown Admin";
-
-            const updateData = {
-                home: isHome ? game.yourTeam : game.opponent,
-                away: !isHome ? game.yourTeam : game.opponent,
-                homeLogo: isHome ? game.yourTeamLogo : game.oppLogo,
-                awayLogo: !isHome ? game.yourTeamLogo : game.oppLogo,
-                homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
-                awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
-                quarter: qtr,
-                clock: document.getElementById('inpTime').value || "00:00",
-                possession: document.getElementById('inpPossession').value, 
-                status: status,
-                updatedBy: usernameToSave,
-                lastUpdated: new Date().toISOString()
-            };
-
-            update(ref(dbRealtime, 'live_scores/' + gameKey), updateData).then(() => {
-                window.closeScoreModal(); 
-                btn.innerText = origText; 
-                btn.disabled = false;
-            }).catch(err => {
-                alert("Error updating score."); 
-                btn.innerText = origText; 
-                btn.disabled = false;
-            });
-        });
-
-        // --- SHARE SCORE TO FAN ZONE ---
-        window.openShareScoreModal = function(e) {
-            if (e) e.stopPropagation();
-            if (!auth.currentUser) {
-                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
-            }
-
-            const homeName = document.getElementById('sb-home-name').innerText;
-            const homeScore = document.getElementById('sb-home-score').innerText;
-            const awayName = document.getElementById('sb-away-name').innerText;
-            const awayScore = document.getElementById('sb-away-score').innerText;
-            const status = document.getElementById('sb-status').innerText;
-            const clock = document.getElementById('sb-clock').innerText;
-
-            let timeStr = "";
-            if (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") {
-                timeStr = ` | Time: ${clock}`;
-            }
-
-            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}\n\n`;
-            
-            document.getElementById('shareScoreContent').value = shareText;
-
-            const overlay = document.getElementById('shareScoreModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeShareScoreModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
-                const overlay = document.getElementById('shareScoreModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                    document.body.style.overflow = ''; 
-                }, 300);
-            }
-        };
-
-        window.submitSharedScore = async function() {
-            const btn = document.getElementById('submitShareScoreBtn');
-            const content = document.getElementById('shareScoreContent').value.trim();
-            const origText = btn.innerText;
-            
-            if (content === "") return alert("Post cannot be empty.");
-            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
-
-            btn.innerText = "Posting...";
-            btn.disabled = true;
-
-            const cleanContent = filterProfanity(content);
-            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
-            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
-            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
-
-            try {
-                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
-                await set(newPostRef, {
-                    authorId: auth.currentUser.uid,
-                    authorUsername: username,
-                    content: cleanContent,
-                    taggedTeam: teamToTag,
-                    taggedTeam2: opponentTeamToTag,
-                    timestamp: new Date().toISOString()
-                });
-                
-                window.closeShareScoreModal(null, true);
-                alert("Score shared to the Fan Zone successfully!");
-            } catch (error) { 
-                console.error(error);
-                alert("Failed to communicate with server."); 
-            } finally {
-                btn.innerText = origText;
-                btn.disabled = false;
-            }
-        };
-
-        // --- CLAIM TEAM (ADMIN REQUEST) ---
-        window.handleClaimTeamGameDay = function(school) {
-            const user = auth.currentUser;
-            if (!user) {
-                if(confirm("You must be logged in to request Team Admin. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
-            }
-
-            const adminEmail = "thepahsfootball@gmail.com";
-            const subject = encodeURIComponent(`Admin Request for ${school}`);
-            const displayName = (window.currentUserProfile && window.currentUserProfile.username) ? window.currentUserProfile.username : "User"; 
-
-            const body = encodeURIComponent(
-                `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
-            );
-
-            window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-
-            setTimeout(() => {
-                if(confirm("If your email app didn't open automatically, click 'OK' to copy our email address to your clipboard so you can email us manually.")) {
-                    navigator.clipboard.writeText(adminEmail).then(() => {
-                        alert("Copied " + adminEmail + " to clipboard!\n\nPlease email us with the subject: Admin Request for " + school);
-                    });
-                }
-            }, 500);
-        };
     </script>
 </body>
 </html>
