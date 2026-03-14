@@ -262,6 +262,46 @@
     </div>
 </div>
 
+<div id="claimModalOverlay" class="fixed inset-0 bg-black/80 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+    <div class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
+        <div class="p-5 bg-[#27272a] flex justify-between items-center border-b border-white/10">
+            <h2 class="font-head text-3xl uppercase tracking-wide text-white m-0 leading-none flex items-center gap-2">
+                <i class="fa-solid fa-crown text-pahs-gold"></i> Request Admin
+            </h2>
+            <button onclick="closeClaimModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 bg-[#18181b]">
+            <p class="text-sm text-gray-300 mb-5 font-body leading-relaxed">
+                Requesting admin access for <strong id="claimTeamNameDisplay" class="text-pahs-gold">Team</strong>. Your account details will be attached to this request.
+            </p>
+            <form id="claimForm">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Message / Reason</label>
+                <textarea id="claimReason" rows="3" required placeholder="Why are you requesting access? (e.g. I am the head coach, booster club president, etc.)" class="w-full p-3 rounded-xl bg-[#27272a] border border-white/10 text-white mb-4 resize-none font-body text-sm outline-none focus:border-pahs-gold transition-colors"></textarea>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">First Name</label>
+                        <input type="text" id="claimFirstName" required class="w-full p-3 rounded-xl text-gray-400 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
+                        <input type="text" id="claimLastName" required class="w-full p-3 rounded-xl text-gray-400 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                    </div>
+                </div>
+
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email</label>
+                <input type="email" id="claimEmail" required class="w-full p-3 rounded-xl text-gray-400 mb-4 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                
+                <button type="submit" id="submitClaimBtn" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                    Submit Request
+                </button>
+                <div id="claimStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -281,9 +321,13 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- TWO SEPARATE DATABASES ---
+    // --- DATABASES & FORM URL ---
     const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
     const masterTeamsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
+    
+    // This uses the exact same Google Form URL as your Fan Zone Report system to collect the data
+    const CONTACT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ'; 
+    const CONTACT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + CONTACT_FORM_ID + '/formResponse';
 
     let allData = [], filteredData = [];
     let currentTeam = "";
@@ -352,7 +396,7 @@
         }
     });
 
-    // --- PROMISE-BASED FETCHING (Fixes the Race Condition) ---
+    // --- PROMISE-BASED FETCHING ---
     async function initializeAppFlow() {
         try {
             await fetchLogos();
@@ -362,26 +406,21 @@
         await fetchDirectoryData();
     }
 
-    // --- NEW BULLETPROOF LOGO PARSER ---
     function fetchLogos() {
         return new Promise((resolve, reject) => {
             Papa.parse(masterTeamsUrl, {
                 download: true,
                 header: true, 
                 skipEmptyLines: true,
-                // This makes your headers bulletproof by making them lowercase and removing spaces
                 transformHeader: function(header) {
                     return header.toLowerCase().replace(/[^a-z0-9]/g, '');
                 },
                 complete: function(logoRes) {
                     logoRes.data.forEach(row => {
-                        // Looks for "teamname", "school", or "team"
                         const teamName = row['school'] || row['teamname'] || row['team'];
-                        // Looks for "logourl" or "logo"
                         const logoUrl = row['logourl'] || row['logo'];
                         
                         if (teamName && logoUrl) {
-                            // Convert strictly to uppercase alphanumeric for a perfect match
                             const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                             teamLogoDictionary[safeKey] = logoUrl.trim();
                         }
@@ -484,7 +523,6 @@
             const { p } = parseColors(row['Colors']||row['Color']||'');
             const primaryColor = p || '#a1a1aa';
             
-            // BULLETPROOF LOGO LOOKUP
             const rawSchool = row['School'] || '';
             const safeKey = rawSchool.toUpperCase().replace(/[^A-Z0-9]/g, '');
             const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -557,7 +595,6 @@
         document.getElementById('modalConference').innerText = d['Conference/League'] || 'N/A';
         document.getElementById('modalChamps').innerText = d['State Championships'] || 'None';
 
-        // BULLETPROOF MODAL LOGO LOOKUP
         const rawSchool = d['School'] || '';
         const safeKey = rawSchool.toUpperCase().replace(/[^A-Z0-9]/g, '');
         const logoUrl = teamLogoDictionary[safeKey] || '';
@@ -602,11 +639,7 @@
         els.claimText.innerText = "REQUEST TEAM ADMIN";
         els.claimBtn.classList.remove('hidden'); 
         
-        els.claimBtn.onclick = () => {
-            if(confirm("You must be logged in to request Team Admin. Go to login?")) {
-                window.location.href = "login.html";
-            }
-        };
+        els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam);
 
         const user = auth.currentUser;
         if (user) {
@@ -637,7 +670,7 @@
                         els.claimBtn.onclick = null;
                     } else {
                         els.claimText.innerText = "REQUEST TEAM ADMIN";
-                        els.claimBtn.onclick = () => handleClaimTeam(currentTeam, user, userData);
+                        els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam, user, userData);
                     }
                 }
             } catch (err) { console.error("Error checking user status:", err); }
@@ -691,27 +724,100 @@
         finally { els.followBtn.disabled = false; }
     });
 
-    function handleClaimTeam(school, user, userData) {
-        if (!user) return;
+    // --- NEW MODAL-BASED CLAIM TEAM SYSTEM ---
+    window.currentClaimSchool = null;
+    window.currentClaimUsername = null;
 
-        const adminEmail = "thepahsfootball@gmail.com";
-        const subject = encodeURIComponent(`Admin Request for ${school}`);
-        const displayName = userData.username || "User"; 
-
-        const body = encodeURIComponent(
-            `Hello,\n\nI would like to request Admin access to manage the Game Day page for ${school}.\n\nMy Account Information:\nUsername: ${displayName}\nEmail: ${user.email}\n\nThank you!`
-        );
-
-        window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-
-        setTimeout(() => {
-            if(confirm("If your email app didn't open automatically, click 'OK' to copy our email address to your clipboard so you can email us manually.")) {
-                navigator.clipboard.writeText(adminEmail).then(() => {
-                    alert("Copied " + adminEmail + " to clipboard!\n\nPlease email us with the subject: Admin Request for " + school);
-                });
+    window.handleClaimTeam = function(school, user, userData) {
+        if (!auth.currentUser) {
+            if(confirm("You must be logged in to request Team Admin. Go to login?")) {
+                window.location.href = "login.html";
             }
-        }, 500);
+            return;
+        }
+        
+        // Use the passed in user data if available, otherwise fetch from global window if possible
+        const localUser = user || auth.currentUser;
+        
+        document.getElementById('claimTeamNameDisplay').innerText = school;
+        document.getElementById('claimFirstName').value = userData?.firstName || "N/A";
+        document.getElementById('claimLastName').value = userData?.lastName || "N/A";
+        document.getElementById('claimEmail').value = localUser.email || "N/A";
+        
+        window.currentClaimSchool = school;
+        window.currentClaimUsername = userData?.username || "User";
+
+        // Open the Claim Modal
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.remove('opacity-0');
+            overlay.children[0].classList.remove('scale-95');
+        }, 10);
     }
+
+    window.closeClaimModal = function() {
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.add('opacity-0');
+        overlay.children[0].classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.getElementById('claimForm').reset();
+            document.getElementById('claimStatusMessage').classList.add('hidden');
+            document.getElementById('submitClaimBtn').style.display = 'block';
+            document.getElementById('submitClaimBtn').disabled = false;
+        }, 300);
+    }
+
+    // Submit the Request to Google Forms
+    document.getElementById('claimForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitClaimBtn'); 
+        const msg = document.getElementById('claimStatusMessage');
+        
+        btn.innerText = 'Submitting...'; 
+        btn.disabled = true; 
+        btn.style.opacity = '0.7'; 
+        
+        const reason = document.getElementById('claimReason').value;
+        const school = window.currentClaimSchool;
+        const username = window.currentClaimUsername;
+        const uid = auth.currentUser.uid;
+        
+        const combinedMessage = `*** TEAM ADMIN REQUEST ***\n` +
+                                `Team Requested: ${school}\n\n` +
+                                `Reason/Message: ${reason}\n\n` +
+                                `*** USER INFO ***\n` +
+                                `Username: @${username}\n` +
+                                `User ID: ${uid}`;
+        
+        const params = new URLSearchParams();
+        params.append("entry.1967997366", combinedMessage); 
+        params.append("entry.1990515734", document.getElementById('claimFirstName').value); 
+        params.append("entry.1429224270", document.getElementById('claimLastName').value); 
+        params.append("entry.1778241553", document.getElementById('claimEmail').value); 
+        
+        fetch(CONTACT_SUBMIT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: params.toString() 
+        })
+        .then(() => {
+             btn.style.display = 'none'; 
+             msg.classList.remove('hidden'); 
+             msg.style.color = '#10b981'; 
+             msg.innerText = 'Request Submitted Successfully!';
+             setTimeout(() => { window.closeClaimModal(); }, 2000);
+        }).catch(() => { 
+            btn.innerText = 'Try Again'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            msg.classList.remove('hidden'); 
+            msg.style.color = '#ef4444'; 
+            msg.innerText = 'Error sending request.'; 
+        });
+    });
 
     function closeModal() {
         els.modalOverlay.classList.add('opacity-0');
