@@ -359,8 +359,10 @@
             return { p: normalizeColor(p[0]) };
         };
 
-        // *** PROFANITY FILTER ***
+        // *** PROFANITY & LINK FILTER ***
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
+        const prohibitedDomains = ['pornhub', 'xvideos', 'onlyfans', 'redtube', 'youporn', 'chaturbate', 'stripchat', 'fansly'];
+
         function filterProfanity(text) {
             let filteredText = text;
             badWords.forEach(word => {
@@ -368,6 +370,12 @@
                 filteredText = filteredText.replace(regex, '***');
             });
             return filteredText;
+        }
+
+        // Checks if text contains prohibited domain names
+        function containsProhibitedDomain(text) {
+            const lowerText = text.toLowerCase();
+            return prohibitedDomains.some(domain => lowerText.includes(domain));
         }
 
         // *** LINKIFY LOGIC (URLs and YouTube) ***
@@ -614,7 +622,7 @@
                 const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
                 
                 tagHtml = `
-                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide" style="background-color: ${postColor}; color: ${contrastText}; border: 1px solid ${borderColor};">
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
                         ${iconHtml} View ${post.taggedTeam}
                     </a>
                 `;
@@ -738,8 +746,7 @@
                 postCard.onclick = () => window.openPostModal(post.postId);
                 postCard.innerHTML = postData.html;
                 
-                // --- FULL BORDER COLOR UPDATE ---
-                // Changes the border on ALL sides instead of just the top
+                // Color border top based on team
                 if (post.taggedTeam) {
                     postCard.style.border = `3px solid ${postData.color}`;
                     postCard.style.borderTop = `4px solid ${postData.color}`;
@@ -778,6 +785,11 @@
             
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
+            // --- PROHIBITED LINK CHECK ---
+            if (containsProhibitedDomain(rawContent)) {
+                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
+            }
             
             let finalTeamTag = "";
             if (teamTagInput !== "") {
@@ -839,6 +851,11 @@
             
             if (rawContent === "") return alert("Post cannot be empty.");
             if (rawContent.length > 500) return alert("Post is too long. Max 500 characters.");
+            
+            // --- PROHIBITED LINK CHECK ---
+            if (containsProhibitedDomain(rawContent)) {
+                return alert("Your post contains a reference or link to a prohibited website. Please remove it to post.");
+            }
             
             let finalTeamTag = "";
             if (teamTagInput !== "") {
@@ -1193,11 +1210,6 @@
                 msg.innerText = 'Error sending report.'; 
             });
         });
-
-        // XSS Security
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
-        }
     </script>
 </body>
 </html>
