@@ -500,6 +500,16 @@
                 }
 
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
+
+                // BYPASS WARNING FOR PAHSFOOTBALL DOMAINS
+                if (cleanUrl.toLowerCase().includes('pahsfootball.com')) {
+                    return `
+                        <a href="${cleanUrl}" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
+                            <i class="fa-solid fa-link"></i> ${displayUrl}
+                        </a>`;
+                }
+
+                // SHOW WARNING MODAL FOR ALL OTHER EXTERNAL LINKS
                 return `
                     <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
@@ -1051,7 +1061,7 @@
                     card.style.borderTop = `4px solid ${postData.color}`; 
                 }
                 
-                const secondsOld = (now - postData.timestamp) / 1000;
+                const secondsOld = (now - new Date(post.timestamp).getTime()) / 1000;
                 if (secondsOld < 10 && secondsOld >= -30) {
                     card.classList.add('new-post-solid-glow');
                     const timeRemaining = secondsOld < 0 ? 10 : (10 - secondsOld);
@@ -1363,7 +1373,7 @@
             params.append("entry.1429224270", document.getElementById('reportLastName').value);
             params.append("entry.1778241553", document.getElementById('reportEmail').value);
             
-            fetch('https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse', { 
+            fetch(REPORT_SUBMIT_URL, { 
                 method: 'POST', 
                 mode: 'no-cors', 
                 body: params 
