@@ -148,10 +148,6 @@
                     <span id="activeFiltersList" class="flex gap-2"></span>
                     <button id="resetFiltersBtn" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
                 </div>
-
-                <div class="ml-auto text-gray-400 font-head text-xl tracking-wider uppercase bg-black/40 px-3 py-1 rounded-lg border border-white/10 hidden sm:block">
-                    <span id="teamCount" class="text-pahs-gold font-bold">0</span> Teams
-                </div>
             </div>
         </div>
     </header>
@@ -443,17 +439,18 @@
         Papa.parse(directoryUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: res => {
+                // FIXED MAPPING TO MATCH YOUR EXACT HEADERS
                 allData = res.data.map(row => {
                     return {
                         school: cleanText(row['School']),
-                        mascot: cleanText(row['Team']),
-                        city: cleanText(row['City/Town']),
+                        mascot: cleanText(row['Mascot']), // Changed from row['Team']
+                        city: cleanText(row['City']),     // Changed from row['City/Town']
                         county: cleanText(row['County']),
                         classification: cleanText(row['Class']),
-                        colors: cleanText(row['Colors'] || row['Color']),
+                        colors: cleanText(row['Colors']),
                         district: cleanText(row['District']).replace(/district/gi, '').trim(),
-                        conference: cleanText(row['Conference/League']),
-                        championships: cleanText(row['State Championships']),
+                        conference: cleanText(row['Conference']), // Changed from row['Conference/League']
+                        championships: cleanText(row['Championships']), // Changed from row['State Championships']
                         logo: cleanText(row['Logo']),
                         fieldName: cleanText(row['FieldName']),
                         fieldLocation: cleanText(row['FieldLocation'])
@@ -672,17 +669,10 @@
                     isFollowing = followed.includes(currentTeam);
                     updateFollowBtnUI();
 
-                    const teamSnap = await getDoc(doc(db, "team_pages", currentTeam));
-
                     if (userData.managedTeam === currentTeam) {
                         els.claimText.innerText = "DASHBOARD";
                         els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
                         els.claimBtn.onclick = () => window.location.href = "profile.html"; 
-                    } else if (teamSnap.exists()) {
-                        els.claimText.innerText = "CLAIMED";
-                        els.claimBtn.disabled = true;
-                        els.claimBtn.style.opacity = "0.5";
-                        els.claimBtn.onclick = null;
                     } else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
                         els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
                         els.claimBtn.disabled = true;
@@ -744,16 +734,16 @@
         finally { els.followBtn.disabled = false; }
     });
 
-    // --- SUGGEST EDIT SYSTEM ---
+    // --- SUGGEST EDIT SYSTEM (FIXED IDs) ---
     window.openSuggestModal = function(teamData) {
-        document.getElementById('upTeamName').value = teamData.school;
-        document.getElementById('upMascot').value = teamData.mascot || '';
-        document.getElementById('upClass').value = teamData.classification || '';
-        document.getElementById('upConf').value = teamData.conference || '';
-        document.getElementById('upColors').value = teamData.colors || '';
-        document.getElementById('upStadium').value = teamData.fieldName || '';
-        document.getElementById('upAddress').value = teamData.fieldLocation || '';
-        document.getElementById('upNotes').value = '';
+        document.getElementById('sugSchool').value = teamData.school;
+        document.getElementById('sugMascot').value = teamData.mascot || '';
+        document.getElementById('sugClass').value = teamData.classification || '';
+        document.getElementById('sugConf').value = teamData.conference || '';
+        document.getElementById('sugColors').value = teamData.colors || '';
+        document.getElementById('sugStadium').value = teamData.fieldName || '';
+        document.getElementById('sugAddress').value = teamData.fieldLocation || '';
+        document.getElementById('sugNotes').value = '';
 
         const overlay = document.getElementById('suggestModalOverlay');
         overlay.classList.remove('hidden');
@@ -785,14 +775,14 @@
         btn.disabled = true; 
         btn.style.opacity = '0.7'; 
         
-        const team = document.getElementById('upTeamName').value;
-        const mascot = document.getElementById('upMascot').value;
-        const tclass = document.getElementById('upClass').value;
-        const conf = document.getElementById('upConf').value;
-        const colors = document.getElementById('upColors').value;
-        const stadium = document.getElementById('upStadium').value;
-        const address = document.getElementById('upAddress').value;
-        const notes = document.getElementById('upNotes').value;
+        const team = document.getElementById('sugSchool').value;
+        const mascot = document.getElementById('sugMascot').value;
+        const tclass = document.getElementById('sugClass').value;
+        const conf = document.getElementById('sugConf').value;
+        const colors = document.getElementById('sugColors').value;
+        const stadium = document.getElementById('sugStadium').value;
+        const address = document.getElementById('sugAddress').value;
+        const notes = document.getElementById('sugNotes').value;
         
         const combinedMessage = `*** DIRECTORY UPDATE REQUEST ***\nTeam: ${team}\nMascot: ${mascot}\nClass: ${tclass}\nConference: ${conf}\nColors: ${colors}\nStadium: ${stadium}\nAddress: ${address}\nNotes/Sources: ${notes}\nSubmitted By: ${auth.currentUser ? auth.currentUser.email : 'Guest'}`;
         
