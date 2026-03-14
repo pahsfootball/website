@@ -153,12 +153,18 @@
                 <button onclick="closeCreatePostModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
-                <textarea id="postContent" rows="4" placeholder="What's on your mind? Hype up your team! (You can safely paste video links here too) - PLEASE BE RESPECTFUL!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+                <textarea id="postContent" rows="4" placeholder="What's on your mind? (Paste video links or use @username to tag others) - PLEASE BE RESPECTFUL!" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
                 
-                <div class="relative mb-5">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tag a Team</label>
-                    <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
-                    <datalist id="teamTagList"></datalist>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tag a Team (Opt)</label>
+                        <input type="text" id="teamTagInput" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                        <datalist id="teamTagList"></datalist>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">2nd Team (Opt)</label>
+                        <input type="text" id="teamTagInput2" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                    </div>
                 </div>
 
                 <div class="flex gap-3">
@@ -196,10 +202,18 @@
             </div>
             <div class="p-6 bg-white">
                 <textarea id="editPostContent" rows="4" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
-                <div class="relative mb-4">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
-                    <input type="text" id="editTeamTagInput" list="teamTagList" placeholder="🔍 Search & tag a team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update Tagged Team</label>
+                        <input type="text" id="editTeamTagInput" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                    </div>
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Update 2nd Team</label>
+                        <input type="text" id="editTeamTagInput2" list="teamTagList" placeholder="🔍 Search team..." class="input-box w-full p-2.5 rounded-lg text-sm text-gray-800 font-bold" autocomplete="off">
+                    </div>
                 </div>
+
                 <button id="submitEditBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:brightness-110 transition-all mt-2">
                     Save Changes
                 </button>
@@ -529,9 +543,8 @@
                 if (data) {
                     Object.keys(data).forEach(key => {
                         const post = data[key];
-                        post.postId = key; // Save Firebase key as postId
+                        post.postId = key; 
                         
-                        // Convert Firebase likes object into an array of UIDs for compatibility
                         let likesArray = [];
                         if (post.likes) {
                             likesArray = Object.keys(post.likes);
@@ -573,7 +586,7 @@
             }
 
             const realLikes = post.likes.length;
-            const artificialLikes = post.artificialLikes || 0; // Legacy support if needed
+            const artificialLikes = post.artificialLikes || 0; 
             const totalLikes = realLikes + artificialLikes;
             
             const hasLiked = currentUser && post.likes.includes(currentUser.uid);
@@ -582,32 +595,54 @@
             const heartId = isModal ? `modal-heart-${post.postId}` : `heart-${post.postId}`;
             const countId = isModal ? `modal-count-${post.postId}` : `count-${post.postId}`;
 
-            let tagHtml = '';
+            let tagsContainerHtml = '';
             let postColor = '#fbbf24'; 
 
-            if (post.taggedTeam) {
-                const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            // Helper to build a single team tag badge
+            const buildTagHtml = (teamName) => {
+                const safeKey = teamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const logoUrl = teamLogoDictionary[safeKey] || '';
-                
-                postColor = teamColorDictionary[safeKey] || '#fbbf24';
-                const contrastText = getContrast(postColor);
+                const tColor = teamColorDictionary[safeKey] || '#fbbf24';
+                const contrastText = getContrast(tColor);
                 const borderColor = contrastText === 'white' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)';
                 
                 const iconHtml = logoUrl 
                     ? `<img src="${logoUrl}" class="w-5 h-5 object-contain mr-1.5 bg-white rounded-full border border-gray-300" onerror="this.style.display='none'">` 
                     : `<i class="fa-solid fa-football mr-1.5" style="color: ${contrastText}"></i>`;
                     
-                const teamUrl = `gameday.html?team=${encodeURIComponent(post.taggedTeam)}`;
+                const teamUrl = `gameday.html?team=${encodeURIComponent(teamName)}`;
                 
-                tagHtml = `
-                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center mt-3 text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border" style="background-color: ${postColor}; color: ${contrastText}; border-color: ${borderColor};">
-                        ${iconHtml} View ${post.taggedTeam}
+                return `
+                    <a href="${teamUrl}" onclick="event.stopPropagation()" class="inline-flex items-center text-xs font-bold pr-4 pl-2 py-1.5 rounded-full hover:brightness-110 transition shadow-sm font-body uppercase tracking-wide border mr-2 mb-2" style="background-color: ${tColor}; color: ${contrastText}; border-color: ${borderColor};">
+                        ${iconHtml} View ${teamName}
                     </a>
                 `;
+            };
+
+            // Build Team 1 Tag (and set main post color)
+            if (post.taggedTeam && post.taggedTeam.trim() !== "") {
+                const safeKey = post.taggedTeam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                postColor = teamColorDictionary[safeKey] || '#fbbf24'; 
+                tagsContainerHtml += buildTagHtml(post.taggedTeam);
+            }
+            
+            // Build Team 2 Tag
+            if (post.taggedTeam2 && post.taggedTeam2.trim() !== "") {
+                tagsContainerHtml += buildTagHtml(post.taggedTeam2);
+            }
+
+            let finalTagSection = "";
+            if (tagsContainerHtml !== "") {
+                finalTagSection = `<div class="mt-3 flex flex-wrap">${tagsContainerHtml}</div>`;
             }
 
             const textClass = isModal ? "text-gray-800 font-body text-base md:text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words" : "text-gray-800 font-body text-sm leading-relaxed mt-1 whitespace-pre-wrap break-words";
-            const safeContent = linkify(escapeHTML(post.content));
+            
+            // Text Processing: Escape -> Linkify -> Username Tagging (@username)
+            let safeContent = escapeHTML(post.content);
+            safeContent = linkify(safeContent);
+            // Replace @username with a styled badge
+            safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
 
             let authorActionsHtml = '';
             if (currentUser && post.authorId === currentUser.uid) {
@@ -639,7 +674,7 @@
                     
                     <div class="${textClass}">${safeContent}</div>
                     
-                    ${tagHtml}
+                    ${finalTagSection}
                     
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
                         <button onclick="window.toggleLike(event, '${post.postId}')" class="like-btn flex items-center gap-1.5 text-sm font-bold hover:text-pahs-gold text-gray-600 transition-colors p-1">
@@ -677,7 +712,11 @@
             
             const filterTeam = document.getElementById('feedTeamFilter').value.trim().toLowerCase();
             if (filterTeam !== "") {
-                postsToRender = postsToRender.filter(post => post.taggedTeam && post.taggedTeam.toLowerCase().includes(filterTeam));
+                postsToRender = postsToRender.filter(post => {
+                    const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
+                    const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
+                    return tag1.includes(filterTeam) || tag2.includes(filterTeam);
+                });
             }
 
             if (postsToRender.length === 0) {
@@ -745,6 +784,7 @@
             
             const contentBox = document.getElementById('postContent');
             const teamTagInput = document.getElementById('teamTagInput').value.trim();
+            const teamTagInput2 = document.getElementById('teamTagInput2').value.trim();
             let rawContent = contentBox.value.trim();
             
             if (rawContent === "") return alert("Post cannot be empty.");
@@ -759,6 +799,13 @@
                 const matchedTeam = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput.toLowerCase());
                 if (matchedTeam) finalTeamTag = matchedTeam;
                 else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
+            }
+            
+            let finalTeamTag2 = "";
+            if (teamTagInput2 !== "") {
+                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
+                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
+                else return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
             }
             
             const btn = document.getElementById('submitPostBtn');
@@ -774,11 +821,13 @@
                     authorUsername: username,
                     content: cleanContent,
                     taggedTeam: finalTeamTag,
+                    taggedTeam2: finalTeamTag2,
                     timestamp: new Date().toISOString()
                 });
                 
                 contentBox.value = "";
                 document.getElementById('teamTagInput').value = "";
+                document.getElementById('teamTagInput2').value = "";
                 window.closeCreatePostModal(null, true);
             } catch (error) { 
                 console.error(error);
@@ -794,6 +843,7 @@
             
             const contentBox = document.getElementById('editPostContent');
             const teamTagInput = document.getElementById('editTeamTagInput').value.trim();
+            const teamTagInput2 = document.getElementById('editTeamTagInput2').value.trim();
             let rawContent = contentBox.value.trim();
             
             if (rawContent === "") return alert("Post cannot be empty.");
@@ -809,6 +859,13 @@
                 if (matchedTeam) finalTeamTag = matchedTeam;
                 else return alert("Invalid team tag. Please select a valid team from the dropdown list.");
             }
+
+            let finalTeamTag2 = "";
+            if (teamTagInput2 !== "") {
+                const matchedTeam2 = Array.from(validTeams).find(t => t.toLowerCase() === teamTagInput2.toLowerCase());
+                if (matchedTeam2) finalTeamTag2 = matchedTeam2;
+                else return alert("Invalid 2nd team tag. Please select a valid team from the dropdown list.");
+            }
             
             const btn = document.getElementById('submitEditBtn');
             btn.innerText = "Saving..."; btn.disabled = true;
@@ -820,6 +877,7 @@
                 await update(postRef, {
                     content: cleanContent,
                     taggedTeam: finalTeamTag,
+                    taggedTeam2: finalTeamTag2,
                     lastEdited: new Date().toISOString()
                 });
                 window.closeEditModal(null, true); 
