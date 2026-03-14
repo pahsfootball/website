@@ -125,12 +125,14 @@
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </a>
     
-    <a href="community.html" id="communityNavBtn" class="nav-card hidden">
+    <a href="login.html" id="communityNavBtn" class="nav-card">
         <div class="nav-text">
-            <span class="nav-title">Fan Zone Community</span>
-            <span class="nav-sub">Join the community & hype up your team</span>
+            <span class="nav-title" id="commNavTitle">Fan Zone Community</span>
+            <span class="nav-sub" id="commNavSub">Members Only - Sign in to unlock</span>
         </div>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>
+        <div id="commNavIcon">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+        </div>
     </a>
 
     <a href="padir.html" class="nav-card">
@@ -335,11 +337,21 @@
         const authBtn = document.getElementById("authNavBtn");
         const authTitle = document.getElementById("authNavTitle");
         const authSub = document.getElementById("authNavSub");
+        
+        // Grab elements for dynamic updates
         const communityBtn = document.getElementById("communityNavBtn");
+        const commTitle = document.getElementById("commNavTitle");
+        const commSub = document.getElementById("commNavSub");
+        const commIcon = document.getElementById("commNavIcon");
 
         if (user) {
-            // SHOW FAN ZONE BUTTON ONLY FOR LOGGED IN USERS
-            if(communityBtn) communityBtn.classList.remove("hidden");
+            // SET FAN ZONE TO LOGGED IN STATE
+            if(communityBtn) {
+                communityBtn.href = "community.html";
+                commTitle.innerHTML = "Fan Zone Community";
+                commSub.innerText = "Join the community & hype up your team";
+                commIcon.innerHTML = `<svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>`;
+            }
 
             if(authBtn) {
                 authBtn.classList.add("logged-in-state");
@@ -365,8 +377,13 @@
             }
 
         } else {
-            // HIDE FAN ZONE BUTTON FOR GUESTS
-            if(communityBtn) communityBtn.classList.add("hidden");
+            // SET FAN ZONE TO LOCKED GUEST STATE
+            if(communityBtn) {
+                communityBtn.href = "login.html";
+                commTitle.innerHTML = `Fan Zone Community <i class="fa-solid fa-lock text-sm ml-1 opacity-70"></i>`;
+                commSub.innerText = "Members Only - Sign in to unlock";
+                commIcon.innerHTML = `<svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>`;
+            }
 
             if(authBtn) {
                 authBtn.classList.remove("logged-in-state");
