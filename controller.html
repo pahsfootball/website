@@ -154,7 +154,7 @@
                 </div>
 
                 <button type="submit" id="submitGameBtn" class="w-full bg-pahs-dark text-pahs-gold font-head font-bold text-3xl uppercase tracking-widest py-4 rounded-xl shadow-xl hover:brightness-110 transition-all border-2 border-pahs-gold mt-4">
-                    Publish Game Day to Firebase
+                    Publish Game Day
                 </button>
                 <div id="statusMessage" class="hidden text-center mt-4 font-bold text-lg uppercase tracking-wide"></div>
 
@@ -166,7 +166,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -205,10 +205,10 @@
                 // Map and clean headers based on user's exact structure
                 directoryData = results.data.map(row => ({
                     school: cleanText(row['School']),
-                    mascot: cleanText(row['Team']),
+                    mascot: cleanText(row['Mascot'] || row['Team']),
                     logo: cleanText(row['Logo']),
                     field: cleanText(row['FieldName']),
-                    address: cleanText(row['FieldLocation'])
+                    address: cleanText(row['FieldLocation'] || row['City'])
                 })).filter(t => t.school !== "");
 
                 // Populate Datalist for Opponent Dropdown
@@ -326,38 +326,57 @@
             const oppName = document.getElementById('oppSelect').value.trim();
             if (!oppName) {
                 alert("Please select an opponent.");
-                btn.innerText = "Publish Game Day to Firebase"; btn.disabled = false; btn.classList.remove('opacity-70'); return;
+                btn.innerText = "Publish Game Day"; btn.disabled = false; btn.classList.remove('opacity-70'); return;
             }
 
+            // Explicitly cast to Strings to prevent Firebase 'undefined' crashes
             const payload = {
-                yourTeam: adminTeamName,
-                yourTeamMascot: myTeamObj ? myTeamObj.mascot : "",
-                yourTeamLogo: myTeamObj ? myTeamObj.logo : "",
-                yourTeamRecord: document.getElementById('myTeamRecord').value.trim(),
+                yourTeam: String(adminTeamName),
+                yourTeamMascot: String(myTeamObj ? myTeamObj.mascot : ""),
+                yourTeamLogo: String(myTeamObj ? myTeamObj.logo : ""),
+                yourTeamRecord: String(document.getElementById('myTeamRecord').value.trim()),
                 
-                opponent: oppName,
-                oppMascot: oppTeamObj ? oppTeamObj.mascot : "",
-                oppLogo: oppTeamObj ? oppTeamObj.logo : "",
-                oppRecord: document.getElementById('oppRecord').value.trim(),
+                opponent: String(oppName),
+                oppMascot: String(oppTeamObj ? oppTeamObj.mascot : ""),
+                oppLogo: String(oppTeamObj ? oppTeamObj.logo : ""),
+                oppRecord: String(document.getElementById('oppRecord').value.trim()),
                 
-                date: document.getElementById('gameDate').value,
-                time: document.getElementById('gameTime').value,
-                theme: document.getElementById('gameTheme').value.trim() || "No Theme",
+                date: String(document.getElementById('gameDate').value),
+                time: String(document.getElementById('gameTime').value),
+                theme: String(document.getElementById('gameTheme').value.trim() || "No Theme"),
                 
-                homeAway: document.querySelector('input[name="locationType"]:checked').value,
-                stadium: document.getElementById('stadiumName').value.trim(),
-                address: document.getElementById('stadiumAddress').value.trim(),
+                homeAway: String(document.querySelector('input[name="locationType"]:checked').value),
+                stadium: String(document.getElementById('stadiumName').value.trim()),
+                address: String(document.getElementById('stadiumAddress').value.trim()),
                 
                 status: "UPCOMING",
                 lastUpdated: new Date().toISOString()
             };
 
             try {
-                // Save to 'gameday_config/{team_safe_name}'
+                // 1. Save Matchup to 'gameday_config'
                 const safeKey = adminTeamName.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const configRef = ref(dbRealtime, 'gameday_config/' + safeKey);
-                
                 await set(configRef, payload);
+
+                // 2. Initialize the Scoreboard to 0-0 in 'live_scores'
+                const isHome = payload.homeAway.toLowerCase() === 'home';
+                const hName = (isHome ? payload.yourTeam : payload.opponent).replace(/[^a-zA-Z0-9]/g, '');
+                const aName = (isHome ? payload.opponent : payload.yourTeam).replace(/[^a-zA-Z0-9]/g, '');
+                const gameKey = [hName, aName].sort().join('_');
+                
+                const scoreRef = ref(dbRealtime, 'live_scores/' + gameKey);
+                
+                // We use update here so we don't accidentally overwrite an active score 
+                // if they are just fixing a typo in the controller.
+                await update(scoreRef, {
+                    home: isHome ? payload.yourTeam : payload.opponent,
+                    away: !isHome ? payload.yourTeam : payload.opponent,
+                    homeLogo: isHome ? payload.yourTeamLogo : payload.oppLogo,
+                    awayLogo: !isHome ? payload.yourTeamLogo : payload.oppLogo,
+                    status: "UPCOMING",
+                    quarter: "PREGAME"
+                });
 
                 msg.innerText = "Game Day Published Successfully!";
                 msg.classList.replace('text-red-500', 'text-green-500');
@@ -365,18 +384,19 @@
 
                 setTimeout(() => {
                     msg.classList.add('hidden');
-                    btn.innerText = "Publish Game Day to Firebase";
+                    btn.innerText = "Publish Game Day";
                     btn.disabled = false;
                     btn.classList.remove('opacity-70');
                 }, 3000);
 
             } catch (err) {
                 console.error(err);
-                msg.innerText = "Error publishing. Try again.";
+                // Reveal exact error to user for debugging Firebase Rules
+                msg.innerText = "Error: " + err.message;
                 msg.classList.replace('text-green-500', 'text-red-500');
                 msg.classList.remove('hidden');
                 
-                btn.innerText = "Publish Game Day to Firebase";
+                btn.innerText = "Publish Game Day";
                 btn.disabled = false;
                 btn.classList.remove('opacity-70');
             }
