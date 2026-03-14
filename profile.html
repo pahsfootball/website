@@ -154,7 +154,7 @@
                         <i class="fa-solid fa-football mr-2"></i> Go to My Game Day Page
                     </a>
                     
-                    <button type="button" id="relinquishAdminBtn" class="flex items-center justify-center w-full bg-white text-[#ef4444] font-bold font-head text-xl py-2 px-6 rounded-lg shadow-sm hover:bg-gray-100 transition-colors uppercase border border-[#ef4444] cursor-pointer">
+                    <button type="button" onclick="window.openRelinquishModal()" id="relinquishAdminBtn" class="flex items-center justify-center w-full bg-white text-[#ef4444] font-bold font-head text-xl py-2 px-6 rounded-lg shadow-sm hover:bg-gray-100 transition-colors uppercase border border-[#ef4444] cursor-pointer">
                         <i class="fa-solid fa-user-xmark mr-2"></i> Relinquish Manager Access
                     </button>
                 </div>
@@ -167,6 +167,45 @@
                 
                 <div id="statusMsg" class="status-msg"></div>
             </form>
+        </div>
+    </div>
+
+    <div id="relinquishModalOverlay" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" onclick="window.closeRelinquishModal(event)">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col border-t-8 border-red-600">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-red-600 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-user-xmark"></i> Relinquish Admin
+                </h2>
+                <button onclick="window.closeRelinquishModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    Are you sure you want to step down as the admin for <strong id="relinquishTeamNameDisplay" class="text-gray-900">your team</strong>? Please provide a reason below.
+                </p>
+                <form id="relinquishAdminForm">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason</label>
+                    <textarea id="relinquishReason" rows="3" required placeholder="Why are you stepping down?" class="w-full p-3 rounded-xl bg-white border border-gray-300 text-gray-800 mb-4 resize-none font-body text-sm outline-none focus:border-red-500 transition-colors"></textarea>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
+                            <input type="text" id="relinquishFirstName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-200 outline-none cursor-not-allowed" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
+                            <input type="text" id="relinquishLastName" required class="w-full p-3 rounded-xl text-gray-500 font-body text-sm bg-gray-100 border border-gray-200 outline-none cursor-not-allowed" readonly>
+                        </div>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email</label>
+                    <input type="email" id="relinquishEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-200 outline-none cursor-not-allowed" readonly>
+                    
+                    <button type="submit" id="btnSubmitRelinquish" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">
+                        Submit Request
+                    </button>
+                    <div id="relinquishStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -353,18 +392,8 @@
                             document.getElementById('admin-controls').classList.remove('hidden');
                             
                             const teamName = data.managedTeam || "Unknown Team"; 
-                            const userName = data.username || "Unknown User";
-                            const userEmail = user.email;
-
                             document.getElementById('adminTeamNameLabel').innerText = teamName;
                             document.getElementById('adminGamedayLink').href = `gameday.html?team=${encodeURIComponent(teamName)}`;
-                            
-                            const relinquishBtn = document.getElementById('relinquishAdminBtn');
-                            relinquishBtn.addEventListener('click', () => {
-                                const subject = encodeURIComponent(`Admin Removal Request - ${teamName}`);
-                                const body = encodeURIComponent(`Please remove my manager access for the following team:\n\nTeam: ${teamName}\nUsername: ${userName}\nEmail: ${userEmail}\n\nThank you.`);
-                                window.location.href = `mailto:thepahsfootball@gmail.com?subject=${subject}&body=${body}`;
-                            });
                         }
                     }
                 } catch (error) {
@@ -375,6 +404,91 @@
             }
         });
 
+        // --- RELINQUISH ADMIN LOGIC ---
+        window.openRelinquishModal = function() {
+            const teamName = window.currentUserProfile?.managedTeam || "Unknown Team"; 
+            document.getElementById('relinquishTeamNameDisplay').innerText = teamName;
+            document.getElementById('relinquishFirstName').value = window.currentUserProfile?.firstName || "N/A";
+            document.getElementById('relinquishLastName').value = window.currentUserProfile?.lastName || "N/A";
+            document.getElementById('relinquishEmail').value = auth.currentUser?.email || "N/A";
+            
+            const overlay = document.getElementById('relinquishModalOverlay');
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex'; 
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.children[0].classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeRelinquishModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'relinquishModalOverlay')) {
+                const overlay = document.getElementById('relinquishModalOverlay');
+                overlay.classList.add('opacity-0');
+                overlay.children[0].classList.add('scale-95');
+                setTimeout(() => { 
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                    document.getElementById('relinquishAdminForm').reset();
+                    document.getElementById('relinquishStatusMessage').classList.add('hidden');
+                    document.getElementById('btnSubmitRelinquish').style.display = 'block';
+                    document.getElementById('btnSubmitRelinquish').disabled = false;
+                }, 300);
+            }
+        };
+
+        document.getElementById('relinquishAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitRelinquish'); 
+            const msg = document.getElementById('relinquishStatusMessage');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
+            const reason = document.getElementById('relinquishReason').value;
+            const teamName = window.currentUserProfile?.managedTeam || "Unknown Team";
+            const username = window.currentUserProfile?.username || "User";
+            const uid = auth.currentUser.uid;
+            
+            const combinedMessage = `*** ADMIN REMOVAL REQUEST ***\n` +
+                                    `Team to Remove: ${teamName}\n\n` +
+                                    `Reason: ${reason}\n\n` +
+                                    `*** USER INFO ***\n` +
+                                    `Username: @${username}\n` +
+                                    `User ID: ${uid}`;
+            
+            const params = new URLSearchParams();
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", document.getElementById('relinquishFirstName').value); 
+            params.append("entry.1429224270", document.getElementById('relinquishLastName').value); 
+            params.append("entry.1778241553", document.getElementById('relinquishEmail').value); 
+            
+            const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
+
+            fetch(CONTACT_FORM_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Request Submitted Successfully!';
+                 setTimeout(() => { window.closeRelinquishModal(null, true); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending request.'; 
+            });
+        });
+
+        // --- UPDATE PROFILE LISTENER ---
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUserUid) return;
