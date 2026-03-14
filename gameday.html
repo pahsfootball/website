@@ -42,7 +42,6 @@
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
-        /* --- SCORE UPDATE ANIMATIONS --- */
         @keyframes scoreUpdateAnim {
             0% { border-color: var(--team-primary); box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
             15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
@@ -57,7 +56,6 @@
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: var(--team-primary, #fbbf24); outline: none; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         
-        /* DYNAMIC BUTTON STYLING FOR CONTRAST */
         .btn-dynamic { background-color: var(--team-primary); color: var(--team-text); border: 1px solid var(--team-primary); }
     </style>
 </head>
@@ -472,11 +470,11 @@
         window.currentUserProfile = null;
         window.currentMatchupData = null; 
 
-        // State Tracking for UI updates
+        // State Tracking
         let isUserLoggedIn = false;
         let isUserAdmin = false;
         let isActiveGame = false;
-        let isTeamClaimed = false; // Globally tracks if ANY user is the admin for this team
+        let isTeamClaimed = false; 
 
         // --- COLOR LOGIC (SMART CONTRAST) ---
         const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
@@ -491,9 +489,7 @@
             let h = normalizeColor(hexcolor).replace("#", "");
             if (h.length === 3) h = h.split('').map(s => s + s).join('');
             if (h.length !== 6) return 'black';
-            var r = parseInt(h.substr(0,2),16);
-            var g = parseInt(h.substr(2,2),16);
-            var b = parseInt(h.substr(4,2),16);
+            var r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
             var yiq = ((r*299)+(g*587)+(b*114))/1000;
             return (yiq >= 128) ? 'black' : 'white';
         }
@@ -503,7 +499,6 @@
             const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
             let primary = normalizeColor(parts[0]);
             let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
-            // The Anti-Black Rule
             if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
             return primary;
         }
@@ -646,7 +641,6 @@
             const sbCard = document.getElementById('basicScoreboardCard');
             const btnUpdateScoreAdmin = document.getElementById('btn-update-score-admin');
 
-            // Hide all dynamic panels initially
             if(loginPanel) loginPanel.classList.add('hidden');
             if(adminTopBar) adminTopBar.classList.add('hidden');
             if(claimPanel) claimPanel.classList.add('hidden');
@@ -654,37 +648,28 @@
             if(sbCard) sbCard.classList.add('hidden');
             if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.add('hidden');
 
-            // 1. Live Scoreboard Card
             if (isActiveGame) {
                 if(sbCard) sbCard.classList.remove('hidden');
             }
 
-            // 2. Auth State
             if (!isUserLoggedIn) {
-                // Not logged in: show login prompt
                 if(loginPanel) loginPanel.classList.remove('hidden');
                 
-                // If not logged in, NO game, AND team is NOT claimed -> show claim panel
+                // ONLY SHOW CLAIM PANEL IF TEAM HAS NO ADMIN AND NO GAME
                 if (!isActiveGame && !isTeamClaimed) {
                     if(claimPanel) claimPanel.classList.remove('hidden');
                 }
             } else {
-                // Logged in user!
                 if (isUserAdmin) {
-                    // Admin of THIS team: show Top Bar
                     if(adminTopBar) adminTopBar.classList.remove('hidden');
-                    
-                    // If game is active, show the update button inside the top bar
                     if (isActiveGame) {
                         if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.remove('hidden');
                     }
                 } else {
-                    // Logged in but NOT the admin for this team
                     if (isActiveGame) {
-                        // Game is active: Show the Fan "Post Live Score" panel
                         if(fanScorePanel) fanScorePanel.classList.remove('hidden');
                     } else {
-                        // No game active AND team is NOT claimed: Show the "Admin Needed / Claim" panel
+                        // ONLY SHOW CLAIM PANEL TO LOGGED-IN USERS IF TEAM IS UNCLAIMED
                         if(!isTeamClaimed) {
                             if(claimPanel) claimPanel.classList.remove('hidden');
                         }
@@ -704,7 +689,6 @@
                     if (userDoc.exists()) {
                         window.currentUserProfile = userDoc.data();
                         
-                        // Check case-insensitive
                         if (window.currentUserProfile.role === 'admin' && 
                             window.currentUserProfile.managedTeam && 
                             window.currentUserProfile.managedTeam.toLowerCase() === teamParam?.toLowerCase()) {
@@ -753,7 +737,6 @@
                         return;
                     }
 
-                    // Apply Colors Smartly
                     applyTeamColors(teamRow['Colors'] || teamRow['Color']);
 
                     // CHECK IF THIS TEAM IS ALREADY CLAIMED BY AN ADMIN
@@ -768,7 +751,6 @@
                         isTeamClaimed = false;
                     }
 
-                    // Check Firebase for Active Game
                     try {
                         const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
@@ -779,7 +761,6 @@
                         if (!game || !game.yourTeam) {
                             isActiveGame = false;
                             
-                            // --- OFFSEASON FALLBACK STATE ---
                             document.getElementById('main-app').classList.remove('hidden');
                             document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
                             
@@ -813,7 +794,6 @@
                             
                             document.getElementById('ui-theme').innerText = "TBD";
                             
-                            // Use CSV Fallback Location
                             const stadiumName = cleanText(teamRow['FieldName']);
                             const stadiumLoc = cleanText(teamRow['FieldLocation']) || cleanText(teamRow['City']);
                             
@@ -837,7 +817,6 @@
                         } else {
                             isActiveGame = true;
                             
-                            // --- ACTIVE GAME DAY STATE ---
                             window.currentMatchupData = game;
                             
                             document.getElementById('main-app').classList.remove('hidden');
@@ -875,9 +854,11 @@
                                 oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
                             }
 
-                            let isHome = (game.homeAway || "").toLowerCase().includes('home');
+                            // --- NEUTRAL GAME FIX: Neutral means Admin is Home ---
+                            let isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
                             document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
-                            document.getElementById('ui-homeaway').className = isHome ? "font-bold bg-pahs-gold text-[color:var(--team-text,#000)] px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-pahs-gold" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
+                            
+                            document.getElementById('ui-homeaway').className = (game.homeAway === "Home") ? "font-bold bg-pahs-gold text-[color:var(--team-text,#000)] px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-pahs-gold" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
                             
                             document.getElementById('ui-theme').innerText = game.theme || "No Theme";
                             document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
@@ -939,11 +920,11 @@
 
         // --- SCOREBOARD LISTENER ---
         function listenToLiveScore(game) {
-            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            // --- NEUTRAL GAME FIX ---
+            const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
-            // Fix for crashes if missing data
-            const homeName = (isHome ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
-            const awayName = (!isHome ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
+            const homeName = (isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
             const gameKey = [homeName, awayName].sort().join('_');
             
             const sbCard = document.getElementById('basicScoreboardCard');
@@ -953,17 +934,17 @@
             const sbClock = document.getElementById('sb-clock');
 
             onValue(ref(dbRealtime, 'live_scores/' + gameKey), (snapshot) => {
-                document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
-                document.getElementById('sb-away-name').innerText = !isHome ? game.yourTeam : game.opponent;
+                document.getElementById('sb-home-name').innerText = isHomeSide ? game.yourTeam : game.opponent;
+                document.getElementById('sb-away-name').innerText = !isHomeSide ? game.yourTeam : game.opponent;
                 
                 const hLogo = document.getElementById('sb-home-logo'); const aLogo = document.getElementById('sb-away-logo');
                 const hFall = document.getElementById('sb-home-fall'); const aFall = document.getElementById('sb-away-fall');
                 
-                hFall.innerText = (isHome ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
-                aFall.innerText = (!isHome ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
+                hFall.innerText = (isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
+                aFall.innerText = (!isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
 
-                let hUrl = isHome ? game.yourTeamLogo : game.oppLogo; 
-                let aUrl = !isHome ? game.yourTeamLogo : game.oppLogo;
+                let hUrl = isHomeSide ? game.yourTeamLogo : game.oppLogo; 
+                let aUrl = !isHomeSide ? game.yourTeamLogo : game.oppLogo;
                 
                 if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
                 else { hLogo.style.display = 'none'; hFall.style.display='block'; }
@@ -1021,8 +1002,8 @@
                         sbClock.style.display = '';
                     }
                 } else {
-                    document.getElementById('sb-home-name').innerText = isHome ? game.yourTeam : game.opponent;
-                    document.getElementById('sb-away-name').innerText = !isHome ? game.yourTeam : game.opponent;
+                    document.getElementById('sb-home-name').innerText = isHomeSide ? game.yourTeam : game.opponent;
+                    document.getElementById('sb-away-name').innerText = !isHomeSide ? game.yourTeam : game.opponent;
                     statusBadge.innerText = "PREGAME";
                     statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded uppercase tracking-widest border";
                 }
@@ -1034,16 +1015,16 @@
             const game = window.currentMatchupData;
             if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
             
-            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
-            document.getElementById('lblHome').innerText = (isHome ? game.yourTeam : game.opponent) + " Score";
-            document.getElementById('lblAway').innerText = (!isHome ? game.yourTeam : game.opponent) + " Score";
+            document.getElementById('lblHome').innerText = (isHomeSide ? game.yourTeam : game.opponent) + " Score";
+            document.getElementById('lblAway').innerText = (!isHomeSide ? game.yourTeam : game.opponent) + " Score";
             
-            document.getElementById('optPossHome').innerText = isHome ? game.yourTeam : game.opponent;
-            document.getElementById('optPossAway').innerText = (!isHome ? game.yourTeam : game.opponent);
+            document.getElementById('optPossHome').innerText = isHomeSide ? game.yourTeam : game.opponent;
+            document.getElementById('optPossAway').innerText = (!isHomeSide ? game.yourTeam : game.opponent);
 
-            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const homeName = (isHomeSide ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHomeSide ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
             const gameKey = [homeName, awayName].sort().join('_');
             
             try {
@@ -1075,10 +1056,10 @@
             btn.disabled = true;
 
             const game = window.currentMatchupData;
-            const isHome = (game.homeAway || "").toLowerCase().includes('home');
+            const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
-            const homeName = (isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
-            const awayName = (!isHome ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const homeName = (isHomeSide ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
+            const awayName = (!isHomeSide ? game.yourTeam : game.opponent).replace(/[^a-zA-Z0-9]/g, '');
             const gameKey = [homeName, awayName].sort().join('_');
             
             const qtr = document.getElementById('inpQuarter').value;
@@ -1090,10 +1071,10 @@
             const usernameToSave = window.currentUserProfile?.username || "Fan";
 
             const updateData = {
-                home: isHome ? game.yourTeam : game.opponent,
-                away: !isHome ? game.yourTeam : game.opponent,
-                homeLogo: isHome ? game.yourTeamLogo : game.oppLogo,
-                awayLogo: !isHome ? game.yourTeamLogo : game.oppLogo,
+                home: isHomeSide ? game.yourTeam : game.opponent,
+                away: !isHomeSide ? game.yourTeam : game.opponent,
+                homeLogo: isHomeSide ? game.yourTeamLogo : game.oppLogo,
+                awayLogo: !isHomeSide ? game.yourTeamLogo : game.oppLogo,
                 homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
                 awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
                 quarter: qtr,
@@ -1114,82 +1095,6 @@
                 btn.disabled = false;
             });
         });
-
-        // --- SHARE SCORE MODAL ---
-        window.openShareScoreModal = function(e) {
-            if (e) e.stopPropagation();
-            if (!auth.currentUser) {
-                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
-            }
-
-            const homeName = document.getElementById('sb-home-name').innerText;
-            const homeScore = document.getElementById('sb-home-score').innerText;
-            const awayName = document.getElementById('sb-away-name').innerText;
-            const awayScore = document.getElementById('sb-away-score').innerText;
-            const status = document.getElementById('sb-status').innerText;
-            const clock = document.getElementById('sb-clock').innerText;
-
-            let timeStr = "";
-            if (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") { timeStr = ` | Time: ${clock}`; }
-
-            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}\n\n`;
-            
-            document.getElementById('shareScoreContent').value = shareText;
-
-            const overlay = document.getElementById('shareScoreModalOverlay');
-            overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeShareScoreModal = function(e, force = false) {
-            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
-                const overlay = document.getElementById('shareScoreModalOverlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
-            }
-        };
-
-        window.submitSharedScore = async function() {
-            const btn = document.getElementById('submitShareScoreBtn');
-            const content = document.getElementById('shareScoreContent').value.trim();
-            const origText = btn.innerText;
-            
-            if (content === "") return alert("Post cannot be empty.");
-            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
-
-            btn.innerText = "Posting...";
-            btn.disabled = true;
-
-            const cleanContent = filterProfanity(content);
-            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
-            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
-            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
-
-            try {
-                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
-                await set(newPostRef, {
-                    authorId: auth.currentUser.uid,
-                    authorUsername: username,
-                    content: cleanContent,
-                    taggedTeam: teamToTag,
-                    taggedTeam2: opponentTeamToTag,
-                    timestamp: new Date().toISOString()
-                });
-                
-                window.closeShareScoreModal(null, true);
-                alert("Score shared to the Fan Zone successfully!");
-            } catch (error) { 
-                console.error(error);
-                alert("Failed to communicate with server."); 
-            } finally {
-                btn.innerText = origText;
-                btn.disabled = false;
-            }
-        };
 
         // --- REQUEST ADMIN MODAL (RESTORED) ---
         window.openRequestAdminModal = function(e) {
