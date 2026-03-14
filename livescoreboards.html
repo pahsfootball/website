@@ -35,7 +35,7 @@
         <div class="max-w-4xl mx-auto">
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="searchInput" placeholder="Search for your team..." class="w-full pl-12 pr-4 py-4 rounded-xl text-lg font-bold outline-none focus:ring-4 focus:ring-pahs-gold/50">
+                <input type="text" id="searchInput" placeholder="Search for your team..." class="w-full pl-12 pr-4 py-4 rounded-xl text-lg font-bold outline-none focus:ring-4 focus:ring-pahs-gold/50 transition-all">
             </div>
         </div>
     </div>
@@ -49,7 +49,42 @@
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
         let allTeams = [];
 
+        const colorMap = {
+            "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
+            "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
+            "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
+            "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
+            "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
+        };
+
         function clean(str) { return str ? str.replace(/\*/g, '').trim() : ""; }
+
+        // Logic to determine best accent color
+        function getBestAccent(colorString) {
+            if (!colorString) return "#fbbf24"; // Fallback Gold
+            const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
+            
+            let primary = colorMap[parts[0]] || parts[0];
+            let secondary = parts[1] ? (colorMap[parts[1]] || parts[1]) : primary;
+
+            // If primary is Black or very dark, use secondary
+            if (primary === "#000000" || primary.toLowerCase() === "black") {
+                return secondary;
+            }
+            return primary;
+        }
+
+        // Logic to determine text color (Black or White) based on background brightness
+        function getContrastYIQ(hexcolor){
+            if (!hexcolor || hexcolor.startsWith('rgb')) return 'black';
+            hexcolor = hexcolor.replace("#", "");
+            if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(s => s + s).join('');
+            var r = parseInt(hexcolor.substr(0,2),16);
+            var g = parseInt(hexcolor.substr(2,2),16);
+            var b = parseInt(hexcolor.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? 'black' : 'white';
+        }
 
         Papa.parse(CSV_URL, {
             download: true,
@@ -60,7 +95,8 @@
                     school: clean(row['School']),
                     mascot: clean(row['Mascot']),
                     logo: clean(row['Logo']),
-                    class: clean(row['Class'])
+                    class: clean(row['Class']),
+                    colors: clean(row['Colors'])
                 })).filter(t => t.school !== "");
                 
                 allTeams.sort((a,b) => a.school.localeCompare(b.school));
@@ -71,19 +107,30 @@
 
         function render(teams) {
             const grid = document.getElementById('grid');
-            grid.innerHTML = teams.map(team => `
-                <a href="gameday.html?team=${encodeURIComponent(team.school)}" class="block bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-1 transition-all border-t-4 border-pahs-gold">
+            grid.innerHTML = teams.map(team => {
+                const accent = getBestAccent(team.colors);
+                const textColor = getContrastYIQ(accent);
+                const badgeBg = textColor === 'black' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)';
+
+                return `
+                <a href="gameday.html?team=${encodeURIComponent(team.school)}" class="block bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-1 transition-all group" style="border-top: 6px solid ${accent}">
                     <div class="p-6 flex flex-col items-center text-center">
-                        <div class="w-20 h-20 bg-gray-50 rounded-full border border-gray-200 flex items-center justify-center overflow-hidden mb-4 p-2">
+                        <div class="w-20 h-20 bg-gray-50 rounded-full border border-gray-200 flex items-center justify-center overflow-hidden mb-4 p-2 transition-transform group-hover:scale-110">
                             ${team.logo ? `<img src="${team.logo}" class="w-full h-full object-contain">` : `<i class="fa-solid fa-shield text-gray-300 text-4xl"></i>`}
                         </div>
-                        <h2 class="font-head text-3xl uppercase leading-none text-gray-900">${team.school}</h2>
+                        <h2 class="font-head text-3xl uppercase leading-none text-gray-900 group-hover:text-pahs-dark">${team.school}</h2>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">${team.mascot || 'Varsity Football'}</p>
-                        <span class="mt-4 text-[10px] bg-pahs-dark text-pahs-gold px-3 py-1 rounded-full font-black uppercase">Class ${team.class || 'PIAA'}</span>
+                        
+                        <div class="mt-4 flex items-center justify-center gap-2">
+                            <span class="text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-sm" style="background-color: ${accent}; color: ${textColor}">Class ${team.class || 'PIAA'}</span>
+                        </div>
                     </div>
-                    <div class="bg-gray-100 py-3 text-center text-[10px] font-black uppercase text-gray-400 tracking-widest border-t border-gray-200">View Game Day Page</div>
+                    <div class="py-3 text-center text-[10px] font-black uppercase tracking-widest border-t transition-colors" style="background-color: ${accent}; color: ${textColor}; border-color: ${badgeBg}">
+                        View Game Day Page
+                    </div>
                 </a>
-            `).join('');
+                `;
+            }).join('');
         }
 
         document.getElementById('searchInput').addEventListener('input', (e) => {
