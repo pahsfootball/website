@@ -74,7 +74,7 @@
                         <i class="fa-solid fa-arrow-left text-xs"></i>
                         <span class="text-sm font-bold font-head text-lg pt-0.5">BACK</span>
                     </a>
-                    <h1 class="text-3xl font-bold font-head text-white tracking-wide uppercase">Statewide <span class="text-pahs-gold">Teams</span></h1>
+                    <h1 class="text-3xl font-bold text-white tracking-wide hidden sm:block uppercase">Statewide <span class="text-pahs-gold">Teams</span></h1>
                 </div>
 
                 <a href="all-scores.html" class="flex items-center justify-center gap-3 bg-pahs-gold text-black px-6 py-2 rounded-full font-head text-xl font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-lg hover:scale-105 w-full md:w-auto">
@@ -132,7 +132,7 @@
         <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 border border-gray-300">
             <i class="fa-solid fa-filter text-gray-500 text-2xl"></i>
         </div>
-        <h3 class="text-2xl font-head text-gray-900">NO TEAMS FOUND</h3>
+        <h3 class="text-2xl font-head text-gray-900 uppercase">NO TEAMS FOUND</h3>
         <p class="text-gray-700 max-w-xs mx-auto mt-1 font-body text-sm">Try adjusting your filters or search term.</p>
         <button id="resetAllBtn" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg border border-yellow-500 uppercase tracking-widest">
             RESET ALL
@@ -284,10 +284,9 @@
     </div>
 </div>
 
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, updateDoc, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -303,8 +302,10 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // --- UNIFIED DATABASES & FORM URL ---
     const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-    const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
+    const CONTACT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ'; 
+    const CONTACT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + CONTACT_FORM_ID + '/formResponse';
 
     let allData = [], filteredData = [];
     let currentTeam = "";
@@ -377,7 +378,7 @@
         Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
     }
 
-    // --- COLOR INTELLIGENCE FOR CARDS ---
+    // --- COLOR INTELLIGENCE ---
     const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
     function getBestAccent(colorString) {
         if (!colorString) return "#fbbf24";
@@ -387,7 +388,9 @@
         if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
         return primary;
     }
-    function getContrastYIQ(hexcolor){
+    
+    // BUG FIX: Correctly named getContrast function!
+    function getContrast(hexcolor) {
         if (!hexcolor || hexcolor.startsWith('rgb')) return 'black';
         let h = hexcolor.replace("#", "");
         if (h.length === 3) h = h.split('').map(s => s + s).join('');
@@ -396,11 +399,6 @@
         return (((r*299)+(g*587)+(b*114))/1000 >= 128) ? 'black' : 'white';
     }
 
-    const parseColors = str => {
-        const p = (str||'').split(/[&/,]+/).map(s=>s.trim()).filter(s=>s);
-        return { p: normalizeColor(p[0]), a: p.slice(1).map(normalizeColor) };
-    };
-
     function renderCards(data) {
         els.grid.innerHTML = '';
         if(!data.length) { els.noResults.classList.remove('hidden'); return; } else { els.noResults.classList.add('hidden'); }
@@ -408,7 +406,7 @@
 
         data.forEach((row, idx) => {
             const accent = getBestAccent(row.colors);
-            const textColor = getContrastYIQ(accent);
+            const textColor = getContrast(accent);
             const badgeBg = textColor === 'black' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)';
             const logoUrl = row.logo || '';
 
@@ -451,7 +449,8 @@
     function resetAllFilters() { els.search.value = ''; els.district.value = 'All'; els.class.value = 'All'; els.clear.classList.add('hidden'); handleSearch(); }
 
     window.openModal = async function(idx) {
-        const d = filteredData[idx]; currentTeam = d.school; const { p, a } = parseColors(d.colors);
+        const d = filteredData[idx]; currentTeam = d.school; 
+        
         document.getElementById('modalSchool').innerText = d.school; document.getElementById('modalTeam').innerText = d.mascot || 'Varsity Football';
         document.getElementById('modalClass').innerText = d.classification || '-'; document.getElementById('modalDistrict').innerText = d.district || '-';
         const locText = d.fieldLocation || d.city || 'Unknown'; document.getElementById('modalCity').innerText = locText;
@@ -460,9 +459,14 @@
         
         const headerBanner = document.getElementById('modalHeaderBanner');
         const searchBtn = document.getElementById('modalSearchLink');
-        const primary = p || '#27272a'; const secondary = (a && a[0]) ? a[0] : primary;
-        headerBanner.style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
-        searchBtn.style.backgroundColor = primary; searchBtn.style.color = getContrastYIQ(primary) === 'black' ? '#000000' : '#ffffff';
+        
+        // Grab colors for banner
+        const accent = getBestAccent(d.colors);
+        const secondAccent = d.colors ? (normalizeColor(d.colors.split(/[&/,]+/)[1]) || accent) : accent;
+
+        headerBanner.style.background = `linear-gradient(135deg, ${accent} 0%, ${secondAccent} 100%)`;
+        searchBtn.style.backgroundColor = accent; 
+        searchBtn.style.color = getContrast(accent) === 'black' ? '#000000' : '#ffffff';
 
         const aiQuery = `Overview and history of the ${d.school} ${d.mascot} football program Pennsylvania`;
         document.getElementById('modalSearchLink').href = `https://www.google.com/search?q=${encodeURIComponent(aiQuery)}`;
@@ -478,55 +482,257 @@
             try {
                 const userSnap = await getDoc(doc(db, "users", user.uid)); const userData = userSnap.data() || {}; 
                 if (userSnap.exists()) {
-                    isFollowing = (userData.followedTeams || []).includes(currentTeam); updateFollowBtnUI();
-                    if (userData.managedTeam === currentTeam) { els.claimText.innerText = "DASHBOARD"; els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600'); els.claimBtn.onclick = () => window.location.href = "profile.html"; }
-                    else if (userData.managedTeam && userData.managedTeam !== currentTeam) { els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`; els.claimBtn.disabled = true; els.claimBtn.style.opacity = "0.5"; els.claimBtn.onclick = null; }
-                    else { els.claimText.innerText = "ADMIN"; els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam, user, userData); }
+                    const followed = userData.followedTeams || [];
+                    isFollowing = followed.includes(currentTeam);
+                    updateFollowBtnUI();
+
+                    if (userData.managedTeam === currentTeam) {
+                        els.claimText.innerText = "DASHBOARD";
+                        els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                        els.claimBtn.onclick = () => window.location.href = "profile.html"; 
+                    } else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
+                        els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
+                        els.claimBtn.disabled = true;
+                        els.claimBtn.style.opacity = "0.5";
+                        els.claimBtn.onclick = null;
+                    } else {
+                        els.claimText.innerText = "ADMIN";
+                        els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam, user, userData);
+                    }
                 }
             } catch (err) { console.error("Error checking user status:", err); }
-        } else { isFollowing = false; updateFollowBtnUI(); }
+        } else {
+            isFollowing = false;
+            updateFollowBtnUI();
+        }
 
-        els.modalOverlay.classList.remove('hidden'); setTimeout(() => { els.modalOverlay.classList.remove('opacity-0'); els.modalContent.classList.remove('scale-95'); els.modalContent.classList.add('scale-100'); }, 10); document.body.style.overflow = 'hidden';
+        els.modalOverlay.classList.remove('hidden');
+        setTimeout(() => {
+            els.modalOverlay.classList.remove('opacity-0');
+            els.modalContent.classList.remove('scale-95');
+            els.modalContent.classList.add('scale-100');
+        }, 10);
+        document.body.style.overflow = 'hidden';
     };
 
-    function updateFollowBtnUI() { if (isFollowing) { els.followBtn.classList.replace('bg-[#27272a]', 'bg-red-600'); els.followBtn.classList.add('text-white'); els.followText.innerText = "UNFOLLOW TEAM"; els.followIcon.classList.replace('fa-star', 'fa-trash'); } else { els.followBtn.classList.replace('bg-red-600', 'bg-[#27272a]'); els.followBtn.classList.add('text-white'); els.followText.innerText = "FOLLOW TEAM"; els.followIcon.classList.replace('fa-trash', 'fa-star'); } }
+    function updateFollowBtnUI() {
+        if (isFollowing) {
+            els.followBtn.classList.replace('bg-[#27272a]', 'bg-red-600');
+            els.followBtn.classList.add('text-white');
+            els.followText.innerText = "UNFOLLOW TEAM";
+            els.followIcon.classList.replace('fa-star', 'fa-trash');
+        } else {
+            els.followBtn.classList.replace('bg-red-600', 'bg-[#27272a]');
+            els.followBtn.classList.add('text-white');
+            els.followText.innerText = "FOLLOW TEAM";
+            els.followIcon.classList.replace('fa-trash', 'fa-star');
+        }
+    }
 
     els.followBtn.addEventListener('click', async () => {
-        const user = auth.currentUser; if (!user) { if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html"; return; }
+        const user = auth.currentUser;
+        if (!user) {
+            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
+            return;
+        }
+
         const userRef = doc(db, "users", user.uid);
-        try { els.followBtn.disabled = true; if (isFollowing) { await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) }); isFollowing = false; } else { await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) }); isFollowing = true; } updateFollowBtnUI(); } catch (err) {} finally { els.followBtn.disabled = false; }
+        try {
+            els.followBtn.disabled = true;
+            if (isFollowing) {
+                await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
+                isFollowing = false;
+            } else {
+                await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
+                isFollowing = true;
+            }
+            updateFollowBtnUI();
+        } catch (err) { console.error("Follow update error:", err); }
+        finally { els.followBtn.disabled = false; }
     });
 
+    // --- SUGGEST EDIT SYSTEM ---
     window.openSuggestModal = function(teamData) {
-        document.getElementById('sugSchool').value = teamData.school; document.getElementById('sugMascot').value = teamData.mascot || ''; document.getElementById('sugClass').value = teamData.classification || ''; document.getElementById('sugConf').value = teamData.conference || ''; document.getElementById('sugColors').value = teamData.colors || ''; document.getElementById('sugStadium').value = teamData.fieldName || ''; document.getElementById('sugAddress').value = teamData.fieldLocation || ''; document.getElementById('sugNotes').value = '';
-        const overlay = document.getElementById('suggestModalOverlay'); overlay.classList.remove('hidden'); setTimeout(() => { overlay.classList.remove('opacity-0'); overlay.children[0].classList.remove('scale-95'); }, 10);
+        document.getElementById('sugSchool').value = teamData.school;
+        document.getElementById('sugMascot').value = teamData.mascot || '';
+        document.getElementById('sugClass').value = teamData.classification || '';
+        document.getElementById('sugConf').value = teamData.conference || '';
+        document.getElementById('sugColors').value = teamData.colors || '';
+        document.getElementById('sugStadium').value = teamData.fieldName || '';
+        document.getElementById('sugAddress').value = teamData.fieldLocation || '';
+        document.getElementById('sugNotes').value = '';
+
+        const overlay = document.getElementById('suggestModalOverlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.remove('opacity-0');
+            overlay.children[0].classList.remove('scale-95');
+        }, 10);
     }
-    window.closeSuggestModal = function() { const overlay = document.getElementById('suggestModalOverlay'); overlay.classList.add('opacity-0'); overlay.children[0].classList.add('scale-95'); setTimeout(() => { overlay.classList.add('hidden'); document.getElementById('suggestForm').reset(); document.getElementById('suggestStatusMessage').classList.add('hidden'); document.getElementById('submitSuggestBtn').style.display = 'block'; document.getElementById('submitSuggestBtn').disabled = false; }, 300); }
+
+    window.closeSuggestModal = function() {
+        const overlay = document.getElementById('suggestModalOverlay');
+        overlay.classList.add('opacity-0');
+        overlay.children[0].classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.getElementById('suggestForm').reset();
+            document.getElementById('suggestStatusMessage').classList.add('hidden');
+            document.getElementById('submitSuggestBtn').style.display = 'block';
+            document.getElementById('submitSuggestBtn').disabled = false;
+        }, 300);
+    }
 
     document.getElementById('suggestForm').addEventListener('submit', function(e) {
-        e.preventDefault(); const btn = document.getElementById('submitSuggestBtn'); const msg = document.getElementById('suggestStatusMessage'); btn.innerText = 'Submitting...'; btn.disabled = true; btn.style.opacity = '0.7'; 
-        const combinedMessage = `*** DIRECTORY UPDATE REQUEST ***\nTeam: ${document.getElementById('sugSchool').value}\nMascot: ${document.getElementById('sugMascot').value}\nClass: ${document.getElementById('sugClass').value}\nConference: ${document.getElementById('sugConf').value}\nColors: ${document.getElementById('sugColors').value}\nStadium: ${document.getElementById('sugStadium').value}\nAddress: ${document.getElementById('sugAddress').value}\nNotes/Sources: ${document.getElementById('sugNotes').value}\nSubmitted By: ${auth.currentUser ? auth.currentUser.email : 'Guest'}`;
-        const params = new URLSearchParams(); params.append("entry.1967997366", combinedMessage); params.append("entry.1990515734", "Directory"); params.append("entry.1429224270", "Update"); params.append("entry.1778241553", auth.currentUser ? auth.currentUser.email : 'Guest'); 
-        fetch(CONTACT_SUBMIT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(() => { btn.style.display = 'none'; msg.classList.remove('hidden'); msg.style.color = '#10b981'; msg.innerText = 'Update Requested Successfully!'; setTimeout(() => { window.closeSuggestModal(); btn.disabled = false; btn.innerText = "Send to Admins"; }, 2000); }).catch(() => { btn.innerText = 'Try Again'; btn.disabled = false; btn.style.opacity = '1'; msg.classList.remove('hidden'); msg.style.color = '#ef4444'; msg.innerText = 'Error sending request.'; });
+        e.preventDefault();
+        const btn = document.getElementById('submitSuggestBtn'); 
+        const msg = document.getElementById('suggestStatusMessage');
+        
+        btn.innerText = 'Submitting...'; 
+        btn.disabled = true; 
+        btn.style.opacity = '0.7'; 
+        
+        const team = document.getElementById('sugSchool').value;
+        const mascot = document.getElementById('sugMascot').value;
+        const tclass = document.getElementById('sugClass').value;
+        const conf = document.getElementById('sugConf').value;
+        const colors = document.getElementById('sugColors').value;
+        const stadium = document.getElementById('sugStadium').value;
+        const address = document.getElementById('sugAddress').value;
+        const notes = document.getElementById('sugNotes').value;
+        
+        const combinedMessage = `*** DIRECTORY UPDATE REQUEST ***\nTeam: ${team}\nMascot: ${mascot}\nClass: ${tclass}\nConference: ${conf}\nColors: ${colors}\nStadium: ${stadium}\nAddress: ${address}\nNotes/Sources: ${notes}\nSubmitted By: ${auth.currentUser ? auth.currentUser.email : 'Guest'}`;
+        
+        const params = new URLSearchParams();
+        params.append("entry.1967997366", combinedMessage); 
+        params.append("entry.1990515734", "Directory"); 
+        params.append("entry.1429224270", "Update"); 
+        params.append("entry.1778241553", auth.currentUser ? auth.currentUser.email : 'Guest'); 
+        
+        fetch(CONTACT_SUBMIT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: params.toString() 
+        })
+        .then(() => {
+             btn.style.display = 'none'; 
+             msg.classList.remove('hidden'); 
+             msg.style.color = '#10b981'; 
+             msg.innerText = 'Update Requested Successfully!';
+             setTimeout(() => { window.closeSuggestModal(); btn.disabled = false; btn.innerText = "Send to Admins"; }, 2000);
+        }).catch(() => { 
+            btn.innerText = 'Try Again'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            msg.classList.remove('hidden'); 
+            msg.style.color = '#ef4444'; 
+            msg.innerText = 'Error sending request.'; 
+        });
     });
 
-    window.currentClaimSchool = null; window.currentClaimUsername = null;
+
+    // --- MODAL-BASED CLAIM TEAM SYSTEM ---
+    window.currentClaimSchool = null;
+    window.currentClaimUsername = null;
+
     window.handleClaimTeam = function(school, user, userData) {
-        if (!auth.currentUser) { if(confirm("You must be logged in to request Team Admin. Go to login?")) { window.location.href = "login.html"; } return; }
+        if (!auth.currentUser) {
+            if(confirm("You must be logged in to request Team Admin. Go to login?")) {
+                window.location.href = "login.html";
+            }
+            return;
+        }
+        
         const localUser = user || auth.currentUser;
-        document.getElementById('claimTeamNameDisplay').innerText = school; document.getElementById('claimFirstName').value = userData?.firstName || "N/A"; document.getElementById('claimLastName').value = userData?.lastName || "N/A"; document.getElementById('claimEmail').value = localUser.email || "N/A"; window.currentClaimSchool = school; window.currentClaimUsername = userData?.username || "User";
-        const overlay = document.getElementById('claimModalOverlay'); overlay.classList.remove('hidden'); setTimeout(() => { overlay.classList.remove('opacity-0'); overlay.children[0].classList.remove('scale-95'); }, 10);
+        
+        document.getElementById('claimTeamNameDisplay').innerText = school;
+        document.getElementById('claimFirstName').value = userData?.firstName || "N/A";
+        document.getElementById('claimLastName').value = userData?.lastName || "N/A";
+        document.getElementById('claimEmail').value = localUser.email || "N/A";
+        
+        window.currentClaimSchool = school;
+        window.currentClaimUsername = userData?.username || "User";
+
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.remove('opacity-0');
+            overlay.children[0].classList.remove('scale-95');
+        }, 10);
     }
-    window.closeClaimModal = function() { const overlay = document.getElementById('claimModalOverlay'); overlay.classList.add('opacity-0'); overlay.children[0].classList.add('scale-95'); setTimeout(() => { overlay.classList.add('hidden'); document.getElementById('claimForm').reset(); document.getElementById('claimStatusMessage').classList.add('hidden'); document.getElementById('submitClaimBtn').style.display = 'block'; document.getElementById('submitClaimBtn').disabled = false; }, 300); }
+
+    window.closeClaimModal = function() {
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.add('opacity-0');
+        overlay.children[0].classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.getElementById('claimForm').reset();
+            document.getElementById('claimStatusMessage').classList.add('hidden');
+            document.getElementById('submitClaimBtn').style.display = 'block';
+            document.getElementById('submitClaimBtn').disabled = false;
+        }, 300);
+    }
 
     document.getElementById('claimForm').addEventListener('submit', function(e) {
-        e.preventDefault(); const btn = document.getElementById('submitClaimBtn'); const msg = document.getElementById('claimStatusMessage'); btn.innerText = 'Submitting...'; btn.disabled = true; btn.style.opacity = '0.7'; 
-        const combinedMessage = `*** TEAM ADMIN REQUEST ***\nTeam Requested: ${window.currentClaimSchool}\nReason/Message: ${document.getElementById('claimReason').value}\n\n*** USER INFO ***\nUsername: @${window.currentClaimUsername}\nUser ID: ${auth.currentUser.uid}`;
-        const params = new URLSearchParams(); params.append("entry.1967997366", combinedMessage); params.append("entry.1990515734", document.getElementById('claimFirstName').value); params.append("entry.1429224270", document.getElementById('claimLastName').value); params.append("entry.1778241553", document.getElementById('claimEmail').value); 
-        fetch(CONTACT_SUBMIT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(() => { btn.style.display = 'none'; msg.classList.remove('hidden'); msg.style.color = '#10b981'; msg.innerText = 'Request Submitted Successfully!'; setTimeout(() => { window.closeClaimModal(); }, 2000); }).catch(() => { btn.innerText = 'Try Again'; btn.disabled = false; btn.style.opacity = '1'; msg.classList.remove('hidden'); msg.style.color = '#ef4444'; msg.innerText = 'Error sending request.'; });
+        e.preventDefault();
+        const btn = document.getElementById('submitClaimBtn'); 
+        const msg = document.getElementById('claimStatusMessage');
+        
+        btn.innerText = 'Submitting...'; 
+        btn.disabled = true; 
+        btn.style.opacity = '0.7'; 
+        
+        const reason = document.getElementById('claimReason').value;
+        const school = window.currentClaimSchool;
+        const username = window.currentClaimUsername;
+        const uid = auth.currentUser.uid;
+        
+        const combinedMessage = `*** TEAM ADMIN REQUEST ***\n` +
+                                `Team Requested: ${school}\n\n` +
+                                `Reason/Message: ${reason}\n\n` +
+                                `*** USER INFO ***\n` +
+                                `Username: @${username}\n` +
+                                `User ID: ${uid}`;
+        
+        const params = new URLSearchParams();
+        params.append("entry.1967997366", combinedMessage); 
+        params.append("entry.1990515734", document.getElementById('claimFirstName').value); 
+        params.append("entry.1429224270", document.getElementById('claimLastName').value); 
+        params.append("entry.1778241553", document.getElementById('claimEmail').value); 
+        
+        fetch(CONTACT_SUBMIT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: params.toString() 
+        })
+        .then(() => {
+             btn.style.display = 'none'; 
+             msg.classList.remove('hidden'); 
+             msg.style.color = '#10b981'; 
+             msg.innerText = 'Request Submitted Successfully!';
+             setTimeout(() => { window.closeClaimModal(); }, 2000);
+        }).catch(() => { 
+            btn.innerText = 'Try Again'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            msg.classList.remove('hidden'); 
+            msg.style.color = '#ef4444'; 
+            msg.innerText = 'Error sending request.'; 
+        });
     });
 
-    function closeModal() { els.modalOverlay.classList.add('opacity-0'); els.modalContent.classList.remove('scale-100'); els.modalContent.classList.add('scale-95'); setTimeout(() => { els.modalOverlay.classList.add('hidden'); document.body.style.overflow = ''; }, 300); }
+    function closeModal() {
+        els.modalOverlay.classList.add('opacity-0');
+        els.modalContent.classList.remove('scale-100');
+        els.modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            els.modalOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    }
 </script>
 
 </body>
