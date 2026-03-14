@@ -9,22 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' }
-                    },
-                    fontFamily: {
-                        'head': ['Teko', 'sans-serif'],
-                        'body': ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
     <style>
         :root {
             --bg-main: #adadad;
@@ -55,16 +39,47 @@
         .auth-header p { color: var(--text-sub); font-size: 14px; font-weight: 600; text-transform: uppercase; margin-top: 5px; }
 
         label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
-        input { 
+        input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="tel"] { 
             width: 100%; background: #ffffff; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; 
             font-family: var(--font-body); font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 16px;
         }
         input:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
 
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #e4e4e7;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+        .checkbox-container input[type="checkbox"] {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-container label {
+            margin-bottom: 0;
+            font-size: 11px;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #3f3f46;
+        }
+        .checkbox-container a {
+            color: #2563eb;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
         .btn-primary {
             width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; 
             padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; 
-            font-weight: bold; transition: 0.3s; margin-top: 10px;
+            font-weight: bold; transition: 0.3s; margin-top: 5px;
         }
         .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); }
 
@@ -123,6 +138,13 @@
 
             <a href="#" id="forgotPasswordBtn" class="forgot-password">Forgot Password?</a>
 
+            <div id="termsContainer" class="checkbox-container hidden">
+                <input type="checkbox" id="termsCheckbox">
+                <label for="termsCheckbox">
+                    I acknowledge that PAHS Football is a family-friendly environment. I agree to the <a href="terms.html" target="_blank">Terms and Conditions</a> and understand that any violations may result in account suspension or a permanent ban.
+                </label>
+            </div>
+
             <button type="submit" id="mainSubmitBtn" class="btn-primary">Sign In</button>
             <button type="button" id="toggleModeBtn" class="btn-secondary">Need an account? Sign Up</button>
         </form>
@@ -172,6 +194,8 @@
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
         const signUpFields = document.getElementById('signUpFields');
+        const termsContainer = document.getElementById('termsContainer');
+        const termsCheckbox = document.getElementById('termsCheckbox');
         const mainSubmitBtn = document.getElementById('mainSubmitBtn');
         const toggleModeBtn = document.getElementById('toggleModeBtn');
         const formTitle = document.getElementById('formTitle');
@@ -181,7 +205,7 @@
         const usernameSignupInput = document.getElementById('usernameSignupInput');
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
-        // Username Profanity List (Adjusted to avoid blocking names containing 'ass' like Cassidy)
+        // Username Profanity List
         const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
 
         function containsProfanity(text) {
@@ -231,7 +255,8 @@
 
             if (isSignUpMode) {
                 signUpFields.classList.remove('hidden');
-                forgotPasswordBtn.classList.add('hidden'); // Hide forgot password on Sign Up
+                termsContainer.classList.remove('hidden');
+                forgotPasswordBtn.classList.add('hidden');
                 mainSubmitBtn.innerText = "Create Account";
                 toggleModeBtn.innerText = "Already have an account? Sign In";
                 formTitle.innerText = "Join the Team";
@@ -240,9 +265,11 @@
                 document.getElementById('lNameInput').required = true;
                 document.getElementById('dobInput').required = true;
                 usernameSignupInput.required = true;
+                termsCheckbox.required = true;
             } else {
                 signUpFields.classList.add('hidden');
-                forgotPasswordBtn.classList.remove('hidden'); // Show forgot password on Sign In
+                termsContainer.classList.add('hidden');
+                forgotPasswordBtn.classList.remove('hidden');
                 mainSubmitBtn.innerText = "Sign In";
                 toggleModeBtn.innerText = "Need an account? Sign Up";
                 formTitle.innerText = "Portal Access";
@@ -251,6 +278,8 @@
                 document.getElementById('lNameInput').required = false;
                 document.getElementById('dobInput').required = false;
                 usernameSignupInput.required = false;
+                termsCheckbox.required = false;
+                termsCheckbox.checked = false; // Uncheck it when toggling back
             }
         });
 
@@ -277,6 +306,13 @@
             e.preventDefault();
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
+
+            // Terms & Conditions Check
+            if (isSignUpMode && !termsCheckbox.checked) {
+                showError("You must agree to the Terms and Conditions to create an account.");
+                return;
+            }
+
             mainSubmitBtn.disabled = true;
             mainSubmitBtn.innerText = "Processing...";
             
