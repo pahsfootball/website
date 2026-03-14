@@ -21,6 +21,8 @@
             --border-light: rgba(0, 0, 0, 0.1);
             --font-head: 'Teko', sans-serif;
             --font-body: 'Inter', sans-serif;
+            --green-active: #10b981; 
+            --green-hover: #059669;  
         }
 
         body { margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
@@ -144,11 +146,12 @@
 
                 <div id="admin-controls" class="hidden mt-4 mb-8 border-t border-gray-300 pt-6">
                     <h3 class="text-xl font-bold font-head mb-2 text-gray-800 uppercase tracking-wide">
-                        <i class="fa-solid fa-screwdriver-wrench text-pahs-gold mr-2"></i>Manager Tools
+                        <i class="fa-solid fa-shield-halved text-pahs-gold mr-2"></i>Manager Tools
                     </h3>
-                    <p class="text-sm text-gray-600 mb-4 font-body">You have manager access. Update your team's Game Day page below.</p>
-                    <a href="controller.html" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24] mb-3" style="text-decoration: none;">
-                        <i class="fa-solid fa-gear mr-2"></i> Open Game Day Controller
+                    <p class="text-sm text-gray-600 mb-4 font-body">You are the verified admin for <strong id="adminTeamNameLabel" class="text-pahs-gold">your team</strong>. Admin controls are located directly on your team's Game Day page.</p>
+                    
+                    <a href="#" id="adminGamedayLink" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24] mb-3" style="text-decoration: none;">
+                        <i class="fa-solid fa-football mr-2"></i> Go to My Game Day Page
                     </a>
                     
                     <button type="button" id="relinquishAdminBtn" class="flex items-center justify-center w-full bg-white text-[#ef4444] font-bold font-head text-xl py-2 px-6 rounded-lg shadow-sm hover:bg-gray-100 transition-colors uppercase border border-[#ef4444] cursor-pointer">
@@ -205,7 +208,7 @@
 
         let currentUserUid = null;
         let currentSavedUsername = ""; 
-        window.currentUserProfile = null; // Store globally for unfollow access
+        window.currentUserProfile = null;
 
         // UNFOLLOW FUNCTION 
         window.unfollowUser = async function(targetUid) {
@@ -213,19 +216,15 @@
             
             const myRef = doc(db, "users", currentUserUid);
             try {
-                // Update database
                 await updateDoc(myRef, { following: arrayRemove(targetUid) });
                 
-                // Update local memory
                 if(window.currentUserProfile && window.currentUserProfile.following) {
                     window.currentUserProfile.following = window.currentUserProfile.following.filter(id => id !== targetUid);
                 }
                 
-                // Hide badge on screen
                 const badge = document.getElementById('follow-badge-' + targetUid);
                 if (badge) badge.remove();
                 
-                // Update number
                 const currentCount = parseInt(followingCount.innerText);
                 followingCount.innerText = currentCount - 1;
                 
@@ -298,12 +297,12 @@
                         currentSavedUsername = data.username || "";
                         aboutMeInput.value = data.aboutMe || "";
 
-                        // TEAM WATCHLIST
+                        // TEAM WATCHLIST (Updated to link to livescoreboards.html hub)
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
-                                `<a href="padir.html?team=${encodeURIComponent(team)}" class="team-link">
-                                    <i class="fa-solid fa-location-arrow mr-2 text-[10px] opacity-40"></i> ${team}
+                                `<a href="livescoreboards.html?team=${encodeURIComponent(team)}" class="team-link">
+                                    <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[10px] opacity-40"></i> ${team}
                                 </a>`
                             ).join('');
                         } else {
@@ -325,7 +324,6 @@
                                         const uData = uSnap.data();
                                         const isPahs = uData.username && uData.username.toUpperCase() === 'PAHSFOOTBALL';
                                         
-                                        // The Unfollow X Button (Hide if PAHSFOOTBALL)
                                         const unfollowBtn = isPahs 
                                             ? '' 
                                             : `<button type="button" onclick="window.unfollowUser('${uid}')" class="ml-2 text-pahs-gold hover:text-white transition-colors" title="Unfollow"><i class="fa-solid fa-xmark"></i></button>`;
@@ -350,15 +348,18 @@
                             followersCount.innerText = "-";
                         }
 
-                        // ADMIN CONTROLS
+                        // ADMIN CONTROLS (Updated logic)
                         if (data.role === 'admin') {
                             document.getElementById('admin-controls').classList.remove('hidden');
                             
-                            const relinquishBtn = document.getElementById('relinquishAdminBtn');
                             const teamName = data.managedTeam || "Unknown Team"; 
                             const userName = data.username || "Unknown User";
                             const userEmail = user.email;
+
+                            document.getElementById('adminTeamNameLabel').innerText = teamName;
+                            document.getElementById('adminGamedayLink').href = `gameday.html?team=${encodeURIComponent(teamName)}`;
                             
+                            const relinquishBtn = document.getElementById('relinquishAdminBtn');
                             relinquishBtn.addEventListener('click', () => {
                                 const subject = encodeURIComponent(`Admin Removal Request - ${teamName}`);
                                 const body = encodeURIComponent(`Please remove my manager access for the following team:\n\nTeam: ${teamName}\nUsername: ${userName}\nEmail: ${userEmail}\n\nThank you.`);
