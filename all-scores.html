@@ -3,107 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statewide Scoreboards | PAHSFootball</title>
+    <title>Statewide Scoreboard | PAHS Football</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } },
+                    colors: { pahs: { dark: '#0f0f0f', card: '#18181b', gold: '#fbbf24' } },
                     fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
-
+    
     <style>
-        body { background-color: #adadad; font-family: 'Inter', sans-serif; color: #18181b; min-height: 100vh; }
-        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+        body { background-color: #adadad; font-family: 'Inter', sans-serif; color: #18181b; min-height: 100vh; display: flex; flex-direction: column; }
+        .score-card { transition: transform 0.2s, box-shadow 0.2s; border-top: 4px solid #fbbf24; }
+        .score-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .offseason-card { opacity: 0.85; filter: grayscale(20%); transition: all 0.3s; border-top: 4px solid #9ca3af; }
+        .offseason-card:hover { opacity: 1; filter: grayscale(0%); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); border-top-color: #fbbf24; }
         .pulse-live { animation: pulseLive 2s infinite; }
-        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
-        /* --- NEW: SCORE UPDATE ANIMATIONS --- */
+        /* --- SCORE UPDATE ANIMATIONS --- */
         @keyframes scoreUpdateAnim {
             0% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
             15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
             50% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
-            100% { transform: scale(1); } /* Returns to normal defined by the card */
+            100% { transform: scale(1); }
         }
-        .anim-score-update {
-            animation: scoreUpdateAnim 3.5s ease-out forwards;
-            z-index: 40;
-        }
+        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
         
         @keyframes fadeOutDelayed {
             0%, 60% { opacity: 1; }
             100% { opacity: 0; visibility: hidden; }
         }
-        .animate-fade-out-delayed {
-            animation: fadeOutDelayed 3s forwards;
-        }
+        .animate-fade-out-delayed { animation: fadeOutDelayed 3s forwards; }
     </style>
 </head>
 <body class="antialiased">
 
-    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10 py-4 px-4 sm:px-8">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+                <a href="index.html" class="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Home</span>
                 </a>
-                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Statewide Scores</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold font-head tracking-wide uppercase">Statewide Scoreboard</h1>
             </div>
             <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
                 <i class="fa-solid fa-list-ol text-pahs-gold"></i>
-                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
         
-        <div class="text-center mb-10">
+        <div class="text-center mb-8">
             <h2 class="font-head text-5xl uppercase tracking-wide text-gray-900 drop-shadow-sm">Live GameDay Action</h2>
             <p class="text-gray-700 font-medium max-w-2xl mx-auto mt-2">Real-time scores updated by fans in the stands. Click a team's logo to view their full Game Day page.</p>
         </div>
 
-        <div id="scoreboards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div id="loading-state" class="col-span-full text-center py-12">
-                <i class="fa-solid fa-circle-notch fa-spin text-5xl text-pahs-gold mb-4"></i>
-                <h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">Fetching Matchups...</h3>
+        <div class="bg-pahs-dark p-6 rounded-2xl shadow-lg mb-8 flex flex-col md:flex-row gap-4 items-center justify-between border border-gray-800">
+            <div class="w-full md:w-1/2 relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" placeholder="Search teams to view their page..." class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-transparent focus:border-pahs-gold outline-none font-bold text-gray-800 shadow-inner transition-all">
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="filterStatus('all')" id="btn-all" class="flex-1 md:flex-none bg-pahs-gold text-black font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-pahs-gold uppercase tracking-widest filter-btn transition-colors">All Teams</button>
+                <button onclick="filterStatus('active')" id="btn-active" class="flex-1 md:flex-none bg-[#27272a] text-white hover:bg-[#3f3f46] font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-white/10 uppercase tracking-widest transition-colors filter-btn">Matchups</button>
             </div>
         </div>
 
-        <div class="mt-16 pt-10 border-t-4 border-pahs-gold max-w-4xl mx-auto">
-            <div class="text-center mb-6">
-                <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 drop-shadow-sm">Other PAHS Scores</h2>
-                <p class="text-gray-700 font-medium">Powered by ScoreStream</p>
+        <div id="loading" class="text-center py-20">
+            <i class="fa-solid fa-football fa-spin text-5xl text-gray-600 mb-4"></i>
+            <h2 class="font-head text-3xl uppercase tracking-widest text-gray-800">Loading Grid...</h2>
+        </div>
+
+        <div id="scoreboardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
             </div>
-            <div class="scorestream-widget-container bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200" data-ss_widget_type="vertScoreboard" style="height:600px;" data-user-widget-id="58320"></div>
-            <script async="async" type="text/javascript" src="https://scorestream.com/apiJsCdn/widgets/embed.js"></script>
+        
+        <div id="noResults" class="hidden text-center py-20">
+            <h2 class="font-head text-3xl uppercase tracking-widest text-gray-800">No teams found</h2>
         </div>
 
     </main>
+
+    <footer class="bg-pahs-dark border-t-4 border-pahs-gold py-8 text-center text-gray-400 text-sm mt-auto">
+        <p>© 2026 PAHSFOOTBALL.com. All Rights Reserved.</p>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // --- 1. PASTE YOUR TICKER CSV URL HERE ---
-        const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
-
-        // --- 2. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
             authDomain: "pahs-football.firebaseapp.com",
-            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/", 
+            databaseURL: "https://pahs-football-default-rtdb.firebaseio.com/",
             projectId: "pahs-football",
             storageBucket: "pahs-football.firebasestorage.app",
             messagingSenderId: "260294523190",
@@ -113,238 +118,260 @@
         const app = initializeApp(firebaseConfig);
         const dbRealtime = getDatabase(app);
 
-        const container = document.getElementById('scoreboards-container');
-        const loadingState = document.getElementById('loading-state');
-        
-        let baseScheduleGames = {}; 
-        let previousScores = {}; // Tracks scores to trigger animations
-        let isFirstLoad = true;  // Prevents animations from firing on initial page load
+        // Unified Directory URL
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
 
-        // Function to format team names into URLs
-        const formatTeamUrl = (teamName) => {
-            if (!teamName) return '#';
-            return `gameday.html?team=${encodeURIComponent(teamName.trim())}`;
-        };
+        let globalDirectory = [];
+        let globalConfigs = {};
+        let globalScores = {};
+        let currentFilter = 'all'; 
+        let previousScores = {}; 
+        let isFirstLoad = true;
 
-        // --- 3. FETCH THE SCHEDULE FIRST ---
-        Papa.parse(SCHEDULE_CSV_URL, {
-            download: true,
-            header: true,
+        function cleanText(str) { 
+            if (!str) return ""; 
+            return str.replace(/\*/g, '').trim(); 
+        }
+
+        // LOAD DIRECTORY FIRST
+        Papa.parse(CSV_URL, {
+            download: true, 
+            header: true, 
             skipEmptyLines: true,
-            complete: function(results) {
-                const games = results.data;
-                
-                games.forEach(game => {
-                    if (!game.HomeTeam || !game.AwayTeam) return;
+            complete: function(res) {
+                globalDirectory = res.data.map(row => ({
+                    school: cleanText(row['School']),
+                    mascot: cleanText(row['Team']),
+                    logo: cleanText(row['Logo'])
+                })).filter(r => r.school !== "");
 
-                    const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
-                    const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
-                    const gameKey = [homeNameStr, awayNameStr].sort().join('_');
-
-                    baseScheduleGames[gameKey] = {
-                        id: gameKey,
-                        home: game.HomeTeam,
-                        away: game.AwayTeam,
-                        homeLogo: game.HomeLogo || "",
-                        awayLogo: game.AwayLogo || "",
-                        homeScore: 0,
-                        awayScore: 0,
-                        status: "PREGAME",
-                        quarter: "PREGAME",
-                        clock: game.Time || "12:00",
-                        updatedBy: "Schedule",
-                        lastUpdated: new Date(0).toISOString() 
-                    };
-                });
-
-                startFirebaseListener();
-            },
-            error: function(err) {
-                console.error("Error loading schedule CSV", err);
-                startFirebaseListener(); 
+                // THEN LOAD FIREBASE DATA
+                loadFirebaseData();
             }
         });
 
-        // --- 4. MERGE LIVE SCORES AND RENDER ---
-        function startFirebaseListener() {
-            onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
-                const liveData = snapshot.val() || {};
-                const mergedGamesArray = [];
+        function loadFirebaseData() {
+            const configRef = ref(dbRealtime, 'gameday_config');
+            const scoresRef = ref(dbRealtime, 'live_scores');
 
-                const tempGamesMap = { ...baseScheduleGames };
-
-                // Merge Live DB over Schedule DB
-                for (let teamKey in liveData) {
-                    const liveGame = liveData[teamKey];
-                    if (liveGame.home && liveGame.away) {
-                        tempGamesMap[teamKey] = { 
-                            ...tempGamesMap[teamKey], 
-                            ...liveGame, 
-                            id: teamKey 
-                        };
-                    }
-                }
-
-                // Check for updates & convert Map to Array
-                for (let key in tempGamesMap) {
-                    const game = tempGamesMap[key];
+            onValue(configRef, (configSnap) => {
+                globalConfigs = configSnap.val() || {};
+                
+                onValue(scoresRef, (scoreSnap) => {
+                    globalScores = scoreSnap.val() || {};
                     
-                    // --- ANIMATION CHECK LOGIC ---
-                    game.justUpdated = false;
-                    if (!isFirstLoad && previousScores[key]) {
-                        if (previousScores[key].homeScore !== game.homeScore || previousScores[key].awayScore !== game.awayScore) {
-                            game.justUpdated = true;
-                        }
-                    }
-                    // Save to memory for the NEXT update check
-                    previousScores[key] = { homeScore: game.homeScore, awayScore: game.awayScore };
-
-                    mergedGamesArray.push(game);
-                }
-
-                if (mergedGamesArray.length === 0) {
-                    container.innerHTML = `<div class="col-span-full text-center py-12"><i class="fa-solid fa-ghost text-5xl text-gray-500 mb-4"></i><h3 class="font-head text-2xl text-gray-700 uppercase tracking-widest">No Active Games Found</h3><p class="text-gray-500">Wait for kickoff!</p></div>`;
-                    isFirstLoad = false;
-                    return;
-                }
-
-                // Sort: LIVE -> HALF -> PREGAME -> FINAL
-                mergedGamesArray.sort((a, b) => {
-                    const getWeight = (status) => {
-                        const s = (status || "").toUpperCase();
-                        if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; 
-                        if (s === 'HALF') return 2;
-                        if (s === 'PREGAME' || s === 'UPCOMING') return 3;
-                        if (s === 'FINAL') return 4;
-                        return 5;
-                    };
-
-                    const weightA = getWeight(a.status);
-                    const weightB = getWeight(b.status);
-
-                    if (weightA !== weightB) return weightA - weightB;
-                    return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('scoreboardGrid').classList.remove('hidden');
+                    renderScoreboard();
                 });
-
-                // Render
-                loadingState.style.display = 'none';
-                container.innerHTML = ''; 
-
-                mergedGamesArray.forEach(game => {
-                    let badgeText = "";
-                    let badgeClass = "";
-                    let dotClass = "hidden";
-                    let cardBorder = "border-gray-300 shadow-md";
-                    let clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>`;
-
-                    const statusUpper = (game.status || "").toUpperCase();
-                    const qtrUpper = (game.quarter || "").toUpperCase();
-
-                    if (statusUpper === "PREGAME" || qtrUpper === "PREGAME") {
-                        badgeText = "PREGAME";
-                        badgeClass = "bg-yellow-500 text-black";
-                        cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
-                    } else if (qtrUpper === "HALF") {
-                        badgeText = "HALFTIME";
-                        badgeClass = "bg-yellow-600 text-black";
-                        dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                        cardBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
-                    } else if (statusUpper === "FINAL" || qtrUpper === "FINAL") {
-                        badgeText = "FINAL";
-                        badgeClass = "bg-gray-800 text-white";
-                        cardBorder = "border-gray-400 shadow-sm opacity-80"; 
-                        clockHtml = ""; // Hides the clock completely
-                    } else {
-                        badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + game.quarter;
-                        badgeClass = "bg-red-600 text-white animate-pulse";
-                        dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                        cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
-                    }
-
-                    const homeLogoHtml = game.homeLogo 
-                        ? `<img src="${game.homeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
-                        : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
-                    
-                    const awayLogoHtml = game.awayLogo 
-                        ? `<img src="${game.awayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
-                        : `<span class="font-bold text-lg text-gray-500 uppercase">${game.away.substring(0,3)}</span>`;
-
-                    let updatedText = "Unknown";
-                    if (game.lastUpdated && game.updatedBy !== "Schedule") {
-                        const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
-                        if (diffMins < 1) updatedText = "Just now";
-                        else if (diffMins === 1) updatedText = "1 min ago";
-                        else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
-                        else updatedText = "Over an hour ago";
-                    } else {
-                        updatedText = "Scheduled"; 
-                    }
-
-                    const homeUrl = formatTeamUrl(game.home);
-                    const awayUrl = formatTeamUrl(game.away);
-
-                    // Insert animation classes and HTML conditionally
-                    let updateAnimClass = game.justUpdated ? "anim-score-update" : "";
-                    let updateOverlayHtml = game.justUpdated ? `
-                        <div class="absolute inset-0 bg-white/95 z-50 flex items-center justify-center rounded-2xl font-head text-4xl text-red-600 animate-fade-out-delayed pointer-events-none border-4 border-pahs-gold shadow-2xl">
-                            <i class="fa-solid fa-bolt text-yellow-500 mr-3 animate-pulse"></i> SCORE UPDATE
-                        </div>
-                    ` : "";
-
-                    const cardHTML = `
-                        <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white transition-all duration-300 ${updateAnimClass}">
-                            
-                            ${updateOverlayHtml}
-
-                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
-                                <div class="flex items-center gap-2">
-                                    <div class="${dotClass}"></div>
-                                    <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
-                                    ${clockHtml}
-                                </div>
-                            </div>
-
-                            <div class="flex justify-between items-center px-2 flex-grow relative z-10">
-                                <a href="${homeUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
-                                    <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
-                                        ${homeLogoHtml}
-                                    </div>
-                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}</span>
-                                    <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
-                                </a>
-                                
-                                <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
-                                
-                                <a href="${awayUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105" title="View Game Day Page">
-                                    <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
-                                        ${awayLogoHtml}
-                                    </div>
-                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}</span>
-                                    <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
-                                </a>
-                            </div>
-
-                            <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
-                                <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
-                                    <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
-                                </div>
-                                <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right">
-                                    <i class="fa-regular fa-clock mr-1"></i> ${updatedText}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.innerHTML += cardHTML;
-                });
-
-                // Flag the first load as complete so future updates can trigger animations
-                isFirstLoad = false;
             });
         }
+
+        window.renderScoreboard = function() {
+            const grid = document.getElementById('scoreboardGrid');
+            grid.innerHTML = '';
+            
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            const uniqueGames = new Map();
+            const activeTeams = new Set();
+            const mergedGamesArray = [];
+
+            // Merge Live DB Data
+            Object.values(globalConfigs).forEach(game => {
+                if(!game.yourTeam || !game.opponent) return;
+                
+                const isHome = (game.homeAway||'').toLowerCase() === 'home';
+                const hName = isHome ? game.yourTeam : game.opponent;
+                const aName = isHome ? game.opponent : game.yourTeam;
+                const gameId = [hName, aName].sort().join('_').toUpperCase().replace(/[^A-Z0-9_]/g, '');
+
+                if (!uniqueGames.has(gameId)) {
+                    uniqueGames.set(gameId, game);
+                    
+                    const scoreData = globalScores[gameId] || {};
+                    const mergedGame = { ...game, ...scoreData, id: gameId };
+                    
+                    // --- ANIMATION CHECK LOGIC ---
+                    mergedGame.justUpdated = false;
+                    if (!isFirstLoad && previousScores[gameId]) {
+                        if (previousScores[gameId].homeScore !== (scoreData.homeScore || 0) || 
+                            previousScores[gameId].awayScore !== (scoreData.awayScore || 0)) {
+                            mergedGame.justUpdated = true;
+                        }
+                    }
+                    previousScores[gameId] = { homeScore: scoreData.homeScore || 0, awayScore: scoreData.awayScore || 0 };
+                    
+                    mergedGamesArray.push(mergedGame);
+                }
+                
+                activeTeams.add(game.yourTeam.toLowerCase().trim());
+                activeTeams.add(game.opponent.toLowerCase().trim());
+            });
+
+            // Sort: LIVE -> HALF -> PREGAME -> FINAL
+            mergedGamesArray.sort((a, b) => {
+                const getWeight = (status) => {
+                    const s = (status || "").toUpperCase();
+                    if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; 
+                    if (s === 'HALF') return 2;
+                    if (s === 'PREGAME' || s === 'UPCOMING') return 3;
+                    if (s === 'FINAL') return 4;
+                    return 5;
+                };
+
+                const weightA = getWeight(a.status);
+                const weightB = getWeight(b.status);
+
+                if (weightA !== weightB) return weightA - weightB;
+                return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+            });
+
+            let matchCount = 0;
+
+            // RENDER ACTIVE GAMES
+            mergedGamesArray.forEach(game => {
+                const isHome = (game.homeAway||'').toLowerCase() === 'home';
+                const hName = isHome ? game.yourTeam : game.opponent;
+                const aName = isHome ? game.opponent : game.yourTeam;
+                const hLogo = isHome ? game.yourTeamLogo : game.oppLogo;
+                const aLogo = isHome ? game.oppLogo : game.yourTeamLogo;
+                
+                if (searchTerm && !hName.toLowerCase().includes(searchTerm) && !aName.toLowerCase().includes(searchTerm)) return;
+
+                const hScore = game.homeScore || 0;
+                const aScore = game.awayScore || 0;
+                const qtr = game.quarter || game.status || "PREGAME";
+                const clock = game.clock || "12:00";
+                
+                let statusHtml = '';
+                if(qtr === "PREGAME" || qtr === "UPCOMING") statusHtml = `<span class="bg-gray-200 text-gray-800 px-3 py-1 rounded shadow-sm text-[10px] font-bold uppercase tracking-widest border border-gray-300">PREGAME</span>`;
+                else if(qtr === "HALF") statusHtml = `<span class="bg-yellow-500 text-black px-3 py-1 rounded shadow text-[10px] font-bold uppercase tracking-widest animate-pulse">HALFTIME</span>`;
+                else if(qtr === "FINAL") statusHtml = `<span class="bg-pahs-dark text-pahs-gold px-3 py-1 rounded shadow text-[10px] font-bold uppercase tracking-widest">FINAL</span>`;
+                else statusHtml = `<span class="bg-red-600 text-white px-3 py-1 rounded shadow text-[10px] font-bold uppercase tracking-widest animate-pulse">QTR ${qtr} - ${clock}</span>`;
+
+                const hFall = hLogo ? "" : hName.substring(0,3).toUpperCase();
+                const aFall = aLogo ? "" : aName.substring(0,3).toUpperCase();
+
+                let updateAnimClass = game.justUpdated ? "anim-score-update" : "";
+                let updateOverlayHtml = game.justUpdated ? `
+                    <div class="absolute inset-0 bg-white/95 z-50 flex items-center justify-center rounded-2xl font-head text-4xl text-red-600 animate-fade-out-delayed pointer-events-none border-4 border-pahs-gold shadow-2xl">
+                        <i class="fa-solid fa-bolt text-yellow-500 mr-3 animate-pulse"></i> SCORE UPDATE
+                    </div>
+                ` : "";
+
+                let updatedText = "Unknown";
+                if (game.lastUpdated && game.updatedBy !== "Schedule") {
+                    const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
+                    if (diffMins < 1) updatedText = "Just now";
+                    else if (diffMins === 1) updatedText = "1 min ago";
+                    else if (diffMins < 60) updatedText = `${diffMins} mins ago`;
+                    else updatedText = "Over an hour ago";
+                } else {
+                    updatedText = "Scheduled"; 
+                }
+
+                const card = document.createElement('a');
+                card.href = `gameday.html?team=${encodeURIComponent(game.yourTeam)}`; 
+                card.className = `block bg-white rounded-2xl score-card cursor-pointer flex flex-col justify-between relative transition-all duration-300 ${updateAnimClass}`;
+                
+                card.innerHTML = `
+                    ${updateOverlayHtml}
+                    <div class="p-4 flex justify-between items-center border-b border-gray-100 relative z-10">
+                        ${statusHtml}
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Matchup</span>
+                    </div>
+                    <div class="p-5 flex justify-between items-center bg-gray-50 relative z-10">
+                        <div class="flex flex-col items-center w-1/3">
+                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden">
+                                <img src="${hLogo}" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <span class="font-bold text-sm hidden text-gray-400">${hFall}</span>
+                            </div>
+                            <span class="font-head text-xl uppercase text-center leading-tight text-gray-900">${hName}</span>
+                            <span class="text-4xl font-mono font-black mt-1 text-gray-900">${hScore}</span>
+                        </div>
+                        <div class="text-2xl font-black text-gray-300 font-head px-2">VS</div>
+                        <div class="flex flex-col items-center w-1/3">
+                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden">
+                                <img src="${aLogo}" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <span class="font-bold text-sm hidden text-gray-400">${aFall}</span>
+                            </div>
+                            <span class="font-head text-xl uppercase text-center leading-tight text-gray-900">${aName}</span>
+                            <span class="text-4xl font-mono font-black mt-1 text-gray-900">${aScore}</span>
+                        </div>
+                    </div>
+                    <div class="text-center py-2 bg-gray-50 border-t border-gray-100 flex justify-between items-center px-4 relative z-10">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500"><i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span></div>
+                        <div class="text-[10px] uppercase tracking-widest text-gray-400"><i class="fa-regular fa-clock mr-1"></i> ${updatedText}</div>
+                    </div>
+                    <div class="bg-pahs-dark text-white text-center py-2.5 text-xs font-bold uppercase tracking-widest group-hover:bg-pahs-gold group-hover:text-black transition-colors rounded-b-2xl flex items-center justify-center gap-2 relative z-10">
+                        View Game Day <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                `;
+                grid.appendChild(card);
+                matchCount++;
+            });
+
+            // RENDER TBD/OFFSEASON TEAMS (IF 'ALL' FILTER IS ACTIVE)
+            if (currentFilter === 'all') {
+                globalDirectory.forEach(team => {
+                    const tName = team.school.toLowerCase().trim();
+                    if (activeTeams.has(tName)) return; 
+                    if (searchTerm && !tName.includes(searchTerm) && !(team.mascot||'').toLowerCase().includes(searchTerm)) return;
+
+                    const tFall = team.logo ? "" : team.school.substring(0,3).toUpperCase();
+
+                    const card = document.createElement('a');
+                    card.href = `gameday.html?team=${encodeURIComponent(team.school)}`;
+                    card.className = "block bg-white rounded-2xl offseason-card cursor-pointer flex flex-col justify-between";
+                    
+                    card.innerHTML = `
+                        <div class="p-4 flex justify-between items-center border-b border-gray-100">
+                            <span class="bg-gray-100 text-gray-500 px-3 py-1 rounded shadow-sm text-[10px] font-bold uppercase tracking-widest border border-gray-200">TBD / OFFSEASON</span>
+                        </div>
+                        <div class="p-6 flex flex-col items-center justify-center flex-grow">
+                            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center border border-gray-300 shadow-inner mb-3 overflow-hidden">
+                                <img src="${team.logo}" class="w-full h-full object-contain p-2" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <span class="font-bold text-xl hidden text-gray-400">${tFall}</span>
+                            </div>
+                            <h3 class="font-head text-3xl uppercase tracking-wide text-gray-800 text-center leading-none mb-1">${team.school}</h3>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">${team.mascot || 'Varsity'}</p>
+                        </div>
+                        <div class="bg-gray-200 text-gray-700 text-center py-2.5 text-xs font-bold uppercase tracking-widest transition-colors rounded-b-2xl flex items-center justify-center gap-2">
+                            View Team Page <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                    matchCount++;
+                });
+            }
+
+            const noRes = document.getElementById('noResults');
+            if (matchCount === 0) noRes.classList.remove('hidden');
+            else noRes.classList.add('hidden');
+
+            isFirstLoad = false; // Turn on animations for the next update cycle
+        };
+
+        // UI FILTERS
+        document.getElementById('searchInput').addEventListener('input', window.renderScoreboard);
+        
+        window.filterStatus = function(type) {
+            currentFilter = type;
+            const btnAll = document.getElementById('btn-all');
+            const btnAct = document.getElementById('btn-active');
+            
+            if (type === 'all') {
+                btnAll.className = "flex-1 md:flex-none bg-pahs-gold text-black font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-pahs-gold uppercase tracking-widest filter-btn transition-colors";
+                btnAct.className = "flex-1 md:flex-none bg-[#27272a] text-white hover:bg-[#3f3f46] font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-white/10 uppercase tracking-widest transition-colors filter-btn";
+            } else {
+                btnAct.className = "flex-1 md:flex-none bg-pahs-gold text-black font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-pahs-gold uppercase tracking-widest filter-btn transition-colors";
+                btnAll.className = "flex-1 md:flex-none bg-[#27272a] text-white hover:bg-[#3f3f46] font-head text-xl font-bold px-6 py-2 rounded-lg shadow-sm border border-white/10 uppercase tracking-widest transition-colors filter-btn";
+            }
+            
+            window.renderScoreboard();
+        };
+
     </script>
 </body>
 </html>
