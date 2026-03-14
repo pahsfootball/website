@@ -350,7 +350,7 @@
 
             <div id="embedFanZoneCard" class="content-card rounded-2xl p-6 mt-6 border border-gray-300 shadow-md">
                 <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i>Fan Zone - Community Chatter</h3>
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><i class="fa-solid fa-comments text-pahs-gold"></i> Community Chatter</h3>
                     <a href="community.html" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors">View All</a>
                 </div>
                 
@@ -372,9 +372,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getDatabase, ref, onValue, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        // *** REPLACE THIS URL IF YOU CREATED A NEW DEPLOYMENT ***
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqOdCGZpvUW-PV8S9F1VKa6zVBCi1BvvV9v5nkt2-F19QSP2mCPnHzMwlgm9Iucw-F/exec";
 
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
 
@@ -427,9 +424,13 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    const teamRow = results.data.find(r => r['School'] === teamName);
-                    if (teamRow && teamRow['Colors']) {
-                        const { p } = parseColors(teamRow['Colors']);
+                    const teamRow = results.data.find(r => {
+                        const school = r['School'] ? r['School'].replace(/^\*+|\*+$/g, '').trim() : '';
+                        return school.toLowerCase() === teamName.toLowerCase();
+                    });
+                    
+                    if (teamRow && (teamRow['Colors'] || teamRow['Color'])) {
+                        const { p } = parseColors(teamRow['Colors'] || teamRow['Color']);
                         if (p) {
                             const contrast = getContrast(p);
                             document.documentElement.style.setProperty('--team-primary', p);
@@ -489,9 +490,13 @@
                 if (data) {
                     Object.keys(data).forEach(key => {
                         const post = data[key];
-                        const tag = post.taggedTeam || "";
-                        if ((homeTeam && tag.toLowerCase() === homeTeam.toLowerCase()) || 
-                            (awayTeam && tag.toLowerCase() === awayTeam.toLowerCase())) {
+                        const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
+                        const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
+                        const hLower = homeTeam ? homeTeam.toLowerCase() : null;
+                        const aLower = awayTeam ? awayTeam.toLowerCase() : null;
+                        
+                        if ((hLower && (tag1 === hLower || tag2 === hLower)) || 
+                            (aLower && (tag1 === aLower || tag2 === aLower))) {
                             filteredPosts.push(post);
                         }
                     });
@@ -721,6 +726,7 @@
             const cleanContent = filterProfanity(content);
             const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
             const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
+            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
 
             try {
                 const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
@@ -729,6 +735,7 @@
                     authorUsername: username,
                     content: cleanContent,
                     taggedTeam: teamToTag,
+                    taggedTeam2: opponentTeamToTag,
                     timestamp: new Date().toISOString()
                 });
                 
@@ -822,7 +829,7 @@
                         statusBadge.innerText = "FINAL"; statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
-                        sbClock.style.display = 'none'; // HIDES CLOCK ENTIRELY ON FINAL
+                        sbClock.style.display = 'none'; 
                     } else {
                         statusBadge.innerText = "QTR " + qtr; statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; sbCard.className = "content-card rounded-2xl p-6 mt-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
@@ -926,7 +933,7 @@
             }
         }
 
-        // UNIVERSAL LOADER
+        // --- UNIVERSAL LOADER (NOW USING FIREBASE) ---
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const teamParam = urlParams.get('team');
@@ -942,12 +949,16 @@
             applyTeamColors(teamParam);
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL + "?team=" + encodeURIComponent(teamParam));
-                const result = await response.json();
+                // Generate the safe key
+                const safeKey = teamParam.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                
+                // Fetch the game config directly from Realtime Database instead of Google Script
+                const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
+                const game = snapshot.val();
 
                 document.getElementById('loading-overlay').style.display = 'none';
 
-                if (result.status === 'error' || !result.data || !result.data.yourTeam) {
+                if (!game || !game.yourTeam) {
                     document.getElementById('claim-team-desc').innerText = `There is no official Game Day page configured for ${teamParam} yet.`;
                     const claimBtn = document.getElementById('claim-email-btn');
                     claimBtn.onclick = () => window.handleClaimTeamGameDay(teamParam);
@@ -955,12 +966,10 @@
                     return;
                 }
 
-                window.currentMatchupData = result.data;
-                const game = result.data;
+                window.currentMatchupData = game;
                 document.getElementById('main-app').classList.remove('hidden');
 
-                let weekNum = game.week ? game.week.replace(/week/i, '').trim() : "default";
-                document.getElementById('ui-week').innerText = weekNum ? `WEEK ${weekNum} MATCHUP` : "MATCHUP";
+                document.getElementById('ui-week').innerText = "MATCHUP";
                 
                 document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
                 document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
