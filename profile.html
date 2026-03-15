@@ -154,9 +154,9 @@
 
                 <div id="admin-controls" class="hidden mt-4 mb-8 border-t border-gray-300 pt-6">
                     <h3 class="text-xl font-bold font-head mb-2 text-gray-800 uppercase tracking-wide">
-                        <i class="fa-solid fa-shield-halved text-pahs-gold mr-2"></i>Manager Tools
+                        <i class="fa-solid fa-shield-halved text-[#fbbf24] mr-2"></i>Manager Tools
                     </h3>
-                    <p class="text-sm text-gray-600 mb-4 font-body">You are the verified admin for <strong id="adminTeamNameLabel" class="text-pahs-gold">your team</strong>. Admin controls are located directly on your team's Game Day page.</p>
+                    <p class="text-sm text-gray-600 mb-4 font-body">You are the verified admin for <strong id="adminTeamNameLabel" class="text-[#fbbf24]">your team</strong>. Admin controls are located directly on your team's Game Day page.</p>
                     
                     <a href="#" id="adminGamedayLink" class="flex items-center justify-center w-full bg-[#0f0f0f] text-[#fbbf24] font-bold font-head text-2xl py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition-colors uppercase border border-[#fbbf24] mb-3" style="text-decoration: none;">
                         <i class="fa-solid fa-football mr-2"></i> Go to My Game Day Page
@@ -374,12 +374,16 @@
 
                         // --- ROLE TAG FOR PROFILE ---
                         const roleBadge = document.getElementById('userRoleBadge');
+                        const userRole = data.role ? data.role : "Fan";
+
                         if (data.username && data.username.toUpperCase() === 'PAHSFOOTBALL') {
-                            roleBadge.innerHTML = `<span class="bg-black text-pahs-gold text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-pahs-gold shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> Site Owner</span>`;
+                            // Hardcoded the hex colors to guarantee the gold shows up on the black background
+                            roleBadge.innerHTML = `<span class="bg-black text-[#fbbf24] text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-[#fbbf24] shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> Site Owner</span>`;
                         } else if (data.role === 'admin') {
                             roleBadge.innerHTML = `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i> Team Admin</span>`;
                         } else {
-                            roleBadge.innerHTML = '';
+                            // Displays whatever role is in Firestore
+                            roleBadge.innerHTML = `<span class="bg-gray-200 text-gray-800 text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-gray-300 shadow-sm">${userRole}</span>`;
                         }
 
                         // TEAM WATCHLIST
@@ -411,9 +415,9 @@
                                         
                                         const unfollowBtn = isPahs 
                                             ? '' 
-                                            : `<button type="button" onclick="window.unfollowUser('${uid}')" class="ml-2 text-pahs-gold hover:text-white transition-colors" title="Unfollow"><i class="fa-solid fa-xmark"></i></button>`;
+                                            : `<button type="button" onclick="window.unfollowUser('${uid}')" class="ml-2 text-[#fbbf24] hover:text-white transition-colors" title="Unfollow"><i class="fa-solid fa-xmark"></i></button>`;
                                         
-                                        followingHtml += `<span id="follow-badge-${uid}" class="inline-flex items-center bg-pahs-dark text-pahs-gold text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border border-pahs-gold">@${uData.username || 'Unknown'} ${unfollowBtn}</span>`;
+                                        followingHtml += `<span id="follow-badge-${uid}" class="inline-flex items-center bg-[#0f0f0f] text-[#fbbf24] text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border border-[#fbbf24]">@${uData.username || 'Unknown'} ${unfollowBtn}</span>`;
                                     }
                                 } catch(e) { console.error(e); }
                             }
