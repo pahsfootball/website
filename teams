@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statewide Teams | PAHS Football</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pahs: { dark: '#0f0f0f', card: '#18181b', input: '#27272a', gold: '#fbbf24' }
+                    },
+                    fontFamily: {
+                        'head': ['Teko', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    animation: { marquee: 'marquee 25s linear infinite' },
+                    keyframes: {
+                        marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-100%)' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #adadad; color: #18181b; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #adadad; }
+        ::-webkit-scrollbar-thumb { background: #71717a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
+        
+        .modern-input { background: #f4f4f5; border: 2px solid #fbbf24; color: #18181b; transition: all 0.3s ease; }
+        .modern-input::placeholder { color: #71717a; }
+        .modern-input:focus { background: #ffffff; border-color: #fbbf24; outline: none; box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); }
+
+        select {
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-pahs-gold selection:text-black">
+
+<div class="sticky top-0 z-40 w-full shadow-2xl">
+    <div class="bg-black border-b border-white/5 py-1.5 overflow-hidden">
+        <div class="animate-marquee whitespace-nowrap text-pahs-gold text-xs font-bold font-head tracking-widest text-sm">
+            • DATA SOURCED FROM PUBLIC RECORDS • INFORMATION MAY VARY OR BE INCORRECT • REQUEST CHANGES ON LISTINGS WITH INACCURACIES •
+        </div>
+    </div>
+
+    <header class="bg-[#0f0f0f]/90 backdrop-blur-xl border-b border-white/10 py-4 px-4 sm:px-6 transition-all">
+        <div class="max-w-7xl mx-auto flex flex-col gap-5">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-house text-xs"></i>
+                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Home</span>
+                    </a>
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-list-ol text-xs"></i>
+                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Scores</span>
+                    </a>
+                </div>
+                <h1 class="text-3xl font-bold font-head text-white tracking-wide uppercase hidden md:block">Statewide <span class="text-pahs-gold">Teams</span></h1>
+            </div>
+
+            <div class="relative w-full group">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500 group-focus-within:text-pahs-gold transition-colors z-10">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="searchInput" placeholder="Search schools, towns, mascots..." class="modern-input w-full pl-11 pr-10 py-3.5 rounded-xl text-base shadow-inner">
+                <button id="clearBtn" class="absolute inset-y-0 right-3 text-gray-500 hover:text-pahs-gold hidden transition-colors z-10">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative min-w-[140px] flex-1 sm:flex-none">
+                    <select id="districtFilter" class="modern-input w-full pl-4 pr-10 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">
+                        <option value="All">All Districts</option>
+                    </select>
+                </div>
+                <div class="relative min-w-[120px] flex-1 sm:flex-none">
+                    <select id="classFilter" class="modern-input w-full pl-4 pr-10 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">
+                        <option value="All">All Classes</option>
+                    </select>
+                </div>
+
+                <div id="filterSummary" class="hidden flex items-center gap-2 ml-auto">
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wider font-head text-lg">Filtered by:</span>
+                    <span id="activeFiltersList" class="flex gap-2"></span>
+                    <button id="resetFiltersBtn" class="text-xs font-bold text-red-400 hover:text-red-300 ml-2 uppercase tracking-wide font-head text-lg pt-0.5">Clear</button>
+                </div>
+                
+                <div class="ml-auto text-gray-400 font-head text-xl tracking-wider uppercase bg-black/40 px-3 py-1 rounded-lg border border-white/10 hidden sm:block">
+                    <span id="teamCount" class="text-pahs-gold font-bold">0</span> Teams
+                </div>
+            </div>
+        </div>
+    </header>
+</div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-8 pb-12 mt-6">
+    <div id="loading" class="flex flex-col justify-center items-center py-32 opacity-70">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-pahs-gold mb-4"></i>
+        <p class="font-head text-2xl text-gray-800 uppercase">Loading directory...</p>
+    </div>
+
+    <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden pt-4">
+    </div>
+
+    <div id="noResults" class="hidden flex flex-col items-center justify-center py-32 text-center">
+        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 border border-gray-300">
+            <i class="fa-solid fa-filter text-gray-500 text-2xl"></i>
+        </div>
+        <h3 class="text-2xl font-head text-gray-900 uppercase">NO TEAMS FOUND</h3>
+        <p class="text-gray-700 max-w-xs mx-auto mt-1 font-body text-sm">Try adjusting your filters or search term.</p>
+        <button id="resetAllBtn" class="mt-6 px-8 py-2 bg-pahs-gold text-black rounded-lg hover:bg-white transition-colors font-head text-xl font-bold shadow-lg border border-yellow-500 uppercase tracking-widest">
+            RESET ALL
+        </button>
+    </div>
+</main>
+
+<div id="modalOverlay" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+    <div id="modalContent" class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
+
+        <div id="modalHeaderBanner" class="relative pt-10 pb-6 px-6 flex flex-col items-center text-center">
+            <button id="closeModalBtn" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-10 backdrop-blur-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="relative z-10 flex flex-col items-center">
+                <div id="modalLogoContainer" class="w-24 h-24 bg-white rounded-full flex items-center justify-center border-[3px] border-white shadow-xl mb-3 hidden overflow-hidden">
+                    <img id="modalLogo" src="" class="w-full h-full object-contain p-1.5" alt="Team Logo">
+                </div>
+                <h2 id="modalSchool" class="text-4xl font-bold leading-tight font-head text-white drop-shadow-md uppercase">School Name</h2>
+                <p id="modalTeam" class="text-white/90 font-medium text-lg font-head tracking-widest drop-shadow-md uppercase">Team Name</p>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#18181b] to-transparent z-0"></div>
+        </div>
+
+        <div class="p-6 overflow-y-auto">
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div id="modalBadgeClass" class="bg-[#27272a] p-3 rounded-xl border border-white/5 text-center shadow-inner">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">Class</p>
+                    <p id="modalClass" class="text-2xl font-bold font-head text-white uppercase">6A</p>
+                </div>
+                <div id="modalBadgeDistrict" class="bg-[#27272a] p-3 rounded-xl border border-white/5 text-center shadow-inner">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">District</p>
+                    <p id="modalDistrict" class="text-2xl font-bold font-head text-white uppercase">1</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-4 rounded-xl bg-[#27272a] border border-white/5">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">Conference</p>
+                    <p id="modalConference" class="text-gray-200 font-medium text-sm">No Data</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-[#27272a] border border-white/5">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 font-body">State Titles</p>
+                    <p id="modalChamps" class="text-gray-200 font-medium text-sm italic">None</p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-white/10 space-y-3">
+                <a id="modalGameDayLink" href="#" class="flex items-center justify-center w-full py-4 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-pahs-gold tracking-wide bg-pahs-gold text-black uppercase">
+                    <i class="fa-solid fa-football mr-2"></i>
+                    <span>VIEW GAME DAY PAGE</span>
+                </a>
+
+                <button id="followBtn" class="flex items-center justify-center w-full py-3.5 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-2xl border border-white/10 tracking-wide bg-[#27272a] text-white uppercase">
+                    <i id="followIcon" class="fa-solid fa-star mr-2"></i> 
+                    <span id="followText">FOLLOW TEAM</span>
+                </button>
+                
+                <div class="grid grid-cols-2 gap-3 mt-2">
+                    <button id="claimTeamBtn" class="hidden flex items-center justify-center w-full py-3 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-xl border border-white/10 tracking-wide bg-blue-600 text-white uppercase">
+                        <i class="fa-solid fa-hand-fist mr-2"></i><span id="claimText">ADMIN</span>
+                    </button>
+                    <button id="suggestEditBtn" class="flex items-center justify-center w-full py-3 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg font-head text-xl border border-white/10 tracking-wide bg-gray-700 text-white uppercase">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i><span>UPDATE</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="suggestModalOverlay" class="fixed inset-0 bg-black/80 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+    <div class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
+        <div class="p-5 bg-[#27272a] flex justify-between items-center border-b border-white/10 shrink-0">
+            <h2 class="font-head text-3xl uppercase tracking-wide text-white m-0 leading-none flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-pahs-gold"></i> Suggest Update</h2>
+            <button onclick="closeSuggestModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+        </div>
+        <div class="p-6 bg-[#18181b] overflow-y-auto">
+            <form id="suggestForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">School</label>
+                    <input type="text" id="sugSchool" class="w-full p-2.5 rounded-lg bg-[#27272a]/50 text-gray-500 font-bold border border-white/5 outline-none cursor-not-allowed" readonly>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Mascot</label><input type="text" id="sugMascot" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Class</label><input type="text" id="sugClass" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Conference</label><input type="text" id="sugConf" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Colors</label><input type="text" id="sugColors" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Stadium Name</label><input type="text" id="sugStadium" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Stadium Address</label><input type="text" id="sugAddress" class="w-full p-2.5 rounded-lg bg-[#27272a] border border-white/10 text-white font-bold outline-none focus:border-pahs-gold transition-colors"></div>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Source / Notes</label><textarea id="sugNotes" rows="2" class="w-full p-3 rounded-xl bg-[#27272a] border border-white/10 text-white mb-2 resize-none font-body text-sm outline-none focus:border-pahs-gold transition-colors"></textarea></div>
+                <button type="submit" id="submitSuggestBtn" class="w-full bg-gray-700 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-gray-600 transition-all mt-2">Send to Admins</button>
+                <div id="suggestStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="claimModalOverlay" class="fixed inset-0 bg-black/80 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0">
+    <div class="bg-[#18181b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
+        <div class="p-5 bg-[#27272a] flex justify-between items-center border-b border-white/10">
+            <h2 class="font-head text-3xl uppercase tracking-wide text-white m-0 leading-none flex items-center gap-2">
+                <i class="fa-solid fa-crown text-pahs-gold"></i> Request Admin
+            </h2>
+            <button onclick="closeClaimModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+        </div>
+        <div class="p-6 bg-[#18181b]">
+            <p class="text-sm text-gray-300 mb-5 font-body leading-relaxed">
+                Requesting admin access for <strong id="claimTeamNameDisplay" class="text-pahs-gold">Team</strong>. Your account details will be attached to this request.
+            </p>
+            <form id="claimForm">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Message / Reason</label>
+                <textarea id="claimReason" rows="3" required placeholder="Why are you requesting access? (e.g. I am the head coach, booster club president, etc.)" class="w-full p-3 rounded-xl bg-[#27272a] border border-white/10 text-white mb-4 resize-none font-body text-sm outline-none focus:border-pahs-gold transition-colors"></textarea>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">First Name</label>
+                        <input type="text" id="claimFirstName" required class="w-full p-3 rounded-xl text-gray-400 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
+                        <input type="text" id="claimLastName" required class="w-full p-3 rounded-xl text-gray-400 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                    </div>
+                </div>
+
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email</label>
+                <input type="email" id="claimEmail" required class="w-full p-3 rounded-xl text-gray-400 mb-4 font-body text-sm bg-[#27272a]/50 border border-white/5 outline-none cursor-not-allowed" readonly>
+                
+                <button type="submit" id="submitClaimBtn" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                    Submit Request
+                </button>
+                <div id="claimStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, setDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
+        authDomain: "pahs-football.firebaseapp.com",
+        projectId: "pahs-football",
+        storageBucket: "pahs-football.firebasestorage.app",
+        messagingSenderId: "260294523190",
+        appId: "1:260294523190:web:b3963804702d2a03749b97"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const directoryUrl = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
+    const CONTACT_FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ'; 
+    const CONTACT_SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + CONTACT_FORM_ID + '/formResponse';
+
+    let allData = [], filteredData = [];
+    let currentTeam = "";
+    let isFollowing = false;
+
+    const colorNameMap = {
+        "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6",
+        "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b",
+        "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb",
+        "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9",
+        "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554"
+    };
+
+    const els = {
+        grid: document.getElementById('teamGrid'), loading: document.getElementById('loading'), noResults: document.getElementById('noResults'),
+        search: document.getElementById('searchInput'), clear: document.getElementById('clearBtn'), district: document.getElementById('districtFilter'),
+        class: document.getElementById('classFilter'), summary: document.getElementById('filterSummary'), summaryList: document.getElementById('activeFiltersList'),
+        resetFilters: document.getElementById('resetFiltersBtn'), resetAll: document.getElementById('resetAllBtn'), modalOverlay: document.getElementById('modalOverlay'),
+        modalContent: document.getElementById('modalContent'), closeModal: document.getElementById('closeModalBtn'),
+        followBtn: document.getElementById('followBtn'), followText: document.getElementById('followText'), followIcon: document.getElementById('followIcon'),
+        claimBtn: document.getElementById('claimTeamBtn'), claimText: document.getElementById('claimText'), suggestBtn: document.getElementById('suggestEditBtn')
+    };
+
+    function cleanText(str) { return str ? str.replace(/\*/g, '').trim() : ""; }
+
+    document.addEventListener('DOMContentLoaded', fetchDirectoryData);
+
+    els.search.addEventListener('input', () => { handleSearch(); els.clear.classList.toggle('hidden', els.search.value.trim().length === 0); });
+    els.clear.addEventListener('click', () => { els.search.value = ''; els.clear.classList.add('hidden'); handleSearch(); els.search.focus(); });
+    els.district.addEventListener('change', handleSearch); els.class.addEventListener('change', handleSearch);
+    els.resetFilters.addEventListener('click', resetAllFilters); els.resetAll.addEventListener('click', resetAllFilters);
+    els.closeModal.addEventListener('click', closeModal); els.modalOverlay.addEventListener('click', (e) => { if(e.target === els.modalOverlay) closeModal(); });
+
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+    function fetchDirectoryData() {
+        Papa.parse(directoryUrl, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: res => {
+                allData = res.data.map(row => {
+                    return {
+                        school: cleanText(row['School']), mascot: cleanText(row['Mascot']), city: cleanText(row['City']), county: cleanText(row['County']),
+                        classification: cleanText(row['Class']), colors: cleanText(row['Colors']), district: cleanText(row['District']).replace(/district/gi, '').trim(),
+                        conference: cleanText(row['Conference']), championships: cleanText(row['Championships']), logo: cleanText(row['Logo']),
+                        fieldName: cleanText(row['FieldName']), fieldLocation: cleanText(row['FieldLocation'])
+                    };
+                }).filter(r => r.school !== "");
+
+                filteredData = allData; populateFilters(allData); renderCards(filteredData);
+                els.loading.classList.add('hidden'); els.grid.classList.remove('hidden');
+                const countSpan = document.getElementById('teamCount'); if (countSpan) countSpan.innerText = allData.length;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const teamParam = urlParams.get('team');
+                if (teamParam) {
+                    els.search.value = teamParam; els.clear.classList.remove('hidden'); handleSearch(); 
+                    const matchIdx = allData.findIndex(r => r.school === teamParam);
+                    if (matchIdx !== -1) setTimeout(() => window.openModal(matchIdx), 300);
+                }
+            }
+        });
+    }
+
+    function populateFilters(data) {
+        const dSet = new Set(), cSet = new Set();
+        data.forEach(r => { if(r.district) dSet.add(r.district); if(r.classification) cSet.add(r.classification); });
+        const romanToInt = (str) => { const map = { "I":1, "II":2, "III":3, "IV":4, "V":5, "VI":6, "VII":7, "VIII":8, "IX":9, "X":10, "XI":11, "XII":12 }; return map[str.trim().toUpperCase()] || 0; };
+        const sortDistricts = (a, b) => { const rA = romanToInt(a), rB = romanToInt(b); if (rA > 0 && rB > 0) return rA - rB; const nA = parseInt(a.replace(/\D/g, '')), nB = parseInt(b.replace(/\D/g, '')); if (!isNaN(nA) && !isNaN(nB)) return nA - nB; return a.localeCompare(b, undefined, {numeric: true}); };
+        Array.from(dSet).sort(sortDistricts).forEach(d => els.district.add(new Option(`District ${d}`, d)));
+        Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
+    }
+
+    // --- COLOR INTELLIGENCE ---
+    const normalizeColor = c => (!c ? null : colorNameMap[c.toLowerCase().trim()] || c);
+    function getBestAccent(colorString) {
+        if (!colorString) return "#fbbf24";
+        const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
+        let primary = colorNameMap[parts[0]] || parts[0];
+        let secondary = parts[1] ? (colorNameMap[parts[1]] || parts[1]) : primary;
+        if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
+        return primary;
+    }
+    
+    function getContrast(hexcolor) {
+        if (!hexcolor || hexcolor.startsWith('rgb')) return 'black';
+        let h = hexcolor.replace("#", "");
+        if (h.length === 3) h = h.split('').map(s => s + s).join('');
+        if (h.length !== 6) return 'black';
+        var r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+        return (((r*299)+(g*587)+(b*114))/1000 >= 128) ? 'black' : 'white';
+    }
+
+    function renderCards(data) {
+        els.grid.innerHTML = '';
+        if(!data.length) { els.noResults.classList.remove('hidden'); return; } else { els.noResults.classList.add('hidden'); }
+        const countSpan = document.getElementById('teamCount'); if (countSpan) countSpan.innerText = data.length;
+
+        data.forEach((row, idx) => {
+            const accent = getBestAccent(row.colors);
+            const textColor = getContrast(accent);
+            const badgeBg = textColor === 'black' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)';
+            const logoUrl = row.logo || '';
+
+            const card = document.createElement('div');
+            card.className = "block bg-white rounded-2xl overflow-hidden shadow-md hover:-translate-y-1 transition-all group cursor-pointer";
+            card.style.borderTop = `6px solid ${accent}`;
+            card.onclick = () => window.openModal(idx);
+            
+            card.innerHTML = `
+                <div class="p-6 flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full border border-gray-200 flex items-center justify-center overflow-hidden mb-4 p-2 transition-transform group-hover:scale-110">
+                        ${logoUrl ? `<img src="${logoUrl}" class="w-full h-full object-contain">` : `<i class="fa-solid fa-shield text-gray-300 text-4xl"></i>`}
+                    </div>
+                    <h2 class="font-head text-3xl uppercase leading-none text-gray-900 group-hover:text-pahs-dark">${row.school}</h2>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">${row.mascot || 'Varsity Football'}</p>
+                    <div class="mt-4 flex items-center justify-center gap-2">
+                        <span class="text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-sm" style="background-color: ${accent}; color: ${textColor}">Class ${row.classification || 'PIAA'}</span>
+                    </div>
+                </div>
+                <div class="py-3 text-center text-[10px] font-black uppercase tracking-widest border-t transition-colors" style="background-color: ${accent}; color: ${textColor}; border-color: ${badgeBg}">
+                    View Team Info
+                </div>
+            `;
+            els.grid.appendChild(card);
+        });
+    }
+
+    function handleSearch() {
+        const q = els.search.value.toLowerCase().trim(), d = els.district.value, c = els.class.value, filters = [];
+        if(d !== 'All') filters.push(d.toString().toLowerCase().startsWith('district') ? d : `District ${d}`);
+        if(c !== 'All') filters.push(`Class ${c}`);
+        if(filters.length) { els.summary.classList.remove('hidden'); els.summaryList.innerHTML = filters.map(f=>`<span class="px-2 py-0.5 bg-gray-800 text-pahs-gold border border-gray-700 rounded text-[10px] font-bold font-head tracking-wide text-sm pt-0.5">${f}</span>`).join(''); } else els.summary.classList.add('hidden');
+        filteredData = allData.filter(r => {
+            const txt = (r.school + r.mascot + r.city).toLowerCase();
+            return (!q || txt.includes(q)) && (d === 'All' || r.district == d) && (c === 'All' || r.classification == c);
+        });
+        renderCards(filteredData);
+    }
+
+    function resetAllFilters() { els.search.value = ''; els.district.value = 'All'; els.class.value = 'All'; els.clear.classList.add('hidden'); handleSearch(); }
+
+    window.openModal = async function(idx) {
+        const d = filteredData[idx]; currentTeam = d.school; 
+        
+        document.getElementById('modalSchool').innerText = d.school; 
+        document.getElementById('modalTeam').innerText = d.mascot || 'Varsity Football';
+        document.getElementById('modalClass').innerText = d.classification || '-'; 
+        document.getElementById('modalDistrict').innerText = d.district || '-';
+        document.getElementById('modalConference').innerText = d.conference || 'N/A'; 
+        document.getElementById('modalChamps').innerText = d.championships || 'None';
+        
+        const modalLogo = document.getElementById('modalLogo'); 
+        if(d.logo) { 
+            modalLogo.src = d.logo; 
+            document.getElementById('modalLogoContainer').classList.remove('hidden'); 
+        } else { 
+            document.getElementById('modalLogoContainer').classList.add('hidden'); 
+            modalLogo.src = ''; 
+        }
+        
+        const headerBanner = document.getElementById('modalHeaderBanner');
+        const gameDayBtn = document.getElementById('modalGameDayLink');
+        
+        // Grab colors for banner
+        const accent = getBestAccent(d.colors);
+        const secondAccent = d.colors ? (normalizeColor(d.colors.split(/[&/,]+/)[1]) || accent) : accent;
+
+        headerBanner.style.background = `linear-gradient(135deg, ${accent} 0%, ${secondAccent} 100%)`;
+        
+        // Ensure Game Day Button matches contrast
+        gameDayBtn.style.backgroundColor = accent; 
+        gameDayBtn.style.color = getContrast(accent) === 'black' ? '#000000' : '#ffffff';
+        gameDayBtn.style.borderColor = accent;
+
+        document.getElementById('modalGameDayLink').href = `gameday.html?team=${encodeURIComponent(d.school)}`;
+
+        els.suggestBtn.onclick = () => window.openSuggestModal(d);
+
+        els.claimBtn.disabled = false; els.claimBtn.style.opacity = "1"; els.claimBtn.classList.replace('bg-green-600', 'bg-blue-600'); els.claimText.innerText = "ADMIN"; els.claimBtn.classList.remove('hidden'); 
+        els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam);
+
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                const userSnap = await getDoc(doc(db, "users", user.uid)); const userData = userSnap.data() || {}; 
+                if (userSnap.exists()) {
+                    const followed = userData.followedTeams || [];
+                    isFollowing = followed.includes(currentTeam);
+                    updateFollowBtnUI();
+
+                    if (userData.managedTeam === currentTeam) {
+                        els.claimText.innerText = "DASHBOARD";
+                        els.claimBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                        els.claimBtn.onclick = () => window.location.href = "profile.html"; 
+                    } else if (userData.managedTeam && userData.managedTeam !== currentTeam) {
+                        els.claimText.innerText = `ADMIN OF ${userData.managedTeam.toUpperCase()}`;
+                        els.claimBtn.disabled = true;
+                        els.claimBtn.style.opacity = "0.5";
+                        els.claimBtn.onclick = null;
+                    } else {
+                        els.claimText.innerText = "ADMIN";
+                        els.claimBtn.onclick = () => window.handleClaimTeam(currentTeam, user, userData);
+                    }
+                }
+            } catch (err) { console.error("Error checking user status:", err); }
+        } else {
+            isFollowing = false;
+            updateFollowBtnUI();
+        }
+
+        els.modalOverlay.classList.remove('hidden');
+        setTimeout(() => {
+            els.modalOverlay.classList.remove('opacity-0');
+            els.modalContent.classList.remove('scale-95');
+            els.modalContent.classList.add('scale-100');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+    };
+
+    function updateFollowBtnUI() {
+        if (isFollowing) {
+            els.followBtn.classList.replace('bg-[#27272a]', 'bg-red-600');
+            els.followBtn.classList.add('text-white');
+            els.followText.innerText = "UNFOLLOW TEAM";
+            els.followIcon.classList.replace('fa-star', 'fa-trash');
+        } else {
+            els.followBtn.classList.replace('bg-red-600', 'bg-[#27272a]');
+            els.followBtn.classList.add('text-white');
+            els.followText.innerText = "FOLLOW TEAM";
+            els.followIcon.classList.replace('fa-trash', 'fa-star');
+        }
+    }
+
+    els.followBtn.addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) {
+            if(confirm("You must be logged in to follow teams. Go to login?")) window.location.href = "login.html";
+            return;
+        }
+
+        const userRef = doc(db, "users", user.uid);
+        try {
+            els.followBtn.disabled = true;
+            if (isFollowing) {
+                await updateDoc(userRef, { followedTeams: arrayRemove(currentTeam) });
+                isFollowing = false;
+            } else {
+                await updateDoc(userRef, { followedTeams: arrayUnion(currentTeam) });
+                isFollowing = true;
+            }
+            updateFollowBtnUI();
+        } catch (err) { console.error("Follow update error:", err); }
+        finally { els.followBtn.disabled = false; }
+    });
+
+    // --- SUGGEST EDIT SYSTEM ---
+    window.openSuggestModal = function(teamData) {
+        document.getElementById('sugSchool').value = teamData.school;
+        document.getElementById('sugMascot').value = teamData.mascot || '';
+        document.getElementById('sugClass').value = teamData.classification || '';
+        document.getElementById('sugConf').value = teamData.conference || '';
+        document.getElementById('sugColors').value = teamData.colors || '';
+        document.getElementById('sugStadium').value = teamData.fieldName || '';
+        document.getElementById('sugAddress').value = teamData.fieldLocation || '';
+        document.getElementById('sugNotes').value = '';
+
+        const overlay = document.getElementById('suggestModalOverlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.remove('opacity-0');
+            overlay.children[0].classList.remove('scale-95');
+        }, 10);
+    }
+
+    window.closeSuggestModal = function() {
+        const overlay = document.getElementById('suggestModalOverlay');
+        overlay.classList.add('opacity-0');
+        overlay.children[0].classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.getElementById('suggestForm').reset();
+            document.getElementById('suggestStatusMessage').classList.add('hidden');
+            document.getElementById('submitSuggestBtn').style.display = 'block';
+            document.getElementById('submitSuggestBtn').disabled = false;
+        }, 300);
+    }
+
+    document.getElementById('suggestForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitSuggestBtn'); 
+        const msg = document.getElementById('suggestStatusMessage');
+        
+        btn.innerText = 'Submitting...'; 
+        btn.disabled = true; 
+        btn.style.opacity = '0.7'; 
+        
+        const team = document.getElementById('sugSchool').value;
+        const mascot = document.getElementById('sugMascot').value;
+        const tclass = document.getElementById('sugClass').value;
+        const conf = document.getElementById('sugConf').value;
+        const colors = document.getElementById('sugColors').value;
+        const stadium = document.getElementById('sugStadium').value;
+        const address = document.getElementById('sugAddress').value;
+        const notes = document.getElementById('sugNotes').value;
+        
+        const combinedMessage = `*** DIRECTORY UPDATE REQUEST ***\nTeam: ${team}\nMascot: ${mascot}\nClass: ${tclass}\nConference: ${conf}\nColors: ${colors}\nStadium: ${stadium}\nAddress: ${address}\nNotes/Sources: ${notes}\nSubmitted By: ${auth.currentUser ? auth.currentUser.email : 'Guest'}`;
+        
+        const params = new URLSearchParams();
+        params.append("entry.1967997366", combinedMessage); 
+        params.append("entry.1990515734", "Directory"); 
+        params.append("entry.1429224270", "Update"); 
+        params.append("entry.1778241553", auth.currentUser ? auth.currentUser.email : 'Guest'); 
+        
+        fetch(CONTACT_SUBMIT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: params.toString() 
+        })
+        .then(() => {
+             btn.style.display = 'none'; 
+             msg.classList.remove('hidden'); 
+             msg.style.color = '#10b981'; 
+             msg.innerText = 'Update Requested Successfully!';
+             setTimeout(() => { window.closeSuggestModal(); btn.disabled = false; btn.innerText = "Send to Admins"; }, 2000);
+        }).catch(() => { 
+            btn.innerText = 'Try Again'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            msg.classList.remove('hidden'); 
+            msg.style.color = '#ef4444'; 
+            msg.innerText = 'Error sending request.'; 
+        });
+    });
+
+
+    // --- MODAL-BASED CLAIM TEAM SYSTEM ---
+    window.currentClaimSchool = null;
+    window.currentClaimUsername = null;
+
+    window.handleClaimTeam = function(school, user, userData) {
+        if (!auth.currentUser) {
+            if(confirm("You must be logged in to request Team Admin. Go to login?")) {
+                window.location.href = "login.html";
+            }
+            return;
+        }
+        
+        const localUser = user || auth.currentUser;
+        
+        document.getElementById('claimTeamNameDisplay').innerText = school;
+        document.getElementById('claimFirstName').value = userData?.firstName || "N/A";
+        document.getElementById('claimLastName').value = userData?.lastName || "N/A";
+        document.getElementById('claimEmail').value = localUser.email || "N/A";
+        
+        window.currentClaimSchool = school;
+        window.currentClaimUsername = userData?.username || "User";
+
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.remove('opacity-0');
+            overlay.children[0].classList.remove('scale-95');
+        }, 10);
+    }
+
+    window.closeClaimModal = function() {
+        const overlay = document.getElementById('claimModalOverlay');
+        overlay.classList.add('opacity-0');
+        overlay.children[0].classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            document.getElementById('claimForm').reset();
+            document.getElementById('claimStatusMessage').classList.add('hidden');
+            document.getElementById('submitClaimBtn').style.display = 'block';
+            document.getElementById('submitClaimBtn').disabled = false;
+        }, 300);
+    }
+
+    document.getElementById('claimForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitClaimBtn'); 
+        const msg = document.getElementById('claimStatusMessage');
+        
+        btn.innerText = 'Submitting...'; 
+        btn.disabled = true; 
+        btn.style.opacity = '0.7'; 
+        
+        const reason = document.getElementById('claimReason').value;
+        const school = window.currentClaimSchool;
+        const username = window.currentClaimUsername;
+        const uid = auth.currentUser.uid;
+        
+        const combinedMessage = `*** TEAM ADMIN REQUEST ***\n` +
+                                `Team Requested: ${school}\n\n` +
+                                `Reason/Message: ${reason}\n\n` +
+                                `*** USER INFO ***\n` +
+                                `Username: @${username}\n` +
+                                `User ID: ${uid}`;
+        
+        const params = new URLSearchParams();
+        params.append("entry.1967997366", combinedMessage); 
+        params.append("entry.1990515734", document.getElementById('claimFirstName').value); 
+        params.append("entry.1429224270", document.getElementById('claimLastName').value); 
+        params.append("entry.1778241553", document.getElementById('claimEmail').value); 
+        
+        fetch(CONTACT_SUBMIT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: params.toString() 
+        })
+        .then(() => {
+             btn.style.display = 'none'; 
+             msg.classList.remove('hidden'); 
+             msg.style.color = '#10b981'; 
+             msg.innerText = 'Request Submitted Successfully!';
+             setTimeout(() => { window.closeClaimModal(); }, 2000);
+        }).catch(() => { 
+            btn.innerText = 'Try Again'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            msg.classList.remove('hidden'); 
+            msg.style.color = '#ef4444'; 
+            msg.innerText = 'Error sending request.'; 
+        });
+    });
+
+    function closeModal() {
+        els.modalOverlay.classList.add('opacity-0');
+        els.modalContent.classList.remove('scale-100');
+        els.modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            els.modalOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+</script>
+
+</body>
+</html>
