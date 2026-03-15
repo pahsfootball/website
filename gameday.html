@@ -42,6 +42,7 @@
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
+        /* --- SCORE UPDATE ANIMATIONS --- */
         @keyframes scoreUpdateAnim {
             0% { border-color: var(--team-primary); box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
             15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
@@ -56,6 +57,7 @@
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
         .input-box:focus { border-color: var(--team-primary, #fbbf24); outline: none; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         
+        /* DYNAMIC BUTTON STYLING FOR CONTRAST */
         .btn-dynamic { background-color: var(--team-primary); color: var(--team-text); border: 1px solid var(--team-primary); }
     </style>
 </head>
@@ -203,6 +205,38 @@
                         Submit Request
                     </button>
                     <div id="requestStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="suggestLinkModalOverlay" class="modal-overlay" onclick="closeSuggestLinkModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-pahs-dark flex justify-between items-center border-b border-gray-800">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-pahs-gold m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-link"></i> Suggest Link
+                </h2>
+                <button onclick="closeSuggestLinkModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    Know where to buy tickets or stream the game? Submit the information below to alert the team admins.
+                </p>
+                <form id="suggestLinkForm">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Type of Link</label>
+                    <select id="sugLinkType" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 font-body text-sm outline-none focus:border-pahs-gold transition-colors">
+                        <option value="Ticket Link">Ticket Purchase Link</option>
+                        <option value="Broadcast Info">Broadcast / Radio / Stream Info</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Link URL or Info</label>
+                    <textarea id="sugLinkInfo" rows="3" required placeholder="Paste the URL or radio station here..." class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm outline-none focus:border-pahs-gold transition-colors"></textarea>
+                    
+                    <button type="submit" id="btnSubmitSugLink" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                        Submit to Admins
+                    </button>
+                    <div id="sugLinkStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
                 </form>
             </div>
         </div>
@@ -374,7 +408,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div class="content-card rounded-2xl p-6 flex flex-col justify-between">
+                <div class="content-card rounded-2xl p-6 flex flex-col justify-between relative">
                     <div>
                         <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Game Details</h3>
                         <div class="space-y-4">
@@ -394,14 +428,24 @@
                                 <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-cloud-sun"></i></div>
                                 <div><p class="text-xs text-gray-500 font-bold uppercase">Forecast</p><p id="ui-weather" class="font-bold text-gray-900">Check game week</p></div>
                             </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl text-gray-700"><i class="fa-solid fa-radio"></i></div>
+                                <div><p class="text-xs text-gray-500 font-bold uppercase">Broadcast</p><p id="ui-broadcast" class="font-bold text-gray-900 text-sm">None Listed</p></div>
+                            </div>
                         </div>
                     </div>
-                    <a id="ui-ticket" href="#" target="_blank" class="hidden text-center w-full mt-6 bg-pahs-gold text-[color:var(--team-text,#000)] font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:brightness-110 transition-all uppercase border border-pahs-gold">
-                        <i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online
-                    </a>
+                    
+                    <div class="mt-6">
+                        <a id="ui-ticket" href="#" target="_blank" class="hidden text-center w-full bg-pahs-gold text-[color:var(--team-text,#000)] font-head text-xl py-3 rounded-lg font-bold tracking-wide shadow-md hover:brightness-110 transition-all uppercase border border-pahs-gold mb-3">
+                            <i class="fa-solid fa-ticket mr-2"></i> Buy Tickets Online
+                        </a>
+                        <button onclick="window.openSuggestLinkModal()" class="w-full text-center text-xs font-bold text-gray-500 hover:text-pahs-gold uppercase tracking-widest transition-colors">
+                            <i class="fa-solid fa-link mr-1"></i> Suggest Ticket/Broadcast Link
+                        </button>
+                    </div>
                 </div>
 
-                <div class="content-card rounded-2xl p-6 flex flex-col h-[350px]">
+                <div class="content-card rounded-2xl p-6 flex flex-col h-[350px] md:h-auto">
                     <h3 class="font-head text-2xl uppercase tracking-wide border-b border-gray-300 pb-2 mb-4">Location</h3>
                     <div class="flex items-center gap-4 mb-4">
                         <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-xl text-red-600"><i class="fa-solid fa-location-dot"></i></div>
@@ -410,7 +454,7 @@
                             <p id="ui-address" class="text-sm text-gray-600">Loading...</p>
                         </div>
                     </div>
-                    <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 bg-gray-200 relative">
+                    <div class="flex-grow rounded-xl overflow-hidden border border-gray-300 bg-gray-200 relative min-h-[200px]">
                         <iframe id="ui-map" width="100%" height="100%" frameborder="0" style="border:0" src="" allowfullscreen></iframe>
                     </div>
                     <div class="mt-4 flex items-center justify-between gap-3">
@@ -476,7 +520,7 @@
         let isActiveGame = false;
         let isTeamClaimed = false; 
 
-        // --- COLOR LOGIC (SMART CONTRAST) ---
+        // --- COLOR LOGIC ---
         const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
 
         function normalizeColor(c) {
@@ -571,7 +615,7 @@
             }
         };
 
-        // --- FETCH EMBEDDED FAN ZONE POSTS (FIREBASE) ---
+        // --- FETCH EMBEDDED FAN ZONE POSTS ---
         function listenToEmbeddedPosts(homeTeam, awayTeam) {
             const container = document.getElementById('embedFeedContainer');
             const postsRef = ref(dbRealtime, 'fanzone_posts');
@@ -655,7 +699,6 @@
             if (!isUserLoggedIn) {
                 if(loginPanel) loginPanel.classList.remove('hidden');
                 
-                // ONLY SHOW CLAIM PANEL IF TEAM HAS NO ADMIN AND NO GAME
                 if (!isActiveGame && !isTeamClaimed) {
                     if(claimPanel) claimPanel.classList.remove('hidden');
                 }
@@ -669,7 +712,6 @@
                     if (isActiveGame) {
                         if(fanScorePanel) fanScorePanel.classList.remove('hidden');
                     } else {
-                        // ONLY SHOW CLAIM PANEL TO LOGGED-IN USERS IF TEAM IS UNCLAIMED
                         if(!isTeamClaimed) {
                             if(claimPanel) claimPanel.classList.remove('hidden');
                         }
@@ -754,13 +796,26 @@
                     try {
                         const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
-                        const game = snapshot.val();
+                        const game = snapshot.val() || {}; // fallback to empty object to read from CSV if needed
 
                         document.getElementById('loading-overlay').style.display = 'none';
 
-                        if (!game || !game.yourTeam) {
+                        // --- TICKET AND BROADCAST LOGIC ---
+                        const ticketLink = game.ticketLink || teamRow['TicketLink'] || teamRow['Tickets'] || "";
+                        const broadcastInfo = game.broadcast || teamRow['Broadcast'] || teamRow['Radio'] || "None Listed";
+
+                        if(ticketLink && ticketLink.trim() !== "") {
+                            document.getElementById('ui-ticket').href = ticketLink.includes('http') ? ticketLink : 'https://' + ticketLink;
+                            document.getElementById('ui-ticket').style.display = 'block';
+                        } else {
+                            document.getElementById('ui-ticket').style.display = 'none';
+                        }
+                        document.getElementById('ui-broadcast').innerHTML = linkify(escapeHTML(broadcastInfo));
+
+                        if (!game.yourTeam) {
                             isActiveGame = false;
                             
+                            // --- OFFSEASON FALLBACK STATE ---
                             document.getElementById('main-app').classList.remove('hidden');
                             document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
                             
@@ -854,7 +909,6 @@
                                 oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
                             }
 
-                            // --- NEUTRAL GAME FIX: Neutral means Admin is Home ---
                             let isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
                             document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
                             
@@ -918,9 +972,7 @@
             }, 1000);
         }
 
-        // --- SCOREBOARD LISTENER ---
         function listenToLiveScore(game) {
-            // --- NEUTRAL GAME FIX ---
             const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
             const homeName = (isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
@@ -1010,7 +1062,6 @@
             });
         }
 
-        // --- UPDATE SCORE MODAL CONTROLS ---
         window.openScoreModal = async function() {
             const game = window.currentMatchupData;
             if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
@@ -1096,7 +1147,83 @@
             });
         });
 
-        // --- REQUEST ADMIN MODAL (RESTORED) ---
+        // --- SHARE SCORE MODAL ---
+        window.openShareScoreModal = function(e) {
+            if (e) e.stopPropagation();
+            if (!auth.currentUser) {
+                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
+                    window.location.href = "login.html";
+                }
+                return;
+            }
+
+            const homeName = document.getElementById('sb-home-name').innerText;
+            const homeScore = document.getElementById('sb-home-score').innerText;
+            const awayName = document.getElementById('sb-away-name').innerText;
+            const awayScore = document.getElementById('sb-away-score').innerText;
+            const status = document.getElementById('sb-status').innerText;
+            const clock = document.getElementById('sb-clock').innerText;
+
+            let timeStr = "";
+            if (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") { timeStr = ` | Time: ${clock}`; }
+
+            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}\n\n`;
+            
+            document.getElementById('shareScoreContent').value = shareText;
+
+            const overlay = document.getElementById('shareScoreModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeShareScoreModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
+                const overlay = document.getElementById('shareScoreModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+            }
+        };
+
+        window.submitSharedScore = async function() {
+            const btn = document.getElementById('submitShareScoreBtn');
+            const content = document.getElementById('shareScoreContent').value.trim();
+            const origText = btn.innerText;
+            
+            if (content === "") return alert("Post cannot be empty.");
+            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
+
+            btn.innerText = "Posting...";
+            btn.disabled = true;
+
+            const cleanContent = filterProfanity(content);
+            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
+            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
+            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
+
+            try {
+                const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
+                await set(newPostRef, {
+                    authorId: auth.currentUser.uid,
+                    authorUsername: username,
+                    content: cleanContent,
+                    taggedTeam: teamToTag,
+                    taggedTeam2: opponentTeamToTag,
+                    timestamp: new Date().toISOString()
+                });
+                
+                window.closeShareScoreModal(null, true);
+                alert("Score shared to the Fan Zone successfully!");
+            } catch (error) { 
+                console.error(error);
+                alert("Failed to communicate with server."); 
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        };
+
+        // --- REQUEST ADMIN MODAL ---
         window.openRequestAdminModal = function(e) {
             if (e) e.preventDefault();
             const user = auth.currentUser;
@@ -1175,6 +1302,82 @@
                  msg.style.color = '#10b981'; 
                  msg.innerText = 'Request Submitted Successfully!';
                  setTimeout(() => { window.closeRequestModal(null, true); }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+                msg.classList.remove('hidden'); 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending request.'; 
+            });
+        });
+
+        // --- SUGGEST LINK MODAL LOGIC ---
+        window.openSuggestLinkModal = function() {
+            const overlay = document.getElementById('suggestLinkModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeSuggestLinkModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'suggestLinkModalOverlay')) {
+                const overlay = document.getElementById('suggestLinkModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = '';
+                    document.getElementById('suggestLinkForm').reset();
+                    document.getElementById('sugLinkStatusMessage').classList.add('hidden');
+                    document.getElementById('btnSubmitSugLink').style.display = 'block';
+                    document.getElementById('btnSubmitSugLink').disabled = false;
+                }, 300);
+            }
+        };
+
+        document.getElementById('suggestLinkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitSugLink'); 
+            const msg = document.getElementById('sugLinkStatusMessage');
+            
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            
+            const teamParam = new URLSearchParams(window.location.search).get('team') || "Unknown Team";
+            const linkType = document.getElementById('sugLinkType').value;
+            const linkInfo = document.getElementById('sugLinkInfo').value;
+            const username = window.currentUserProfile?.username || "Guest";
+            const email = auth.currentUser?.email || "No Email Provided";
+            
+            const combinedMessage = `*** SUGGEST LINK / BROADCAST ***\n` +
+                                    `Team: ${teamParam}\n` +
+                                    `Type: ${linkType}\n` +
+                                    `Info/URL: ${linkInfo}\n\n` +
+                                    `*** USER INFO ***\n` +
+                                    `Username: @${username}\n` +
+                                    `Email: ${email}`;
+            
+            const params = new URLSearchParams();
+            params.append("entry.1967997366", combinedMessage); 
+            params.append("entry.1990515734", window.currentUserProfile?.firstName || "Guest"); 
+            params.append("entry.1429224270", window.currentUserProfile?.lastName || "Submission"); 
+            params.append("entry.1778241553", email); 
+            
+            const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
+
+            fetch(CONTACT_FORM_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.classList.remove('hidden'); 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Link Submitted Successfully!';
+                 setTimeout(() => { window.closeSuggestLinkModal(null, true); }, 2000);
             }).catch(() => { 
                 btn.innerText = 'Try Again'; 
                 btn.disabled = false; 
