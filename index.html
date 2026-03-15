@@ -233,6 +233,14 @@
         <div class="nav-text"><span class="nav-title">Contact Us</span><span class="nav-sub">Send us a message or report issues</span></div>
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
     </button>
+
+    <button class="nav-card" onclick="openSupportModal()" style="border-left: 5px solid #fbbf24;">
+        <div class="nav-text">
+            <span class="nav-title">Support the Platform</span>
+            <span class="nav-sub">Help keep our servers running and free</span>
+        </div>
+        <svg class="nav-icon" viewBox="0 0 24 24" style="fill: #fbbf24;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </button>
 </div>
 
 <button class="floating-help-btn" onclick="openModal()" title="Need Help?">
@@ -260,7 +268,7 @@
                 <i class="fa-brands fa-facebook-messenger"></i> Message on Facebook
             </a>
             
-            <div class="divider">Or send us an a ticket</div>
+            <div class="divider">Or send us a ticket</div>
 
             <form id="pahsForm">
                 <label>Reason / Message <span style="color:red">*</span></label>
@@ -285,10 +293,40 @@
     </div>
 </div>
 
+<div id="supportModal" class="modal-overlay" onclick="closeSupportModalOutside(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Support the Platform</h2>
+            <button class="close-btn" onclick="closeSupportModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align: center; padding: 30px 24px;">
+            <i class="fa-solid fa-server text-5xl mb-4" style="color: var(--gold-base);"></i>
+            <h3 class="font-head text-2xl uppercase mb-2">Keep the Lights On!</h3>
+            <p class="text-sm text-gray-600 mb-6 font-body">
+                This platform is built by the community, for the community. If you love the live scores and GameDay hubs, consider chipping in to help cover our server and database costs. 
+            </p>
+            
+            <a href="https://buy.stripe.com/14A28raz64b24Qza1U3wQ00" target="_blank" class="submit-btn" style="display: block; text-decoration: none;">
+                <i class="fa-solid fa-heart mr-2"></i> Donate securely via Stripe
+            </a>
+            
+            <p class="text-xs text-gray-400 mt-4 font-bold">
+                <i class="fa-solid fa-lock"></i> Secure checkout powered by Stripe.<br>
+                <span style="font-weight: normal;">Apple Pay & Google Pay accepted.</span>
+            </p>
+        </div>
+    </div>
+</div>
+
 <script>
     function openModal() { document.getElementById('contactModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
     function closeModalOutside(e) { if (e.target.id === 'contactModal') closeModal(); }
+    
+    // NEW SUPPORT MODAL FUNCTIONS
+    function openSupportModal() { document.getElementById('supportModal').style.display = 'flex'; }
+    function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
+    function closeSupportModalOutside(e) { if (e.target.id === 'supportModal') closeSupportModal(); }
 
     const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
     const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
