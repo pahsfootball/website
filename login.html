@@ -323,6 +323,22 @@
                 const phone = document.getElementById('phoneInput').value.trim();
                 const requestedUsername = usernameSignupInput.value.trim();
 
+                // AGE VERIFICATION CHECK (Under 13 Block)
+                const dobDate = new Date(dob);
+                const today = new Date();
+                let age = today.getFullYear() - dobDate.getFullYear();
+                const m = today.getMonth() - dobDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 13) {
+                    showError("You must be at least 13 years old to create an account.");
+                    mainSubmitBtn.disabled = false;
+                    mainSubmitBtn.innerText = "Create Account";
+                    return;
+                }
+
                 // 1. PROFANITY CHECK
                 if (containsProfanity(requestedUsername)) {
                     showError("Please choose a family-friendly username.");
