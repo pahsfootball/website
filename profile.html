@@ -112,6 +112,7 @@
                     <div class="badge-text">
                         <h2 class="badge-title" id="userBadgeTitle">Loading...</h2>
                         <span class="badge-sub">Current Rank</span>
+                        <div id="userRoleBadge" class="mt-1 h-5"></div>
                     </div>
                 </div>
                 <div class="points-display">
@@ -370,6 +371,16 @@
                         usernameInput.value = data.username || "";
                         currentSavedUsername = data.username || "";
                         aboutMeInput.value = data.aboutMe || "";
+
+                        // --- ROLE TAG FOR PROFILE ---
+                        const roleBadge = document.getElementById('userRoleBadge');
+                        if (data.username && data.username.toUpperCase() === 'PAHSFOOTBALL') {
+                            roleBadge.innerHTML = `<span class="bg-black text-pahs-gold text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-pahs-gold shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> Site Owner</span>`;
+                        } else if (data.role === 'admin') {
+                            roleBadge.innerHTML = `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i> Team Admin</span>`;
+                        } else {
+                            roleBadge.innerHTML = '';
+                        }
 
                         // TEAM WATCHLIST
                         const followed = data.followedTeams || [];
