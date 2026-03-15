@@ -85,17 +85,17 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Your Team's Current Record</label>
-                            <input type="text" id="myTeamRecord" placeholder="e.g. 5-0" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg" required>
+                            <input type="text" id="myTeamRecord" placeholder="e.g. 5-0" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg">
                         </div>
                         
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
                             <label class="block text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Select Opponent</label>
                             <div class="relative">
-                                <input type="text" id="oppSelect" list="teamDirectoryList" placeholder="🔍 Search opponent..." class="input-box w-full p-3 font-bold rounded-lg mb-3" required autocomplete="off">
+                                <input type="text" id="oppSelect" list="teamDirectoryList" placeholder="🔍 Search opponent..." class="input-box w-full p-3 font-bold rounded-lg mb-3" autocomplete="off">
                                 <datalist id="teamDirectoryList"></datalist>
                             </div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Opponent's Record</label>
-                            <input type="text" id="oppRecord" placeholder="e.g. 4-1" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg" required>
+                            <input type="text" id="oppRecord" placeholder="e.g. 4-1" class="input-box w-full p-3 text-center text-xl font-bold rounded-lg">
                         </div>
                     </div>
                 </div>
@@ -108,11 +108,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Date</label>
-                            <input type="date" id="gameDate" class="input-box w-full p-3 rounded-lg font-bold" required>
+                            <input type="date" id="gameDate" class="input-box w-full p-3 rounded-lg font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Time</label>
-                            <input type="time" id="gameTime" class="input-box w-full p-3 rounded-lg font-bold" required>
+                            <input type="time" id="gameTime" class="input-box w-full p-3 rounded-lg font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Theme (Optional)</label>
@@ -155,11 +155,11 @@
                     <div class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Stadium / Field Name</label>
-                            <input type="text" id="stadiumName" class="input-box w-full p-3 rounded-lg font-bold" required readonly>
+                            <input type="text" id="stadiumName" class="input-box w-full p-3 rounded-lg font-bold" readonly>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Street Address, City, State, Zip</label>
-                            <input type="text" id="stadiumAddress" class="input-box w-full p-3 rounded-lg font-bold" required readonly>
+                            <input type="text" id="stadiumAddress" class="input-box w-full p-3 rounded-lg font-bold" readonly>
                         </div>
                     </div>
                 </div>
@@ -293,7 +293,7 @@
                 if (existingData) {
                     // Populate the form fields with existing data
                     document.getElementById('myTeamRecord').value = existingData.yourTeamRecord || "";
-                    document.getElementById('oppSelect').value = existingData.opponent || "";
+                    document.getElementById('oppSelect').value = existingData.opponent === "TBA" ? "" : (existingData.opponent || "");
                     document.getElementById('oppRecord').value = existingData.oppRecord || "";
                     document.getElementById('gameDate').value = existingData.date || "";
                     document.getElementById('gameTime').value = existingData.time || "";
@@ -304,7 +304,7 @@
                     document.getElementById('gameTickets').value = existingData.ticketLink || "";
 
                     // Find opponent object for location switching later
-                    if (existingData.opponent) {
+                    if (existingData.opponent && existingData.opponent !== "TBA") {
                         oppTeamObj = directoryData.find(t => t.school.toLowerCase() === existingData.opponent.toLowerCase());
                     }
 
@@ -389,14 +389,7 @@
             btn.disabled = true;
             btn.classList.add('opacity-70');
 
-            const oppName = document.getElementById('oppSelect').value.trim();
-            if (!oppName) {
-                alert("Please select an opponent.");
-                btn.innerText = isUpdate ? "Update Game Day" : "Publish Game Day"; 
-                btn.disabled = false; 
-                btn.classList.remove('opacity-70'); 
-                return;
-            }
+            const oppName = document.getElementById('oppSelect').value.trim() || "TBA";
 
             // Explicitly cast to Strings to prevent Firebase 'undefined' crashes
             const payload = {
