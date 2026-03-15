@@ -38,6 +38,32 @@
             border-top: 5px solid #fbbf24; 
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
         }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card-bg, #f4f4f5); border: 1px solid rgba(0,0,0,0.1); width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; }
+        .modal-content::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: #fbbf24; }
+        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .modal-header h2 { margin: 0; font-family: 'Teko', sans-serif; font-size: 32px; color: #18181b; text-transform: uppercase; line-height: 1; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
+        .close-btn:hover { color: #ef4444; }
+        .modal-body { padding: 24px; text-align: left; }
+        
+        .modal-body label { color: #18181b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 800; display: block; }
+        .modal-body input, .modal-body textarea { width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: #18181b; padding: 12px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; transition: 0.2s; box-sizing: border-box; margin-bottom: 16px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .modal-body input:focus, .modal-body textarea:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
+        .submit-btn { width: 100%; background: #fbbf24; color: black; font-family: 'Teko', sans-serif; font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 12px; }
+        .submit-btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+        
+        .btn-messenger { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #0084ff; color: white; font-family: 'Teko', sans-serif; font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; text-decoration: none; margin-bottom: 20px; }
+        .btn-messenger:hover { background: #0073e6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 132, 255, 0.4); }
+        
+        .divider { display: flex; align-items: center; text-align: center; color: #52525b; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .divider:not(:empty)::before { margin-right: .25em; }
+        .divider:not(:empty)::after { margin-left: .25em; }
+
+        @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="antialiased">
@@ -99,9 +125,127 @@
                     <p class="mt-2">Any accounts supplying false information in order to try to get around the age verification will be terminated and associated equipment could be hardware or IP banned as well.</p>
                 </section>
 
+                <section>
+                    <h3 class="font-bold text-xl text-pahs-dark mb-2"><i class="fa-solid fa-copyright text-pahs-gold mr-2"></i> 6. Copyright & Trademark Disclaimer</h3>
+                    <p>PAHS Football is an independent, community-driven platform. All team names, logos, mascots, and branding displayed on this site are the property of their respective schools, districts, or athletic organizations.</p>
+                    <p class="mt-2">These logos are used strictly for identification and representational purposes under fair use. PAHS Football claims no ownership or copyright over these trademarks, and their presence on this platform does not imply any official endorsement, sponsorship, or affiliation with the respective schools.</p>
+                </section>
+
             </div>
+
+            <div class="mt-12 pt-8 border-t border-gray-200 text-center">
+                <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 mb-4">Questions or Concerns?</h3>
+                <button onclick="openModal()" class="inline-flex items-center gap-2 bg-pahs-gold text-black font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-md hover:bg-yellow-500 transition-all mb-6">
+                    <i class="fa-solid fa-envelope"></i> Contact Support
+                </button>
+                
+                <div class="text-sm text-gray-600 font-body bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p class="mb-3 font-semibold uppercase tracking-wider text-xs">Or reach out directly via email:</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 font-bold text-pahs-dark">
+                        <a href="mailto:support@pahsfootball.com" class="hover:text-pahs-gold transition-colors"><i class="fa-solid fa-at text-gray-400 mr-1"></i>support@pahsfootball.com</a>
+                        <a href="mailto:admin@pahsfootball.com" class="hover:text-pahs-gold transition-colors"><i class="fa-solid fa-at text-gray-400 mr-1"></i>admin@pahsfootball.com</a>
+                        <a href="mailto:contact@pahsfootball.com" class="hover:text-pahs-gold transition-colors"><i class="fa-solid fa-at text-gray-400 mr-1"></i>contact@pahsfootball.com</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
+
+    <div id="contactModal" class="modal-overlay" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Get in Touch</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                
+                <a href="https://m.me/61575202139754" target="_blank" class="btn-messenger">
+                    <i class="fa-brands fa-facebook-messenger"></i> Message on Facebook
+                </a>
+                
+                <div class="divider">Or send us a ticket</div>
+
+                <form id="pahsForm">
+                    <label>Reason / Message <span style="color:red">*</span></label>
+                    <textarea name="entry.1967997366" rows="4" required placeholder="Type your message..."></textarea>
+
+                    <label>First Name <span style="color:red">*</span></label>
+                    <input type="text" id="contactFirstName" name="entry.1990515734" required placeholder="John">
+
+                    <label>Last Name <span style="color:red">*</span></label>
+                    <input type="text" id="contactLastName" name="entry.1429224270" required placeholder="Doe">
+
+                    <label>Phone (Optional)</label>
+                    <input type="tel" id="contactPhoneInput" name="entry.593864574" placeholder="xxx-xxx-xxxx">
+
+                    <label>Email <span style="color:red">*</span></label>
+                    <input type="email" id="contactEmailInput" name="entry.1778241553" required placeholder="email@example.com">
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                    <div id="statusMessage" style="margin-top:10px; text-align:center; font-weight:bold; display:none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById('contactModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
+        function closeModalOutside(e) { if (e.target.id === 'contactModal') closeModal(); }
+
+        const FORM_ID = '1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ';
+        const SUBMIT_URL = 'https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse';
+
+        document.getElementById('pahsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn'); 
+            const msg = document.getElementById('statusMessage');
+            const emailVal = document.getElementById('contactEmailInput').value.trim();
+            
+            if (!emailVal) { 
+                msg.style.display = 'block'; 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Please enter your Email address.'; 
+                return; 
+            }
+            
+            btn.innerText = 'Sending...'; 
+            btn.style.opacity = '0.7'; 
+            msg.style.display = 'none';
+            
+            const formData = new FormData(this); 
+            const params = new URLSearchParams();
+            for (const pair of formData.entries()) { params.append(pair[0], pair[1]); }
+            
+            fetch(SUBMIT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: params.toString() 
+            })
+            .then(() => {
+                 btn.style.display = 'none'; 
+                 msg.style.display = 'block'; 
+                 msg.style.color = '#10b981'; 
+                 msg.innerText = 'Message Sent Successfully!';
+                 setTimeout(() => { 
+                     closeModal(); 
+                     document.getElementById('pahsForm').reset(); 
+                     btn.style.display = 'block'; 
+                     btn.innerText = 'SEND MESSAGE'; 
+                     btn.style.opacity = '1'; 
+                     msg.style.display = 'none'; 
+                 }, 2000);
+            }).catch(() => { 
+                btn.innerText = 'Try Again'; 
+                btn.style.opacity = '1'; 
+                msg.style.display = 'block'; 
+                msg.style.color = '#ef4444'; 
+                msg.innerText = 'Error sending message.'; 
+            });
+        });
+    </script>
 
 </body>
 </html>
