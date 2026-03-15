@@ -105,7 +105,7 @@
                         <span class="bg-pahs-gold text-black w-6 h-6 rounded-full inline-flex items-center justify-center text-sm">2</span> Game Info
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Date</label>
                             <input type="date" id="gameDate" class="input-box w-full p-3 rounded-lg font-bold" required>
@@ -117,6 +117,17 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Theme (Optional)</label>
                             <input type="text" id="gameTheme" placeholder="e.g. Blackout" class="input-box w-full p-3 rounded-lg font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Broadcast / Stream Info</label>
+                            <input type="text" id="gameBroadcast" placeholder="e.g. 98.3 FM or YouTube Link" class="input-box w-full p-3 rounded-lg font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Buy Tickets Link</label>
+                            <input type="url" id="gameTickets" placeholder="e.g. https://gofan.co/..." class="input-box w-full p-3 rounded-lg font-bold">
                         </div>
                     </div>
                 </div>
@@ -202,6 +213,7 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
+                // Map and clean headers based on user's exact structure
                 directoryData = results.data.map(row => ({
                     school: cleanText(row['School']),
                     mascot: cleanText(row['Mascot'] || row['Team']),
@@ -210,6 +222,7 @@
                     address: cleanText(row['FieldLocation'] || row['City'])
                 })).filter(t => t.school !== "");
 
+                // Populate Datalist for Opponent Dropdown
                 const datalist = document.getElementById('teamDirectoryList');
                 directoryData.sort((a,b) => a.school.localeCompare(b.school)).forEach(team => {
                     const option = document.createElement('option');
@@ -217,6 +230,7 @@
                     datalist.appendChild(option);
                 });
 
+                // If auth already resolved, initialize the form
                 if (adminTeamName) initDashboard();
             }
         });
@@ -236,11 +250,13 @@
                             adminTeamName = data.managedTeam;
                             document.getElementById('managedTeamDisplay').innerText = adminTeamName;
                             
+                            // SET THE EXIT BUTTON LINK TO THEIR TEAM'S GAMEDAY PAGE
                             document.getElementById('btnExitController').href = `gameday.html?team=${encodeURIComponent(adminTeamName)}`;
                             
                             loading.classList.add('hidden');
                             dash.classList.remove('hidden');
                             
+                            // If CSV is already loaded, init form
                             if (directoryData.length > 0) initDashboard();
                         } else {
                             loading.classList.add('hidden'); denied.classList.remove('hidden');
@@ -282,6 +298,10 @@
                     document.getElementById('gameDate').value = existingData.date || "";
                     document.getElementById('gameTime').value = existingData.time || "";
                     document.getElementById('gameTheme').value = existingData.theme === "No Theme" ? "" : (existingData.theme || "");
+                    
+                    // Populate new Broadcast/Tickets inputs
+                    document.getElementById('gameBroadcast').value = existingData.broadcast || "";
+                    document.getElementById('gameTickets').value = existingData.ticketLink || "";
 
                     // Find opponent object for location switching later
                     if (existingData.opponent) {
@@ -378,6 +398,7 @@
                 return;
             }
 
+            // Explicitly cast to Strings to prevent Firebase 'undefined' crashes
             const payload = {
                 yourTeam: String(adminTeamName),
                 yourTeamMascot: String(myTeamObj ? myTeamObj.mascot : ""),
@@ -392,6 +413,8 @@
                 date: String(document.getElementById('gameDate').value),
                 time: String(document.getElementById('gameTime').value),
                 theme: String(document.getElementById('gameTheme').value.trim() || "No Theme"),
+                broadcast: String(document.getElementById('gameBroadcast').value.trim()),
+                ticketLink: String(document.getElementById('gameTickets').value.trim()),
                 
                 homeAway: String(document.querySelector('input[name="locationType"]:checked').value),
                 stadium: String(document.getElementById('stadiumName').value.trim()),
@@ -416,6 +439,8 @@
                 
                 const scoreRef = ref(dbRealtime, 'live_scores/' + gameKey);
                 
+                // We use update here so we don't accidentally overwrite an active score 
+                // if they are just fixing a typo in the controller.
                 await update(scoreRef, {
                     home: isHome ? payload.yourTeam : payload.opponent,
                     away: !isHome ? payload.yourTeam : payload.opponent,
