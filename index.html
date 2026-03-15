@@ -83,6 +83,7 @@
         .footer-links { margin-top: 15px; }
         .footer-links a { color: var(--gold-base); text-decoration: none; margin: 0 10px; font-weight: 600; transition: color 0.2s; }
         .footer-links a:hover { color: #fff; text-decoration: underline; }
+        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card-bg); border: 1px solid var(--border-light); width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; }
         .modal-content::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-base); }
@@ -96,6 +97,78 @@
         input:focus, textarea:focus { border-color: var(--gold-base); outline: none; box-shadow: 0 0 0 3px rgba(251,191,36,0.3); }
         .submit-btn { width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 12px; }
         .submit-btn:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+        
+        /* --- FLOATING HELP & MESSENGER BTN --- */
+        .floating-help-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gold-base);
+            color: black;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 90;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .floating-help-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            background: var(--gold-hover);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .btn-messenger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: #0084ff; /* Official Messenger Blue */
+            color: white;
+            font-family: var(--font-head);
+            font-size: 22px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            transition: 0.3s;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .btn-messenger:hover {
+            background: #0073e6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 132, 255, 0.4);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .divider:not(:empty)::before { margin-right: .25em; }
+        .divider:not(:empty)::after { margin-left: .25em; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
@@ -122,7 +195,7 @@
 <div class="content-area">
     <a href="teams.html" class="nav-card featured-card">
         <div class="nav-text">
-            <span class="nav-title" style="font-size: 24px;">Gameday Pages, Team Directory, Live Scores & More</span>
+            <span class="nav-title" style="font-size: 24px;">GameDay Pages, Team Directory, Live Scores & More</span>
             <span class="nav-sub">Find Teams, Matchups & Real-time Action</span>
         </div>
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -162,6 +235,10 @@
     </button>
 </div>
 
+<button class="floating-help-btn" onclick="openModal()" title="Need Help?">
+    <i class="fa-solid fa-comment-dots"></i>
+</button>
+
 <footer class="app-footer">
     <p>&copy; 2026 PAHSFOOTBALL.com. All Rights Reserved.</p>
     <p><em>PAHSFOOTBALL.com and the PAHS Football app are independently operated. All team names, logos, and brands are property of their respective owners. Use of these names, logos, and brands does not imply endorsement.</em></p>
@@ -178,6 +255,13 @@
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body">
+            
+            <a href="https://m.me/61575202139754" target="_blank" class="btn-messenger">
+                <i class="fa-brands fa-facebook-messenger"></i> Message on Facebook
+            </a>
+            
+            <div class="divider">Or send us an email</div>
+
             <form id="pahsForm">
                 <label>Reason / Message <span style="color:red">*</span></label>
                 <textarea name="entry.1967997366" rows="4" required placeholder="Type your message..."></textarea>
