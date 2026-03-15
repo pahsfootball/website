@@ -230,10 +230,10 @@
             
             <div class="p-8 text-center bg-white relative">
                 <div id="upm-badge-container" class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-md mb-4 text-4xl">
-                    <i class="fa-solid fa-football text-slate-500"></i>
+                    <i class="fa-solid fa-user text-slate-400"></i>
                 </div>
                 <h3 id="upm-username" class="font-head text-4xl uppercase tracking-wide text-gray-900 leading-none">@User</h3>
-                <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Fan (0 Points)</p>
+                <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Rookie (0 Points)</p>
                 
                 <div class="text-left bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
                     <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">About Me</p>
@@ -541,7 +541,7 @@
             }
         };
 
-        // *** LOAD CSV DATA ***
+        // --- LOAD CSV DATA ---
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=898353320&single=true&output=csv";
         
         Papa.parse(MASTER_TEAMS_CSV, {
@@ -593,7 +593,7 @@
             }
         });
 
-        // *** AUTHENTICATION LISTENER ***
+        // --- AUTHENTICATION LISTENER ---
         onAuthStateChanged(auth, async (user) => {
             const createBtn = document.getElementById('createPostAction');
             const loginPrompt = document.getElementById('loggedOutPrompt');
@@ -620,7 +620,7 @@
             window.renderFeed(); 
         });
 
-        // *** REFRESH BUTTON LISTENER ***
+        // --- REFRESH BUTTON LISTENER ---
         document.getElementById('refreshFeedBtn').addEventListener('click', () => {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
@@ -630,7 +630,7 @@
             }, 500);
         });
 
-        // *** FILTER TOGGLE LOGIC ***
+        // --- FILTER TOGGLE LOGIC ---
         window.toggleClearBtn = function() {
             const input = document.getElementById('feedTeamFilter');
             const btn = document.getElementById('clearFilterBtn');
@@ -647,7 +647,7 @@
             window.renderFeed();
         };
 
-        // *** FIREBASE REALTIME DB LISTENER ***
+        // --- FIREBASE REALTIME DB LISTENER ---
         function startFirebaseListener() {
             const postsRef = ref(dbRealtime, 'fanzone_posts');
             
@@ -716,7 +716,7 @@
         startFirebaseListener();
 
 
-        // *** OPEN USER PROFILE MODAL ***
+        // --- OPEN USER PROFILE MODAL ---
         window.openUserProfile = async function(e, authorId) {
             if(e) e.stopPropagation();
 
@@ -755,28 +755,48 @@
                     }
                 }
 
-                // Rank Logic
+                // --- NEW GAMIFICATION RANK LOGIC ---
                 const pts = window.authorPointsCache[authorId] || 0;
-                let bIcon = '<i class="fa-solid fa-football text-slate-500 text-sm"></i>';
-                let bClass = 'bg-slate-100 border-slate-300 shadow-sm';
-                let bTitle = 'Fan';
+                let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
+                let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
+                let bTitle = 'Rookie';
                 
-                if (pts >= 500) { 
+                if (pts >= 2500) { 
                     bIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; 
-                    bClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; 
-                    bTitle = 'Hall of Fame (500+ Likes)'; 
-                } else if (pts >= 150) { 
-                    bIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; 
-                    bClass = 'bg-orange-50 border-orange-300'; 
-                    bTitle = 'All-State (150+ Likes)'; 
+                    bClass = 'bg-black border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.6)]'; 
+                    bTitle = 'Hall of Fame'; 
+                } else if (pts >= 1000) { 
+                    bIcon = '<i class="fa-solid fa-gem text-yellow-400 text-sm"></i>'; 
+                    bClass = 'bg-gray-800 border-yellow-400 shadow-md'; 
+                    bTitle = 'MVP'; 
+                } else if (pts >= 500) { 
+                    bIcon = '<i class="fa-solid fa-trophy text-amber-600 text-sm"></i>'; 
+                    bClass = 'bg-amber-50 border-amber-300 shadow-sm'; 
+                    bTitle = 'All-State'; 
+                } else if (pts >= 250) { 
+                    bIcon = '<i class="fa-solid fa-medal text-orange-500 text-sm"></i>'; 
+                    bClass = 'bg-orange-50 border-orange-300 shadow-sm'; 
+                    bTitle = 'All-Conference'; 
+                } else if (pts >= 100) { 
+                    bIcon = '<i class="fa-solid fa-shield-halved text-red-500 text-sm"></i>'; 
+                    bClass = 'bg-red-50 border-red-300 shadow-sm'; 
+                    bTitle = 'Captain'; 
                 } else if (pts >= 50) { 
-                    bIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; 
-                    bClass = 'bg-gray-100 border-gray-300'; 
-                    bTitle = 'Varsity (50+ Likes)'; 
+                    bIcon = '<i class="fa-solid fa-star text-indigo-500 text-sm"></i>'; 
+                    bClass = 'bg-indigo-50 border-indigo-300 shadow-sm'; 
+                    bTitle = 'Varsity'; 
+                } else if (pts >= 25) { 
+                    bIcon = '<i class="fa-solid fa-shirt text-green-500 text-sm"></i>'; 
+                    bClass = 'bg-green-50 border-green-300 shadow-sm'; 
+                    bTitle = 'JV'; 
                 } else if (pts >= 10) { 
-                    bIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; 
-                    bClass = 'bg-amber-50 border-amber-200'; 
-                    bTitle = 'Super Fan (10+ Likes)'; 
+                    bIcon = '<i class="fa-solid fa-bullhorn text-teal-500 text-sm"></i>'; 
+                    bClass = 'bg-teal-50 border-teal-300 shadow-sm'; 
+                    bTitle = 'Super Fan'; 
+                } else if (pts >= 1) { 
+                    bIcon = '<i class="fa-solid fa-football text-blue-500 text-sm"></i>'; 
+                    bClass = 'bg-blue-50 border-blue-300 shadow-sm'; 
+                    bTitle = 'Fan'; 
                 }
 
                 const badgeContainer = document.getElementById('upm-badge-container');
@@ -895,27 +915,48 @@
                 tagsHtml += buildTag(post.taggedTeam2);
             }
 
+            // --- NEW GAMIFICATION RANK LOGIC FOR FEED ---
             const pts = window.authorPointsCache[post.authorId] || 0;
-            let bIcon = '<i class="fa-solid fa-football text-slate-500 text-sm"></i>';
-            let bClass = 'bg-slate-100 border-slate-300 shadow-sm';
-            let bTitle = 'Fan (0+ Likes)';
+            let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
+            let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
+            let bTitle = 'Rookie';
             
-            if (pts >= 500) { 
+            if (pts >= 2500) { 
                 bIcon = '<i class="fa-solid fa-crown text-yellow-500 text-sm"></i>'; 
-                bClass = 'bg-yellow-100 border-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]'; 
+                bClass = 'bg-black border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.6)]'; 
                 bTitle = 'Hall of Fame'; 
-            } else if (pts >= 150) { 
-                bIcon = '<i class="fa-solid fa-trophy text-orange-400 text-sm"></i>'; 
-                bClass = 'bg-orange-50 border-orange-300'; 
+            } else if (pts >= 1000) { 
+                bIcon = '<i class="fa-solid fa-gem text-yellow-400 text-sm"></i>'; 
+                bClass = 'bg-gray-800 border-yellow-400 shadow-md'; 
+                bTitle = 'MVP'; 
+            } else if (pts >= 500) { 
+                bIcon = '<i class="fa-solid fa-trophy text-amber-600 text-sm"></i>'; 
+                bClass = 'bg-amber-50 border-amber-300 shadow-sm'; 
                 bTitle = 'All-State'; 
+            } else if (pts >= 250) { 
+                bIcon = '<i class="fa-solid fa-medal text-orange-500 text-sm"></i>'; 
+                bClass = 'bg-orange-50 border-orange-300 shadow-sm'; 
+                bTitle = 'All-Conference'; 
+            } else if (pts >= 100) { 
+                bIcon = '<i class="fa-solid fa-shield-halved text-red-500 text-sm"></i>'; 
+                bClass = 'bg-red-50 border-red-300 shadow-sm'; 
+                bTitle = 'Captain'; 
             } else if (pts >= 50) { 
-                bIcon = '<i class="fa-solid fa-star text-gray-400 text-sm"></i>'; 
-                bClass = 'bg-gray-100 border-gray-300'; 
+                bIcon = '<i class="fa-solid fa-star text-indigo-500 text-sm"></i>'; 
+                bClass = 'bg-indigo-50 border-indigo-300 shadow-sm'; 
                 bTitle = 'Varsity'; 
+            } else if (pts >= 25) { 
+                bIcon = '<i class="fa-solid fa-shirt text-green-500 text-sm"></i>'; 
+                bClass = 'bg-green-50 border-green-300 shadow-sm'; 
+                bTitle = 'JV'; 
             } else if (pts >= 10) { 
-                bIcon = '<i class="fa-solid fa-bullhorn text-amber-700 text-sm"></i>'; 
-                bClass = 'bg-amber-50 border-amber-200'; 
+                bIcon = '<i class="fa-solid fa-bullhorn text-teal-500 text-sm"></i>'; 
+                bClass = 'bg-teal-50 border-teal-300 shadow-sm'; 
                 bTitle = 'Super Fan'; 
+            } else if (pts >= 1) { 
+                bIcon = '<i class="fa-solid fa-football text-blue-500 text-sm"></i>'; 
+                bClass = 'bg-blue-50 border-blue-300 shadow-sm'; 
+                bTitle = 'Fan'; 
             }
 
             let safeContent = escapeHTML(post.content);
