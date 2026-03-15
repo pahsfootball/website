@@ -233,6 +233,9 @@
                     <i class="fa-solid fa-user text-slate-400"></i>
                 </div>
                 <h3 id="upm-username" class="font-head text-4xl uppercase tracking-wide text-gray-900 leading-none">@User</h3>
+                
+                <div id="upm-role-container" class="mt-2 mb-1 flex justify-center h-6"></div>
+
                 <p id="upm-rank" class="text-sm font-bold text-pahs-gold uppercase tracking-widest mt-1 mb-6">Rookie (0 Points)</p>
                 
                 <div class="text-left bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
@@ -677,15 +680,15 @@
                         }
                     });
 
-                    // PRE-FETCH UNKNOWN USERS FOR PROFILES
+                    // PRE-FETCH UNKNOWN USERS FOR PROFILES AND ROLE BADGES
                     const uniqueUids = [...new Set(currentPosts.map(p => p.authorId))];
                     const fetchPromises = uniqueUids.map(async (uid) => {
                         if (!window.userCache[uid] && uid) {
                             try {
                                 const uSnap = await getDoc(doc(db, "users", uid));
-                                window.userCache[uid] = uSnap.exists() ? uSnap.data() : { points: 0 };
+                                window.userCache[uid] = uSnap.exists() ? uSnap.data() : { points: 0, role: 'fan' };
                             } catch(e) { 
-                                window.userCache[uid] = { points: 0 }; 
+                                window.userCache[uid] = { points: 0, role: 'fan' }; 
                             }
                         }
                     });
@@ -737,6 +740,7 @@
 
             // Set loading states
             document.getElementById('upm-username').innerText = "Loading...";
+            document.getElementById('upm-role-container').innerHTML = "";
             document.getElementById('upm-rank').innerText = "...";
             document.getElementById('upm-about').innerText = "...";
             document.getElementById('upm-teams').innerHTML = "";
@@ -751,11 +755,19 @@
                         userData = uSnap.data();
                         window.userCache[authorId] = userData; 
                     } else {
-                        userData = { username: "Unknown", followedTeams: [], aboutMe: "This user does not have a profile set up yet." };
+                        userData = { username: "Unknown", role: 'fan', followedTeams: [], aboutMe: "This user does not have a profile set up yet." };
                     }
                 }
 
-                // --- NEW GAMIFICATION RANK LOGIC ---
+                // --- ROLE TAG LOGIC FOR PROFILE POPUP ---
+                const roleContainer = document.getElementById('upm-role-container');
+                if (userData.username && userData.username.toUpperCase() === 'PAHSFOOTBALL') {
+                    roleContainer.innerHTML = `<span class="bg-black text-pahs-gold text-[11px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-pahs-gold shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> Site Owner</span>`;
+                } else if (userData.role === 'admin') {
+                    roleContainer.innerHTML = `<span class="bg-blue-600 text-white text-[11px] px-2 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i> Team Admin</span>`;
+                }
+
+                // --- RANK LOGIC ---
                 const pts = window.authorPointsCache[authorId] || 0;
                 let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
                 let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -800,7 +812,7 @@
                 }
 
                 const badgeContainer = document.getElementById('upm-badge-container');
-                badgeContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center border-4 shadow-md mb-4 text-4xl ${bClass}`;
+                badgeContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center border-4 shadow-md mb-2 text-4xl ${bClass}`;
                 badgeContainer.innerHTML = bIcon;
 
                 document.getElementById('upm-username').innerText = '@' + (userData.username || 'Unknown');
@@ -882,7 +894,6 @@
             }
         };
 
-
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
             if (post.timestamp) {
@@ -915,7 +926,7 @@
                 tagsHtml += buildTag(post.taggedTeam2);
             }
 
-            // --- NEW GAMIFICATION RANK LOGIC FOR FEED ---
+            // --- RANK LOGIC ---
             const pts = window.authorPointsCache[post.authorId] || 0;
             let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
             let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -959,6 +970,14 @@
                 bTitle = 'Fan'; 
             }
 
+            // --- ROLE TAG LOGIC FOR IN-FEED POSTS ---
+            let roleTagHtml = '';
+            if (post.authorUsername && post.authorUsername.toUpperCase() === 'PAHSFOOTBALL') {
+                roleTagHtml = `<span class="bg-black text-pahs-gold text-[9px] px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider border border-pahs-gold shadow-sm" title="Official PAHS Football Account"><i class="fa-solid fa-check-circle mr-0.5"></i> Site Owner</span>`;
+            } else if (window.userCache[post.authorId] && window.userCache[post.authorId].role === 'admin') {
+                roleTagHtml = `<span class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider shadow-sm" title="Verified Team Admin"><i class="fa-solid fa-shield-halved mr-0.5"></i> Team Admin</span>`;
+            }
+
             let safeContent = escapeHTML(post.content);
             safeContent = linkify(safeContent);
             safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
@@ -984,7 +1003,10 @@
                                 ${bIcon}
                             </div>
                             <div>
-                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors">@${post.authorUsername}</h4>
+                                <h4 class="font-bold text-gray-900 leading-none text-sm font-body group-hover:text-pahs-gold transition-colors flex items-center">
+                                    @${post.authorUsername}
+                                    ${roleTagHtml}
+                                </h4>
                                 <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
                             </div>
                         </div>
