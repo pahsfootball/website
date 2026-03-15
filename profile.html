@@ -354,7 +354,7 @@
                         const followed = data.followedTeams || [];
                         if (followed.length > 0) {
                             followedTeamsList.innerHTML = followed.map(team => 
-                                `<a href="livescoreboards.html?team=${encodeURIComponent(team)}" class="team-link">
+                                `<a href="teams.html?team=${encodeURIComponent(team)}" class="team-link">
                                     <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[10px] opacity-40"></i> ${team}
                                 </a>`
                             ).join('');
