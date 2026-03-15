@@ -305,7 +305,7 @@
                 
                 let bIcon = '<i class="fa-solid fa-football text-slate-500"></i>';
                 let bClass = 'badge-icon bg-slate-100 border-slate-300 shadow-sm';
-                let bTitle = 'Fan';
+                let bTitle = 'Fan (0+ Likes)';
 
                 if (totalLikes >= 500) { 
                     bIcon = '<i class="fa-solid fa-crown text-yellow-500"></i>'; 
@@ -426,9 +426,11 @@
             document.getElementById('relinquishEmail').value = auth.currentUser?.email || "N/A";
             
             const overlay = document.getElementById('relinquishModalOverlay');
+            overlay.classList.remove('hidden');
             overlay.style.display = 'flex'; 
             setTimeout(() => {
                 overlay.classList.add('active');
+                overlay.children[0].classList.remove('scale-95');
             }, 10);
         };
 
@@ -436,7 +438,9 @@
             if (force || (e && e.target.id === 'relinquishModalOverlay')) {
                 const overlay = document.getElementById('relinquishModalOverlay');
                 overlay.classList.remove('active');
+                overlay.children[0].classList.add('scale-95');
                 setTimeout(() => { 
+                    overlay.classList.add('hidden');
                     overlay.style.display = 'none';
                     document.getElementById('relinquishAdminForm').reset();
                     document.getElementById('relinquishStatusMessage').classList.add('hidden');
@@ -462,7 +466,7 @@
             
             const combinedMessage = `*** ADMIN REMOVAL REQUEST ***\nTeam to Remove: ${teamName}\n\nReason: ${reason}\n\n*** USER INFO ***\nUsername: @${username}\nUser ID: ${uid}`;
             
-            const params = newSearchParams();
+            const params = new URLSearchParams();
             params.append("entry.1967997366", combinedMessage); 
             params.append("entry.1990515734", document.getElementById('relinquishFirstName').value); 
             params.append("entry.1429224270", document.getElementById('relinquishLastName').value); 
@@ -490,7 +494,7 @@
             });
         });
 
-        // --- UPDATE PROFILE LISTENER ---
+        // --- UPDATE PROFILE LISTENER WITH LINK VALIDATION ---
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUserUid) return;
@@ -500,6 +504,17 @@
             statusMsg.style.display = 'none';
 
             const requestedUsername = usernameInput.value.trim();
+            const aboutMeText = aboutMeInput.value.trim();
+
+            // --- LINK VALIDATION (PREVENT URLS IN PROFILE) ---
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|org|net|io|me|co|us|pa|info|edu|gov|ly|be)(\/[^\s]*)?)/i;
+            if (urlRegex.test(aboutMeText) || urlRegex.test(requestedUsername)) {
+                statusMsg.innerText = "External links are not permitted in profiles at this time.";
+                statusMsg.className = "status-msg status-error block";
+                saveBtn.innerText = "Update Profile";
+                saveBtn.disabled = false;
+                return;
+            }
 
             try {
                 if (requestedUsername !== currentSavedUsername) {
@@ -519,7 +534,7 @@
                 const userRef = doc(db, "users", currentUserUid);
                 await updateDoc(userRef, {
                     username: requestedUsername,
-                    aboutMe: aboutMeInput.value.trim()
+                    aboutMe: aboutMeText
                 });
                 
                 currentSavedUsername = requestedUsername;
