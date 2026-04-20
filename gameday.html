@@ -92,7 +92,7 @@
                 <h2 class="font-head text-3xl uppercase tracking-wide text-yellow-600 m-0 leading-none flex items-center gap-2">
                     <i class="fa-solid fa-shield-halved"></i> External Link
                 </h2>
-                <button onclick="window.closeLinkWarning(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+                <button onclick="window.closeLinkWarning(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
             </div>
             <div class="p-6 bg-white text-center">
                 <p class="text-sm text-gray-600 mb-4 font-body leading-relaxed">
@@ -1052,16 +1052,8 @@
                 hFall.innerText = (isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
                 aFall.innerText = (!isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).substring(0,3).toUpperCase();
 
-                let hUrl = isHomeSide ? game.yourTeamLogo : game.oppLogo; 
-                let aUrl = !isHomeSide ? game.yourTeamLogo : game.oppLogo;
-                
-                if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
-                else { hLogo.style.display = 'none'; hFall.style.display='block'; }
-                
-                if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; aFall.style.display='none';}
-                else { aLogo.style.display = 'none'; aFall.style.display='block'; }
-
                 const data = snapshot.val();
+                
                 if (data) {
                     document.getElementById('sb-home-score').innerText = data.homeScore || 0;
                     document.getElementById('sb-away-score').innerText = data.awayScore || 0;
@@ -1078,8 +1070,27 @@
                     else if (data.possession === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
                     else { homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden'); }
 
-                    if(data.homeLogo && data.homeLogo.trim() !== "") { hLogo.src = data.homeLogo; hLogo.style.display = 'block'; hFall.style.display='none';}
-                    if(data.awayLogo && data.awayLogo.trim() !== "") { aLogo.src = data.awayLogo; aLogo.style.display = 'block'; aFall.style.display='none';}
+                    // Check live_scores data first, fallback to the master GameDay config (game)
+                    const finalHomeLogo = (data.homeLogo && data.homeLogo.trim() !== "") ? data.homeLogo : (isHomeSide ? game.yourTeamLogo : game.oppLogo);
+                    const finalAwayLogo = (data.awayLogo && data.awayLogo.trim() !== "") ? data.awayLogo : (!isHomeSide ? game.yourTeamLogo : game.oppLogo);
+
+                    if(finalHomeLogo && finalHomeLogo.trim() !== "") { 
+                        hLogo.src = finalHomeLogo; 
+                        hLogo.style.display = 'block'; 
+                        hFall.style.display='none';
+                    } else {
+                        hLogo.style.display = 'none'; 
+                        hFall.style.display='block';
+                    }
+                    
+                    if(finalAwayLogo && finalAwayLogo.trim() !== "") { 
+                        aLogo.src = finalAwayLogo; 
+                        aLogo.style.display = 'block'; 
+                        aFall.style.display='none';
+                    } else {
+                        aLogo.style.display = 'none'; 
+                        aFall.style.display='block';
+                    }
 
                     const qtr = data.quarter || "PREGAME";
                     if (qtr === "PREGAME" || data.status === "UPCOMING") {
@@ -1115,6 +1126,15 @@
                     document.getElementById('sb-away-name').innerText = !isHomeSide ? game.yourTeam : game.opponent;
                     statusBadge.innerText = "PREGAME";
                     statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded uppercase tracking-widest border";
+                    
+                    let hUrl = isHomeSide ? game.yourTeamLogo : game.oppLogo; 
+                    let aUrl = !isHomeSide ? game.yourTeamLogo : game.oppLogo;
+                    
+                    if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
+                    else { hLogo.style.display = 'none'; hFall.style.display='block'; }
+                    
+                    if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; aFall.style.display='none';}
+                    else { aLogo.style.display = 'none'; aFall.style.display='block'; }
                 }
             });
         }
