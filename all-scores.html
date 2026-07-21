@@ -123,6 +123,29 @@
             return `gameday.html?team=${encodeURIComponent(teamName.trim())}`;
         };
 
+        function formatGameTime(timeStr) {
+            if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
+            try {
+                let [hh, mm] = timeStr.split(':');
+                let h = parseInt(hh);
+                let ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                return `${h}:${mm} ${ampm}`;
+            } catch(e) { return timeStr; }
+        }
+
+        function formatGameDate(dateStr) {
+            if (!dateStr) return "PREGAME";
+            try {
+                let [y, m, d] = dateStr.split('-');
+                let dObj = new Date(y, m - 1, d);
+                if (!isNaN(dObj)) {
+                    return dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                }
+            } catch(e) {}
+            return "PREGAME";
+        }
+
         Papa.parse(SCHEDULE_CSV_URL, {
             download: true,
             header: true,
@@ -148,6 +171,8 @@
                         status: "PREGAME",
                         quarter: "PREGAME",
                         clock: game.Time || "12:00",
+                        date: game.Date || "", 
+                        time: game.Time || "", 
                         updatedBy: "Schedule",
                         lastUpdated: new Date(0).toISOString() 
                     };
@@ -234,16 +259,14 @@
                     const statusUpper = stat.toUpperCase();
                     const qtrUpper = qtr.toUpperCase();
 
-                    let clockText = game.clock;
-                    if (!clockText || clockText === "undefined" || clockText.trim() === "") clockText = "12:00";
-
-                    let clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">${clockText}</span>`;
+                    let clockHtml = "";
 
                     if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
-                        badgeText = "PREGAME";
-                        badgeClass = "bg-yellow-500 text-black";
-                        cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
-                        if (clockText === "12:00") clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">TBA</span>`;
+                        badgeText = game.date ? formatGameDate(game.date) : "PREGAME";
+                        badgeClass = "bg-gray-200 text-gray-800 border border-gray-300"; 
+                        cardBorder = "border-gray-200 shadow-sm";
+                        let timeStr = game.time ? formatGameTime(game.time) : "TBA";
+                        clockHtml = `<span class="font-mono font-bold text-sm text-gray-600">${timeStr}</span>`;
                     } else if (qtrUpper === "HALF") {
                         badgeText = "HALFTIME";
                         badgeClass = "bg-yellow-600 text-black";
@@ -253,12 +276,14 @@
                         badgeText = "FINAL";
                         badgeClass = "bg-gray-800 text-white";
                         cardBorder = "border-gray-400 shadow-sm opacity-80"; 
-                        clockHtml = ""; 
                     } else {
                         badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
                         badgeClass = "bg-red-600 text-white animate-pulse";
                         dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                         cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
+                        let clockText = game.clock || "12:00";
+                        if(clockText === "undefined" || clockText.trim() === "") clockText = "12:00";
+                        clockHtml = `<span class="font-mono font-bold text-sm text-red-600 animate-pulse">${clockText}</span>`;
                     }
 
                     const homeLogoHtml = game.homeLogo 
