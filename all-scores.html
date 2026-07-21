@@ -94,7 +94,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
@@ -111,6 +113,27 @@
 
         const app = initializeApp(firebaseConfig);
         const dbRealtime = getDatabase(app);
+        const auth = getAuth(app);
+        const dbFirestore = getFirestore(app);
+
+        // --- AUTHENTICATION STATE ---
+        let currentUser = null;
+        window.currentUserProfile = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                try {
+                    const userDoc = await getDoc(doc(dbFirestore, "users", user.uid));
+                    if (userDoc.exists()) {
+                        window.currentUserProfile = userDoc.data();
+                    }
+                } catch(e) { console.error("Auth error:", e); }
+            } else {
+                currentUser = null;
+                window.currentUserProfile = null;
+            }
+        });
 
         const container = document.getElementById('scoreboards-container');
         const loadingState = document.getElementById('loading-state');
@@ -119,6 +142,7 @@
         let previousScores = {}; 
         let isFirstLoad = true;  
         let globalTeamDict = {}; 
+        window.currentGameMap = {}; // Tracks live game data for sharing
 
         const formatTeamUrl = (teamName) => {
             if (!teamName) return '#';
@@ -148,6 +172,74 @@
             } catch(e) {}
             return dateStr;
         }
+
+        // --- FAN ZONE SHARE LOGIC ---
+        window.shareToFanZone = async (btnElement, gameId) => {
+            if (!currentUser) {
+                return alert("You must be logged in to share updates to the Fan Zone!");
+            }
+
+            const game = window.currentGameMap[gameId];
+            if (!game) return alert("Error: Game data not found.");
+
+            // Give visual feedback to button
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btnElement.disabled = true;
+
+            let qtr = game.quarter || "PREGAME";
+            let stat = game.status || "UPCOMING";
+            let qtrUpper = qtr.toUpperCase();
+            let statusUpper = stat.toUpperCase();
+            const isPregame = statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME";
+
+            let content = "";
+            
+            if (isPregame) {
+                let fDate = game.date ? formatGameDate(game.date) : "8/28/26";
+                let fTime = game.time ? formatGameTime(game.time) : "7:00 PM";
+                content = `🏈 UPCOMING MATCHUP:\n${game.home} vs ${game.away}\n🕒 Kickoff: ${fDate} @ ${fTime}`;
+            } else {
+                let qtrText = qtrUpper;
+                if (qtrUpper === "HALF") qtrText = "HALFTIME";
+                else if (qtrUpper === "FINAL") qtrText = "FINAL";
+                else if (!qtrUpper.includes("QTR")) qtrText = "QTR " + qtrUpper;
+                
+                let cText = game.clock && game.clock !== "undefined" ? game.clock : "";
+                content = `🚨 SCORE UPDATE:\n\n${game.home} - ${game.homeScore || 0}\n${game.away} - ${game.awayScore || 0}\n\n🕒 Status: ${qtrText} ${cText}`.trim();
+            }
+
+            try {
+                const newRef = push(ref(dbRealtime, 'fanzone_posts'));
+                await set(newRef, {
+                    authorId: currentUser.uid,
+                    authorUsername: window.currentUserProfile ? window.currentUserProfile.username : "Fan",
+                    content: content,
+                    taggedTeam: game.home,
+                    taggedTeam2: game.away,
+                    timestamp: new Date().toISOString()
+                });
+                
+                btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Shared';
+                btnElement.classList.replace('text-blue-700', 'text-green-700');
+                btnElement.classList.replace('bg-blue-50', 'bg-green-50');
+                btnElement.classList.replace('border-blue-200', 'border-green-300');
+                
+                setTimeout(() => {
+                    btnElement.innerHTML = originalText;
+                    btnElement.classList.replace('text-green-700', 'text-blue-700');
+                    btnElement.classList.replace('bg-green-50', 'bg-blue-50');
+                    btnElement.classList.replace('border-green-300', 'border-blue-200');
+                    btnElement.disabled = false;
+                }, 3000);
+
+            } catch (err) {
+                console.error("Share error:", err);
+                alert("Failed to share to Fan Zone.");
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }
+        };
 
         // --- ENHANCED POP-OUT SCOREBOARD WINDOW LOGIC ---
         window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc, homeRecEnc, awayRecEnc) {
@@ -500,6 +592,8 @@
                         }
                     }
                     previousScores[key] = { homeScore: game.homeScore || 0, awayScore: game.awayScore || 0 };
+                    
+                    window.currentGameMap[key] = game; // Store for sharing
                     mergedGamesArray.push(game);
                 }
 
@@ -632,6 +726,9 @@
                                     <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                    <button onclick="window.shareToFanZone(this, '${game.id}')" title="Share update to Fan Zone" class="text-[10px] bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                                        <i class="fa-solid fa-share"></i> Share
+                                    </button>
                                     <button onclick="popoutScoreboard('${encodeURIComponent(game.home)}', '${encodeURIComponent(game.away)}', '${game.id}', '${encodeURIComponent(finalHomeLogo)}', '${encodeURIComponent(finalAwayLogo)}', '${encodeURIComponent(homeData.classification || '')}', '${encodeURIComponent(awayData.classification || '')}', '${encodeURIComponent(homeRec)}', '${encodeURIComponent(awayRec)}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
                                         <i class="fa-solid fa-up-right-from-square"></i> Pop Out
                                     </button>
