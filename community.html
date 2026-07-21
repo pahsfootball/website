@@ -332,7 +332,7 @@
             </div>
             <div class="p-6 bg-white">
                 <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
-                    Please state why you are reporting this post. <strong class="text-gray-800">Your account details will be attached to this report.</strong> False reporting may lead to account suspension.
+                    Please state why you are reporting this post. <strong class="text-gray-800">This post will be instantly flagged for review and your account details attached.</strong> False reporting may lead to account suspension.
                 </p>
                 <form id="reportForm">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Report <span class="text-red-500">*</span></label>
@@ -353,7 +353,7 @@
                     <input type="email" id="reportEmail" required class="w-full p-3 rounded-xl text-gray-500 mb-4 font-body text-sm bg-gray-100 border border-gray-300 outline-none" readonly>
                     
                     <button type="submit" id="submitReportBtn" class="w-full bg-red-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-red-700 transition-all mt-2">
-                        Submit to Admins
+                        Submit & Flag Post
                     </button>
                     <div id="reportStatusMessage" class="hidden mt-3 text-center font-bold text-sm uppercase tracking-wide"></div>
                 </form>
@@ -894,6 +894,24 @@
             }
         };
 
+        // --- NEW MODERATION FUNCTION ---
+        window.approvePost = async (e, id) => {
+            if (e) e.stopPropagation();
+            if (!confirm("Are you sure you want to approve this post and remove the community flag?")) return;
+            try {
+                await update(ref(dbRealtime, 'fanzone_posts/' + id), {
+                    flagged: null,
+                    flaggedByUid: null,
+                    flaggedByUsername: null,
+                    flaggedReason: null,
+                    flaggedAt: null
+                });
+            } catch(err) {
+                console.error("Error approving post:", err);
+                alert("Error approving post.");
+            }
+        };
+
         function buildPostHTML(post, isModal = false) {
             let timeString = "Recently";
             if (post.timestamp) {
@@ -994,9 +1012,61 @@
                 `;
             }
 
+            // MODERATION LOGIC
+            const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
+
+            if (post.flagged && !isAdmin) {
+                return {
+                    color: '#e5e7eb',
+                    html: `
+                        <div class="flex justify-between items-start mb-2 opacity-50">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center border bg-gray-200 text-gray-400">
+                                    <i class="fa-solid fa-user text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-500 leading-none text-sm font-body">Hidden User</h4>
+                                    <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative overflow-hidden rounded-xl my-4">
+                            <div class="filter blur-md select-none opacity-40">
+                                <div class="${isModal ? 'text-lg' : 'text-sm'} text-gray-800 font-body leading-relaxed mt-2 whitespace-pre-wrap break-words">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+                            </div>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100/50 rounded-xl border border-gray-200">
+                                <i class="fa-solid fa-shield-halved text-gray-400 text-3xl mb-2"></i>
+                                <p class="text-sm text-gray-700 font-bold uppercase tracking-wider">Post Under Review</p>
+                                <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest px-4 text-center">This content has been flagged by the community.</p>
+                            </div>
+                        </div>
+                    `
+                };
+            }
+
+            let adminFlagPanel = '';
+            if (post.flagged && isAdmin) {
+                adminFlagPanel = `
+                    <div class="border-2 border-red-500 rounded-xl p-4 bg-red-50 mb-4 shadow-sm" onclick="event.stopPropagation();">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-red-700 font-bold uppercase tracking-wider"><i class="fa-solid fa-flag mr-1"></i> Flagged for Review</p>
+                        </div>
+                        <p class="text-xs text-red-800 mb-3 font-body">
+                            <strong>Reported by:</strong> @${post.flaggedByUsername || 'Unknown'} <br>
+                            <strong>Reason:</strong> ${post.flaggedReason || 'No reason provided'}
+                        </p>
+                        <div class="flex gap-2">
+                            <button onclick="window.approvePost(event, '${post.postId}')" class="flex-1 bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md hover:bg-green-700 uppercase tracking-widest transition-colors flex justify-center items-center gap-1"><i class="fa-solid fa-check"></i> Approve</button>
+                            <button onclick="window.deletePost(event, '${post.postId}')" class="flex-1 bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md hover:bg-red-700 uppercase tracking-widest transition-colors flex justify-center items-center gap-1"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            }
+
             return {
                 color: postColor,
                 html: `
+                    ${adminFlagPanel}
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2 cursor-pointer group" onclick="window.openUserProfile(event, '${post.authorId}')" title="View Profile">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center border transition-transform group-hover:scale-110 ${bClass}" title="${bTitle}">
@@ -1082,7 +1152,7 @@
                     const followingList = currentUserProfile.following || [];
                     postsToRender = postsToRender.filter(p => 
                         p.authorUsername === 'PAHSFOOTBALL' || 
-                        p.authorId === currentUser.uid ||      
+                        p.authorId === currentUser.uid ||     
                         followingList.includes(p.authorId)     
                     );
                 }
@@ -1379,6 +1449,7 @@
             try {
                 await remove(ref(dbRealtime, 'fanzone_posts/' + window.currentDeletePostId)); 
                 window.closeDeleteModal(null, true); 
+                window.closePostModal(null, true);
             } catch(e) {
                 console.error(e);
                 alert("Failed to delete post");
@@ -1390,6 +1461,8 @@
 
         window.openReportModal = (e, id) => {
             e.stopPropagation(); 
+            if(!currentUser) return alert("Please log in to report a post.");
+
             window.currentReportedPostId = id;
             const p = currentPosts.find(x => x.postId === id);
             
@@ -1421,34 +1494,47 @@
             } 
         };
 
-        document.getElementById('reportForm').onsubmit = (e) => {
+        document.getElementById('reportForm').onsubmit = async (e) => {
             e.preventDefault();
             
             const btn = document.getElementById('submitReportBtn');
             btn.disabled = true;
             btn.innerText = "Submitting...";
             
-            const params = new URLSearchParams();
-            const reportBody = `REASON: ${document.getElementById('reportReason').value}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${window.currentReportedPostId}`;
-            
-            params.append("entry.1967997366", reportBody);
-            params.append("entry.1990515734", document.getElementById('reportFirstName').value);
-            params.append("entry.1429224270", document.getElementById('reportLastName').value);
-            params.append("entry.1778241553", document.getElementById('reportEmail').value);
-            
-            fetch(REPORT_SUBMIT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: params 
-            }).then(() => {
-                alert("Report sent to admins!"); 
+            const reason = document.getElementById('reportReason').value;
+            const id = window.currentReportedPostId;
+
+            try {
+                // 1. Instantly flag in Firebase so it blurs on the site
+                await update(ref(dbRealtime, 'fanzone_posts/' + id), {
+                    flagged: true,
+                    flaggedByUid: currentUser.uid,
+                    flaggedByUsername: currentUserProfile?.username || "Unknown",
+                    flaggedReason: reason,
+                    flaggedAt: new Date().toISOString()
+                });
+
+                // 2. Send backup alert to Google Form
+                const params = new URLSearchParams();
+                const reportBody = `REASON: ${reason}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${id}`;
+                params.append("entry.1967997366", reportBody);
+                params.append("entry.1990515734", document.getElementById('reportFirstName').value);
+                params.append("entry.1429224270", document.getElementById('reportLastName').value);
+                params.append("entry.1778241553", document.getElementById('reportEmail').value);
+                
+                fetch(REPORT_SUBMIT_URL, { method: 'POST', mode: 'no-cors', body: params });
+                
+                alert("Report sent and post flagged for review!"); 
                 window.closeReportModal(null, true);
-            }).catch(() => {
+                window.closePostModal(null, true);
+                window.renderFeed();
+            } catch (err) {
+                console.error(err);
                 alert("Failed to send report");
-            }).finally(() => {
+            } finally {
                 btn.disabled = false;
-                btn.innerText = "Submit to Admins";
-            });
+                btn.innerText = "Submit & Flag Post";
+            }
         };
     </script>
 </body>
