@@ -174,6 +174,7 @@
             const homeClassHtml = homeClass ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${homeClass}</span>` : '';
             const awayClassHtml = awayClass ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${awayClass}</span>` : '';
 
+            pop.document.open();
             pop.document.write(`
                 <!DOCTYPE html>
                 <html>
@@ -248,16 +249,17 @@
                                 <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                             </div>
                             <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
-                                <i class="fa-regular fa-clock mr-1"></i> Scheduled
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
                             </div>
                         </div>
                     </div>
 
-                    <script type="module">
-                        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-                        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-                        const app = initializeApp(${JSON.stringify(firebaseConfig)});
-                        const db = getDatabase(app);
+                    <!-- USE COMPAT FIREBASE FOR POP-UP SO CORS/MODULE ISSUES DO NOT BREAK IT -->
+                    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"><\/script>
+                    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"><\/script>
+                    <script>
+                        firebase.initializeApp(${JSON.stringify(firebaseConfig)});
+                        const db = firebase.database();
                         
                         let prevH = null, prevA = null;
                         
@@ -282,7 +284,7 @@
                             return "PREGAME";
                         }
 
-                        onValue(ref(db, 'live_scores/' + '${gameKey}'), (snap) => {
+                        db.ref('live_scores/' + '${gameKey}').on('value', (snap) => {
                             const game = snap.val();
                             if (!game) return;
 
@@ -373,23 +375,12 @@
                             }
 
                             document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
-                            
-                            if (game.lastUpdated && game.updatedBy !== "Schedule") {
-                                const diffMins = Math.floor((new Date() - new Date(game.lastUpdated)) / 60000);
-                                let uText = "";
-                                if (diffMins < 1) uText = "Just now";
-                                else if (diffMins === 1) uText = "1 min ago";
-                                else if (diffMins < 60) uText = \`\${diffMins} mins ago\`;
-                                else uText = "Over an hour ago";
-                                document.getElementById('updated-time').innerHTML = \`<i class="fa-regular fa-clock mr-1"></i> \${uText}\`;
-                            } else {
-                                document.getElementById('updated-time').innerHTML = \`<i class="fa-regular fa-clock mr-1"></i> Scheduled\`;
-                            }
                         });
                     <\/script>
                 </body>
                 </html>
             `);
+            pop.document.close();
         };
 
         // Parse Master Teams CSV
@@ -542,7 +533,6 @@
                     let dotClass = "hidden";
                     let cardBorder = "border-gray-300 shadow-md";
 
-                    // Sanitize the inputs to establish bulletproof fallbacks
                     let qtr = game.quarter;
                     if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
                     
@@ -581,6 +571,7 @@
                         clockHtml = `<span class="font-mono font-bold text-sm text-red-600 animate-pulse">${clockText}</span>`;
                     }
 
+                    // Attach Logos and Classification
                     const safeHomeName = (game.home || '').trim().toLowerCase();
                     const safeAwayName = (game.away || '').trim().toLowerCase();
 
