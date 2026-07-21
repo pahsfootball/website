@@ -231,11 +231,11 @@
         </div>
     </div>
 
-    <!-- Public Matchup Creation Modal -->
+    <!-- Public Matchup Creation / Edit Modal -->
     <div id="publicMatchupModal" class="modal-overlay" onclick="closePublicMatchupModal(event)">
         <div class="modal-content">
             <div class="p-5 bg-blue-900 flex justify-between items-center border-b border-blue-800">
-                <h2 class="font-head text-3xl uppercase tracking-wide text-white m-0 leading-none flex items-center gap-2">
+                <h2 id="modalMatchupTitle" class="font-head text-3xl uppercase tracking-wide text-white m-0 leading-none flex items-center gap-2">
                     <i class="fa-solid fa-calendar-plus"></i> Set Matchup
                 </h2>
                 <button onclick="closePublicMatchupModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
@@ -494,15 +494,20 @@
                         </div>
                     </div>
                     
-                    <!-- DISCLAIMER AND REPORT SECTION -->
+                    <!-- DISCLAIMER AND EDIT/REPORT SECTION -->
                     <div class="mt-6 pt-4 border-t border-gray-300">
                         <p class="text-[10px] leading-tight text-gray-500 italic mb-3">
                             <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1"></i>
                             Information is updated by the public and should be verified. Last updated at <span id="ui-last-time" class="font-bold">--</span> on <span id="ui-last-date" class="font-bold">--</span> by <span id="ui-last-user" class="font-bold text-gray-700">System</span>.
                         </p>
-                        <button onclick="openReportModal()" class="text-[11px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors flex items-center gap-1 mb-3">
-                            <i class="fa-solid fa-flag"></i> Report Inaccurate Info
-                        </button>
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <button id="btnEditMatchup" onclick="openPublicMatchupModal()" class="hidden text-[11px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-widest transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit Matchup Details
+                            </button>
+                            <button onclick="openReportModal()" class="text-[11px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-flag"></i> Report Inaccurate Info
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mt-2">
@@ -781,6 +786,7 @@
             const fanScorePanel = document.getElementById('fanScorePanel');
             const sbCard = document.getElementById('basicScoreboardCard');
             const btnUpdateScoreAdmin = document.getElementById('btn-update-score-admin');
+            const btnEditMatchup = document.getElementById('btnEditMatchup');
 
             if(loginPanel) loginPanel.classList.add('hidden');
             if(adminTopBar) adminTopBar.classList.add('hidden');
@@ -788,12 +794,13 @@
             if(fanScorePanel) fanScorePanel.classList.add('hidden');
             if(sbCard) sbCard.classList.add('hidden');
             if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.add('hidden');
+            if(btnEditMatchup) btnEditMatchup.classList.add('hidden');
 
             if (isActiveGame) {
                 if(sbCard) sbCard.classList.remove('hidden');
             }
 
-            // Always show the create panel if there's no active game (it will prompt for login if needed)
+            // Always show the create panel if there's no active game
             if (!isActiveGame) {
                 if(publicCreatePanel) publicCreatePanel.classList.remove('hidden');
             }
@@ -801,6 +808,10 @@
             if (!isUserLoggedIn) {
                 if(loginPanel) loginPanel.classList.remove('hidden');
             } else {
+                if (isActiveGame) {
+                    if(btnEditMatchup) btnEditMatchup.classList.remove('hidden');
+                }
+
                 if (isUserAdmin) {
                     if(adminTopBar) adminTopBar.classList.remove('hidden');
                     if (isActiveGame) {
@@ -892,7 +903,7 @@
                     try {
                         const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
-                        const game = snapshot.val() || {}; // fallback to empty object to read from CSV if needed
+                        const game = snapshot.val() || {}; 
 
                         document.getElementById('loading-overlay').style.display = 'none';
 
@@ -903,7 +914,6 @@
                             document.getElementById('ui-last-date').innerText = updateDate.toLocaleDateString();
                         }
                         document.getElementById('ui-last-user').innerText = game.updatedBy ? `@${game.updatedBy}` : "System";
-
 
                         // --- TICKET AND BROADCAST LOGIC ---
                         const ticketLink = game.ticketLink || teamRow['TicketLink'] || teamRow['Tickets'] || "";
@@ -1355,11 +1365,27 @@
         window.openPublicMatchupModal = function(e) {
             if (e) e.preventDefault();
             if (!isUserLoggedIn) {
-                if(confirm("You must be logged in to create a matchup. Go to login?")) {
+                if(confirm("You must be logged in to create or edit a matchup. Go to login?")) {
                     window.location.href = "login.html";
                 }
                 return;
             }
+
+            const modalTitle = document.getElementById('modalMatchupTitle');
+
+            // Pre-fill form if a game is currently active
+            if (window.currentMatchupData && isActiveGame) {
+                if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Matchup';
+                document.getElementById('inpOpponent').value = window.currentMatchupData.opponent || "";
+                document.getElementById('inpDate').value = window.currentMatchupData.date || "";
+                document.getElementById('inpGameTime').value = window.currentMatchupData.time || "";
+                document.getElementById('inpHomeAway').value = window.currentMatchupData.homeAway || "Home";
+                document.getElementById('inpAddress').value = window.currentMatchupData.address || "";
+            } else {
+                if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Set Matchup';
+                document.getElementById('publicMatchupForm').reset();
+            }
+
             const overlay = document.getElementById('publicMatchupModal');
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1380,6 +1406,10 @@
             const teamParam = new URLSearchParams(window.location.search).get('team');
             const opponentInput = document.getElementById('inpOpponent').value.trim();
             const homeAway = document.getElementById('inpHomeAway').value;
+
+            // Track previous game info to handle cleanup if opponent changed
+            const oldGame = window.currentMatchupData;
+            const oldOpponent = (oldGame && oldGame.opponent) ? oldGame.opponent.trim() : null;
 
             // Look up logos from the global dictionary
             const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
@@ -1448,17 +1478,42 @@
                 lastUpdated: curDate
             };
 
+            // Prepare Firebase Updates
+            const updates = {};
+
+            // If opponent was changed during edit, wipe the old opponent's page and old live score
+            if (oldOpponent && oldOpponent.toLowerCase() !== opponentInput.toLowerCase()) {
+                const oldOppSafeKey = cleanText(oldOpponent).toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const oldHome = (oldGame.homeAway === "Away" ? oldOpponent : teamParam).replace(/[^a-zA-Z0-9]/g, '');
+                const oldAway = (oldGame.homeAway === "Away" ? teamParam : oldOpponent).replace(/[^a-zA-Z0-9]/g, '');
+                const oldGameKey = [oldHome, oldAway].sort().join('_');
+
+                updates['gameday_config/' + oldOppSafeKey] = null;
+                updates['live_scores/' + oldGameKey] = null;
+            }
+
+            // Apply new/updated records
+            updates['gameday_config/' + safeKey] = matchupDataA;          
+            updates['gameday_config/' + oppSafeKey] = matchupDataB;       
+
+            // For live_scores: maintain current scores if just editing time/location of existing matchup
+            if (oldOpponent && oldOpponent.toLowerCase() === opponentInput.toLowerCase()) {
+                updates['live_scores/' + gameKey + '/home'] = homeName;
+                updates['live_scores/' + gameKey + '/away'] = awayName;
+                updates['live_scores/' + gameKey + '/homeLogo'] = homeAway === "Home" ? myLogo : oppLogo;
+                updates['live_scores/' + gameKey + '/awayLogo'] = homeAway === "Home" ? oppLogo : myLogo;
+                updates['live_scores/' + gameKey + '/updatedBy'] = usernameToSave;
+                updates['live_scores/' + gameKey + '/lastUpdated'] = curDate;
+            } else {
+                updates['live_scores/' + gameKey] = liveScoreInit;
+            }
+
             // Execute Firebase Multipath Update
             try {
-                const updates = {};
-                updates['gameday_config/' + safeKey] = matchupDataA;           // Updates Team A
-                updates['gameday_config/' + oppSafeKey] = matchupDataB;        // Updates Team B
-                updates['live_scores/' + gameKey] = liveScoreInit;             // Pushes to Ticker
-
                 await update(ref(dbRealtime), updates);
                 
                 window.closePublicMatchupModal(null, true);
-                alert("Matchup synced across all pages successfully!");
+                alert("Matchup updated and synced successfully!");
                 window.location.reload();
             } catch (err) {
                 console.error(err);
