@@ -181,6 +181,8 @@
                 <!DOCTYPE html>
                 <html>
                 <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>${home} vs ${away} - Live Tracker</title>
                     <script src="https://cdn.tailwindcss.com"><\/script>
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Teko:wght@700&display=swap" rel="stylesheet">
@@ -209,7 +211,7 @@
                     </style>
                 </head>
                 <body>
-                    <div id="card-container" class="content-card rounded-2xl p-5 border-2 border-gray-200 shadow-sm flex flex-col relative bg-white transition-all duration-300">
+                    <div id="card-container" class="content-card rounded-2xl p-4 sm:p-5 border-2 border-gray-200 shadow-sm flex flex-col relative bg-white transition-all duration-300">
                         <div id="update-overlay" style="display:none;" class="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center rounded-2xl font-head text-4xl text-red-600 pointer-events-none border-4 border-pahs-gold shadow-2xl">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-bolt text-yellow-500 animate-pulse"></i> 
@@ -228,32 +230,32 @@
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center px-2 flex-grow relative z-10">
+                        <div class="flex justify-between items-center px-1 sm:px-2 flex-grow relative z-10">
                             <div class="flex flex-col items-center w-5/12">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
                                     ${homeLogoHtml}
                                 </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
-                                <span class="text-[11px] text-gray-500 font-mono font-bold">(${homeRec})</span>
-                                <span id="home-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                                <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
+                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold">(${homeRec})</span>
+                                <span id="home-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
-                            <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
+                            <div class="text-2xl sm:text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
                             <div class="flex flex-col items-center w-5/12">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
                                     ${awayLogoHtml}
                                 </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
-                                <span class="text-[11px] text-gray-500 font-mono font-bold">(${awayRec})</span>
-                                <span id="away-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                                <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
+                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold">(${awayRec})</span>
+                                <span id="away-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                         </div>
                         
                         <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
-                            <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
                                 <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                             </div>
-                            <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
-                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live
                             </div>
                         </div>
                     </div>
@@ -282,7 +284,7 @@
                             try {
                                 let [y, m, d] = dateStr.split('-');
                                 let dObj = new Date(y, m - 1, d);
-                                if (!isNaN(dObj)) return \`\${dObj.getMonth()+1}/\${dObj.getDate}\/\${dObj.getFullYear().toString().slice(-2)}\`;
+                                if (!isNaN(dObj)) return \`\${dObj.getMonth()+1}/\${dObj.getDate()}/\${dObj.getFullYear().toString().slice(-2)}\`;
                             } catch(e) {}
                             return "PREGAME";
                         }
@@ -360,8 +362,8 @@
                             dotClass.className = dClass;
 
                             if (justUpdated) {
-                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
-                                updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} SCORE UPDATE!\` : "SCORE UPDATE!";
+                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
+                                updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} UPDATE!\` : "UPDATE!";
                                 updateOverlay.style.display = "flex";
                                 
                                 updateOverlay.classList.remove('animate-fade-out-delayed');
@@ -373,7 +375,7 @@
                                     card.classList.remove('anim-score-update');
                                 }, 3500);
                             } else {
-                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
+                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
                             }
 
                             document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
