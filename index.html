@@ -388,7 +388,8 @@
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
                 
                 if (teamName && logoUrl) {
-                    teamLogoDictionary[teamName.trim()] = logoUrl.trim();
+                    // Force lowercase for bulletproof matching
+                    teamLogoDictionary[teamName.trim().toLowerCase()] = logoUrl.trim();
                 }
             });
             startLiveTicker();
@@ -430,8 +431,12 @@
                     let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
                     let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
 
-                    const finalHomeLogo = teamLogoDictionary[(game.home || '').trim()] || game.homeLogo || '';
-                    const finalAwayLogo = teamLogoDictionary[(game.away || '').trim()] || game.awayLogo || '';
+                    // Fetch logos using lowercase matching
+                    const safeHomeName = (game.home || '').trim().toLowerCase();
+                    const safeAwayName = (game.away || '').trim().toLowerCase();
+
+                    const finalHomeLogo = teamLogoDictionary[safeHomeName] || game.homeLogo || '';
+                    const finalAwayLogo = teamLogoDictionary[safeAwayName] || game.awayLogo || '';
 
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
