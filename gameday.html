@@ -354,33 +354,36 @@
                     <h2 id="ui-week" class="text-pahs-gold font-bold tracking-widest uppercase text-sm mb-4 relative z-10 transition-colors duration-500">Loading...</h2>
                     
                     <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
-                        <div class="text-center flex-1 flex flex-col items-center">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative transition-colors duration-500">
+                        
+                        <!-- Your Team Link Container -->
+                        <a id="link-your-team" href="#" class="text-center flex-1 flex flex-col items-center group transition-transform duration-300 hover:scale-105">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative transition-colors duration-500 group-hover:shadow-[0_0_15px_rgba(251,191,36,0.6)]">
                                 <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='flex';">
                                 <span id="ui-your-fallback" class="hidden text-3xl font-black font-head text-black absolute">TEA</span>
                             </div>
-                            <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
+                            <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-pahs-gold transition-colors">Loading...</h3>
                             <div class="flex items-center justify-center gap-2 mt-2">
                                 <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
                                 <span id="ui-your-record" class="text-pahs-gold text-xs font-bold transition-colors duration-500"></span>
                             </div>
-                        </div>
+                        </a>
                         
                         <div class="flex flex-col items-center px-2 md:px-4">
                             <div class="text-3xl md:text-5xl font-black font-head text-white italic opacity-90 drop-shadow-md">VS</div>
                         </div>
                         
-                        <div class="text-center flex-1 flex flex-col items-center">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative">
+                        <!-- Opponent Link Container -->
+                        <a id="link-opp-team" href="#" class="text-center flex-1 flex flex-col items-center group transition-transform duration-300 hover:scale-105">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                                 <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='flex';">
                                 <span id="ui-opp-fallback" class="hidden text-3xl font-black font-head text-black absolute">OPP</span>
                             </div>
-                            <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none">Loading...</h3>
+                            <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-gray-300 transition-colors">Loading...</h3>
                             <div class="flex items-center justify-center gap-2 mt-2">
                                 <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
                                 <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
@@ -989,6 +992,12 @@
                             document.getElementById('ui-opp-fallback').style.display = 'flex'; 
                             document.getElementById('ui-opp-fallback').innerText = "TBD"; 
 
+                            // Update Links for Offseason
+                            document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(cleanText(teamRow['School']))}`;
+                            document.getElementById('link-opp-team').href = "javascript:void(0);";
+                            document.getElementById('link-opp-team').classList.remove('hover:scale-105');
+                            document.getElementById('link-opp-team').classList.add('cursor-default');
+
                             document.getElementById('ui-homeaway').innerText = "TBD";
                             document.getElementById('ui-homeaway').className = "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
                             
@@ -1053,6 +1062,12 @@
                                 oppFallbackEl.style.display = 'flex'; 
                                 oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
                             }
+
+                            // Update Links for Active Game
+                            document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(game.yourTeam)}`;
+                            document.getElementById('link-opp-team').href = `gameday.html?team=${encodeURIComponent(game.opponent)}`;
+                            document.getElementById('link-opp-team').classList.add('hover:scale-105');
+                            document.getElementById('link-opp-team').classList.remove('cursor-default');
 
                             let isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
                             document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
