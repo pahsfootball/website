@@ -967,7 +967,6 @@
                 tagsHtml += buildTag(post.taggedTeam2);
             }
 
-            // --- RANK LOGIC ---
             const pts = window.authorPointsCache[post.authorId] || 0;
             let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
             let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -1011,7 +1010,6 @@
                 bTitle = 'Fan'; 
             }
 
-            // --- ROLE TAG LOGIC FOR IN-FEED POSTS ---
             let roleTagHtml = '';
             if (post.authorUsername && post.authorUsername.toUpperCase() === 'PAHSFOOTBALL') {
                 roleTagHtml = `<span class="bg-black text-pahs-gold text-[9px] px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider border border-pahs-gold shadow-sm" title="Official PAHS Football Account"><i class="fa-solid fa-check-circle mr-0.5"></i> Site Owner</span>`;
@@ -1023,8 +1021,10 @@
             safeContent = linkify(safeContent);
             safeContent = safeContent.replace(/(^|\s)@([a-zA-Z0-9_]+)/g, '$1<span class="text-pahs-gold bg-pahs-dark px-1.5 py-0.5 rounded text-xs font-bold shadow-sm cursor-pointer border border-pahs-gold mx-0.5" title="User Tag">@$2</span>');
 
+            const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
+
             let authActions = '';
-            if (currentUser && post.authorId === currentUser.uid) {
+            if (currentUser && (post.authorId === currentUser.uid || isAdmin)) {
                 authActions = `
                     <button onclick="window.openEditModal(event, '${post.postId}')" class="text-xs text-gray-500 hover:text-pahs-gold font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1">
                         <i class="fa-solid fa-pen text-lg"></i> <span class="hidden sm:inline">Edit</span>
@@ -1034,9 +1034,6 @@
                     </button>
                 `;
             }
-
-            // --- MODERATION DISPLAY LOGIC ---
-            const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
 
             if (post.flagged && !isAdmin) {
                 return {
