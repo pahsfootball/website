@@ -197,16 +197,20 @@
                 }
 
                 mergedGamesArray.sort((a, b) => {
-                    const getWeight = (status) => {
-                        const s = (status || "").toUpperCase();
-                        if (s === 'LIVE' || (!['PREGAME', 'HALF', 'FINAL', 'UPCOMING'].includes(s))) return 1; 
-                        if (s === 'HALF') return 2;
-                        if (s === 'PREGAME' || s === 'UPCOMING') return 3;
-                        if (s === 'FINAL') return 4;
-                        return 5;
+                    const getWeight = (status, quarter) => {
+                        let s = (status || "").toUpperCase();
+                        let q = (quarter || "").toUpperCase();
+                        
+                        if (!s || s === "UNDEFINED") s = "UPCOMING";
+                        if (!q || q === "UNDEFINED") q = "PREGAME";
+
+                        if (s === 'FINAL' || q === 'FINAL') return 4;
+                        if (q === 'PREGAME' || s === 'UPCOMING' || s === 'PREGAME') return 3;
+                        if (q === 'HALF') return 2;
+                        return 1; // LIVE action
                     };
-                    const weightA = getWeight(a.status);
-                    const weightB = getWeight(b.status);
+                    const weightA = getWeight(a.status, a.quarter);
+                    const weightB = getWeight(b.status, b.quarter);
                     if (weightA !== weightB) return weightA - weightB;
                     return new Date(b.lastUpdated) - new Date(a.lastUpdated);
                 });
@@ -219,15 +223,27 @@
                     let badgeClass = "";
                     let dotClass = "hidden";
                     let cardBorder = "border-gray-300 shadow-md";
-                    let clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">${game.clock || "12:00"}</span>`;
 
-                    const statusUpper = (game.status || "").toUpperCase();
-                    const qtrUpper = (game.quarter || "").toUpperCase();
+                    // Sanitize the inputs to establish bulletproof fallbacks
+                    let qtr = game.quarter;
+                    if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
+                    
+                    let stat = game.status;
+                    if (!stat || stat === "undefined" || stat === "") stat = "UPCOMING";
 
-                    if (statusUpper === "PREGAME" || qtrUpper === "PREGAME") {
+                    const statusUpper = stat.toUpperCase();
+                    const qtrUpper = qtr.toUpperCase();
+
+                    let clockText = game.clock;
+                    if (!clockText || clockText === "undefined" || clockText.trim() === "") clockText = "12:00";
+
+                    let clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">${clockText}</span>`;
+
+                    if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
                         badgeText = "PREGAME";
                         badgeClass = "bg-yellow-500 text-black";
                         cardBorder = "border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]";
+                        if (clockText === "12:00") clockHtml = `<span class="font-mono font-bold text-sm text-gray-700">TBA</span>`;
                     } else if (qtrUpper === "HALF") {
                         badgeText = "HALFTIME";
                         badgeClass = "bg-yellow-600 text-black";
@@ -239,7 +255,7 @@
                         cardBorder = "border-gray-400 shadow-sm opacity-80"; 
                         clockHtml = ""; 
                     } else {
-                        badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + game.quarter;
+                        badgeText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
                         badgeClass = "bg-red-600 text-white animate-pulse";
                         dotClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                         cardBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
