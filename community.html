@@ -449,6 +449,8 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
         
+        let lastPostTime = 0; // NEW SPAM PREVENTION TRACKER
+        
         // --- PAGINATION & ADMIN STATE ---
         let visiblePostCount = 5;
         window.isAdminReviewMode = false;
@@ -758,7 +760,7 @@
                 
                 // Deep Link Check
                 if (!initialDeepLinkChecked) {
-                    const urlParams = newSearchParams(window.location.search);
+                    const urlParams = new URLSearchParams(window.location.search);
                     const targetPost = urlParams.get('post');
                     if (targetPost) {
                         window.openPostModal(targetPost);
@@ -1316,6 +1318,19 @@
         };
         
         document.getElementById('submitPostBtn').onclick = async () => {
+            // --- SPAM PREVENTION COOLDOWN ---
+            const now = Date.now();
+            const COOLDOWN_MS = 30000; // 30 seconds
+            
+            // PAHSFOOTBALL Admin bypasses the cooldown
+            const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
+            
+            if (!isAdmin && (now - lastPostTime < COOLDOWN_MS)) {
+                const remaining = Math.ceil((COOLDOWN_MS - (now - lastPostTime)) / 1000);
+                return alert(`Please wait ${remaining} seconds before posting again to prevent spam.`);
+            }
+            // --------------------------------
+
             const content = document.getElementById('postContent').value.trim();
             if(!content || content.length > 500 || containsProhibitedDomain(content)) {
                 return alert("Invalid post content.");
@@ -1362,6 +1377,9 @@
                     taggedTeam2: finalTeamTag2, 
                     timestamp: new Date().toISOString() 
                 });
+
+                lastPostTime = Date.now(); // RESET THE TIMER UPON SUCCESSFUL POST
+
                 document.getElementById('postContent').value = ''; 
                 document.getElementById('teamTagInput').value = '';
                 document.getElementById('teamTagInput2').value = '';
@@ -1592,6 +1610,7 @@
             const id = window.currentReportedPostId;
 
             try {
+                // 1. Instantly flag in Firebase so it blurs on the site
                 await update(ref(dbRealtime, 'fanzone_posts/' + id), {
                     flagged: true,
                     flaggedByUid: currentUser.uid,
@@ -1600,6 +1619,7 @@
                     flaggedAt: new Date().toISOString()
                 });
 
+                // 2. Send backup alert to Google Form
                 const params = new URLSearchParams();
                 const reportBody = `REASON: ${reason}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${id}`;
                 params.append("entry.1967997366", reportBody);
