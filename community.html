@@ -147,18 +147,18 @@
             
             <div class="flex flex-wrap items-center gap-2 self-end">
                 <div class="relative flex items-center">
-                    <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-28 sm:w-32" autocomplete="off" oninput="window.toggleClearBtn(); window.renderFeed()">
+                    <input type="text" id="feedTeamFilter" list="teamTagList" placeholder="🔍 Filter team..." class="bg-white border border-gray-300 text-gray-700 text-xs font-bold py-1.5 pl-2 pr-6 rounded-lg outline-none focus:border-pahs-gold transition-colors shadow-sm w-28 sm:w-32" autocomplete="off" oninput="window.resetPageAndRender()">
                     <button id="clearFilterBtn" onclick="window.clearFeedFilter()" class="absolute right-2 text-gray-400 hover:text-red-600 hidden transition-colors focus:outline-none">
                         <i class="fa-solid fa-circle-xmark text-sm"></i>
                     </button>
                 </div>
                 
-                <select id="feedScope" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-blue-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-blue-500 transition-colors">
+                <select id="feedScope" onchange="window.resetPageAndRender()" class="bg-white border border-gray-300 text-blue-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-blue-500 transition-colors">
                     <option value="global">Global Feed</option>
                     <option value="following">Following</option>
                 </select>
 
-                <select id="feedSort" onchange="window.renderFeed()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
+                <select id="feedSort" onchange="window.resetPageAndRender()" class="bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider py-1.5 px-2 rounded-lg outline-none cursor-pointer shadow-sm hover:border-pahs-gold transition-colors">
                     <option value="newest">Latest</option>
                     <option value="top">Most Hyped</option>
                 </select>
@@ -176,6 +176,13 @@
                 <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
                 <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
             </div>
+        </div>
+
+        <!-- SHOW MORE POSTS BUTTON CONTAINER -->
+        <div id="loadMoreContainer" class="hidden mt-6 text-center">
+            <button id="loadMoreBtn" onclick="window.loadMorePosts()" class="w-full sm:w-auto bg-gray-200 hover:bg-pahs-gold hover:text-black text-gray-800 font-head font-bold text-2xl uppercase tracking-widest py-3 px-10 rounded-xl shadow-md border border-gray-300 transition-all">
+                <i class="fa-solid fa-angles-down mr-2"></i> Show More Posts
+            </button>
         </div>
 
         <div id="sharedPostGuestCTA" class="hidden mt-8 bg-pahs-dark border-t-4 border-pahs-gold rounded-2xl p-8 text-center shadow-2xl">
@@ -421,6 +428,9 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
         
+        // --- PAGINATION / SHOW MORE STATE ---
+        let visiblePostCount = 5;
+
         window.authorPointsCache = {}; 
         window.userCache = {}; 
 
@@ -623,11 +633,23 @@
             window.renderFeed(); 
         });
 
+        // --- PAGINATION / RESET ACTIONS ---
+        window.loadMorePosts = function() {
+            visiblePostCount += 5;
+            window.renderFeed();
+        };
+
+        window.resetPageAndRender = function() {
+            visiblePostCount = 5;
+            window.toggleClearBtn();
+            window.renderFeed();
+        };
+
         // --- REFRESH BUTTON LISTENER ---
         document.getElementById('refreshFeedBtn').addEventListener('click', () => {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('fa-spin');
-            window.renderFeed();
+            window.resetPageAndRender();
             setTimeout(() => { 
                 icon.classList.remove('fa-spin'); 
             }, 500);
@@ -646,8 +668,7 @@
 
         window.clearFeedFilter = function() {
             document.getElementById('feedTeamFilter').value = "";
-            window.toggleClearBtn();
-            window.renderFeed();
+            window.resetPageAndRender();
         };
 
         // --- FIREBASE REALTIME DB LISTENER ---
@@ -723,7 +744,6 @@
         window.openUserProfile = async function(e, authorId) {
             if(e) e.stopPropagation();
 
-            // Safely close the post modal if it's currently open
             const postOverlay = document.getElementById('postModalOverlay');
             if (postOverlay.style.display === 'flex') {
                 postOverlay.classList.remove('active');
@@ -738,7 +758,6 @@
                 modal.classList.add('active');
             }, 10);
 
-            // Set loading states
             document.getElementById('upm-username').innerText = "Loading...";
             document.getElementById('upm-role-container').innerHTML = "";
             document.getElementById('upm-rank').innerText = "...";
@@ -759,7 +778,6 @@
                     }
                 }
 
-                // --- ROLE TAG LOGIC FOR PROFILE POPUP ---
                 const roleContainer = document.getElementById('upm-role-container');
                 if (userData.username && userData.username.toUpperCase() === 'PAHSFOOTBALL') {
                     roleContainer.innerHTML = `<span class="bg-black text-pahs-gold text-[11px] px-2 py-0.5 rounded uppercase font-bold tracking-wider border border-pahs-gold shadow-sm"><i class="fa-solid fa-check-circle mr-1"></i> Site Owner</span>`;
@@ -767,7 +785,6 @@
                     roleContainer.innerHTML = `<span class="bg-blue-600 text-white text-[11px] px-2 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i> Team Admin</span>`;
                 }
 
-                // --- RANK LOGIC ---
                 const pts = window.authorPointsCache[authorId] || 0;
                 let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
                 let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -826,7 +843,6 @@
                     teamsContainer.innerHTML = `<span class="text-xs text-gray-500 italic">No teams followed.</span>`;
                 }
 
-                // Setup Follow Button
                 const followBtn = document.getElementById('upm-follow-btn');
                 
                 if (!currentUser || currentUser.uid === authorId || (userData.username && userData.username.toUpperCase() === 'PAHSFOOTBALL')) {
@@ -894,7 +910,7 @@
             }
         };
 
-        // --- NEW MODERATION FUNCTION ---
+        // --- MODERATION FUNCTION: APPROVE POST ---
         window.approvePost = async (e, id) => {
             if (e) e.stopPropagation();
             if (!confirm("Are you sure you want to approve this post and remove the community flag?")) return;
@@ -944,7 +960,6 @@
                 tagsHtml += buildTag(post.taggedTeam2);
             }
 
-            // --- RANK LOGIC ---
             const pts = window.authorPointsCache[post.authorId] || 0;
             let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
             let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -988,7 +1003,6 @@
                 bTitle = 'Fan'; 
             }
 
-            // --- ROLE TAG LOGIC FOR IN-FEED POSTS ---
             let roleTagHtml = '';
             if (post.authorUsername && post.authorUsername.toUpperCase() === 'PAHSFOOTBALL') {
                 roleTagHtml = `<span class="bg-black text-pahs-gold text-[9px] px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider border border-pahs-gold shadow-sm" title="Official PAHS Football Account"><i class="fa-solid fa-check-circle mr-0.5"></i> Site Owner</span>`;
@@ -1012,7 +1026,7 @@
                 `;
             }
 
-            // MODERATION LOGIC
+            // --- MODERATION DISPLAY LOGIC ---
             const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
 
             if (post.flagged && !isAdmin) {
@@ -1104,6 +1118,7 @@
             const sharedPostGuestCTA = document.getElementById('sharedPostGuestCTA');
             const sharedPostGuestHeader = document.getElementById('sharedPostGuestHeader');
             const feedControls = document.getElementById('feedControls');
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
 
             if (!feedContainer) return;
 
@@ -1115,6 +1130,7 @@
                 if (post) {
                     feedContainer.classList.add('hidden');
                     feedControls.classList.add('hidden');
+                    if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
                     
                     sharedPostGuestHeader.classList.remove('hidden');
                     sharedPostGuestContainer.classList.remove('hidden');
@@ -1136,6 +1152,7 @@
             
             if (currentPosts.length === 0) { 
                 feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts yet. Be the first to hype up your team!</div>`; 
+                if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
                 return; 
             }
             
@@ -1168,6 +1185,7 @@
             
             if (postsToRender.length === 0) {
                 feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500 font-bold font-body italic">No posts found in this view.</div>`;
+                if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
                 return;
             }
 
@@ -1180,9 +1198,20 @@
                 postsToRender.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             }
 
+            // --- PAGINATION / CUTOFF LOGIC ---
+            const postsToDisplay = postsToRender.slice(0, visiblePostCount);
+
+            if (loadMoreContainer) {
+                if (postsToRender.length > visiblePostCount) {
+                    loadMoreContainer.classList.remove('hidden');
+                } else {
+                    loadMoreContainer.classList.add('hidden');
+                }
+            }
+
             const now = new Date().getTime();
 
-            postsToRender.forEach(post => {
+            postsToDisplay.forEach(post => {
                 const postData = buildPostHTML(post, false);
                 const card = document.createElement('div');
                 card.className = "post-card rounded-2xl p-5 relative bg-white";
