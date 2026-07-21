@@ -34,6 +34,10 @@
             min-height: 100vh; 
         }
         
+        /* Hide scrollbar for top navigation on mobile */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .post-card { 
             background: #f4f4f5; 
             border: 1px solid rgba(0, 0, 0, 0.1); 
@@ -105,17 +109,26 @@
 </head>
 <body class="antialiased">
 
-    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10 py-4 px-4 sm:px-8">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="index.html" class="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                    <i class="fa-solid fa-arrow-left text-sm"></i>
-                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+    <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-4xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+                <a href="index.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Home</span>
                 </a>
-                <h1 class="text-2xl sm:text-3xl font-bold font-head tracking-wide uppercase">Fan Zone</h1>
+                <a href="teams.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Teams</span>
+                </a>
+                <a href="all-scores.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-list-ol"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Scores</span>
+                </a>
+                <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2 whitespace-nowrap">Fan Zone</h1>
             </div>
-            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide flex-shrink-0 ml-4">
                 <i class="fa-solid fa-comments text-pahs-gold"></i>
+                <span class="font-bold hidden sm:inline">PAHS<span class="text-pahs-gold">Football</span></span>
             </div>
         </div>
     </nav>
