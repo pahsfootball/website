@@ -29,7 +29,6 @@
 
         body { margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
-        /* --- MODERN HEADER --- */
         .app-header { position: relative; height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
         .header-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('PAHSFOOTBALLblkgld.jpg'); background-size: cover; background-position: center; z-index: 0; filter: grayscale(80%) opacity(0.6); }
         .header-gradient { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(173,173,173,0) 0%, var(--bg-main) 100%); z-index: 1; }
@@ -38,7 +37,6 @@
         .header-title { font-family: var(--font-head); font-size: 42px; text-transform: uppercase; letter-spacing: 2px; color: #18181b; margin: 0; line-height: 1; text-shadow: 0 2px 10px rgba(255,255,255,0.5); }
         .header-subtitle { font-size: 14px; text-transform: uppercase; letter-spacing: 5px; color: #18181b; font-weight: 800; margin-top: 5px; }
 
-        /* --- TICKER STYLES --- */
         .ticker-title-bar { background-color: var(--dark-header); color: var(--gold-base); text-align: center; font-family: var(--font-head); font-size: 18px; letter-spacing: 2px; padding: 6px 0 0 0; border-top: 3px solid var(--gold-base); }
         .ticker-container { width: 100%; background: var(--dark-header); border-bottom: 3px solid var(--gold-base); overflow: hidden; white-space: nowrap; padding: 8px 0 12px 0; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .ticker-wrapper { display: inline-block; animation: ticker 25s linear infinite; will-change: transform; padding-left: 100vw; }
@@ -54,7 +52,6 @@
         .game-date { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; font-weight: 700; }
         .game-time { font-family: var(--font-body); font-size: 11px; color: var(--gold-base); font-weight: bold; }
 
-        /* --- CONTENT AREA & CARDS --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; display: grid; gap: 16px; animation: fadeIn 0.8s ease-out; }
         .nav-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px 24px; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; width: 100%; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
         button.nav-card { cursor: pointer; text-align: left; font-family: inherit; }
@@ -62,7 +59,6 @@
         .nav-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4); border-color: var(--gold-base); }
         .nav-card:hover::before { transform: scaleY(1); }
         
-        /* GREEN LOGGED IN STATE */
         .nav-card.logged-in-state { border-color: var(--green-active); }
         .nav-card.logged-in-state::before { background: var(--green-active); transform: scaleY(1); }
         .nav-card.logged-in-state .nav-icon { fill: var(--green-active); }
@@ -77,7 +73,6 @@
         .featured-card { background: linear-gradient(135deg, #ffffff, var(--card-bg)); border-left: 5px solid var(--gold-base); }
         .featured-card .nav-icon { fill: var(--gold-base); filter: drop-shadow(0 2px 4px rgba(251,191,36,0.4)); }
 
-        /* --- FOOTER & MODAL --- */
         .app-footer { margin-top: auto; background: var(--dark-header); border-top: 3px solid var(--gold-base); padding: 30px 20px; text-align: center; color: #9ca3af; font-size: 12px; line-height: 1.5; }
         .app-footer p { margin: 5px auto; max-width: 800px; }
         .footer-links { margin-top: 15px; }
@@ -87,7 +82,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card-bg); border: 1px solid var(--border-light); width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; }
         .modal-content::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-base); }
-        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .modal-header { padding: 20px 24px; display: flex; justify-between: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
         .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 32px; color: var(--text-main); text-transform: uppercase; line-height: 1; }
         .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
         .close-btn:hover { color: #ef4444; }
@@ -98,7 +93,6 @@
         .submit-btn { width: 100%; background: var(--gold-base); color: black; font-family: var(--font-head); font-size: 22px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-top: 12px; }
         .submit-btn:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
         
-        /* --- FLOATING HELP & MESSENGER BTN --- */
         .floating-help-btn {
             position: fixed;
             bottom: 30px;
@@ -130,7 +124,7 @@
             justify-content: center;
             gap: 10px;
             width: 100%;
-            background: #0084ff; /* Official Messenger Blue */
+            background: #0084ff; 
             color: white;
             font-family: var(--font-head);
             font-size: 22px;
@@ -263,7 +257,6 @@
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body">
-            
             <a href="https://m.me/61575202139754" target="_blank" class="btn-messenger">
                 <i class="fa-brands fa-facebook-messenger"></i> Message on Facebook
             </a>
@@ -329,7 +322,6 @@
     function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
     function closeModalOutside(e) { if (e.target.id === 'contactModal') closeModal(); }
     
-    // NEW SUPPORT MODAL FUNCTIONS
     function openSupportModal() { document.getElementById('supportModal').style.display = 'flex'; }
     function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
     function closeSupportModalOutside(e) { if (e.target.id === 'supportModal') closeSupportModal(); }
@@ -357,7 +349,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -377,11 +369,11 @@
 
     const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
     
-    // Store logos AND classification (Class) for each team
     let globalTeamDict = {};
 
     function formatGameTime(timeStr) {
-        if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
+        if (!timeStr || timeStr === "undefined") return "7:00 PM";
+        if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) return timeStr;
         try {
             let [hh, mm] = timeStr.split(':');
             let h = parseInt(hh);
@@ -392,16 +384,15 @@
     }
 
     function formatGameDate(dateStr) {
-        if (!dateStr) return "PREGAME";
+        if (!dateStr || dateStr === "undefined") return "8/28/26";
         try {
             let [y, m, d] = dateStr.split('-');
             let dObj = new Date(y, m - 1, d);
             if (!isNaN(dObj)) {
-                // Returns M/D/YY format (e.g., 8/28/26)
                 return `${dObj.getMonth()+1}/${dObj.getDate()}/${dObj.getFullYear().toString().slice(-2)}`;
             }
         } catch(e) {}
-        return "PREGAME";
+        return dateStr;
     }
 
     Papa.parse(MASTER_TEAMS_CSV, {
@@ -429,7 +420,13 @@
         }
     });
 
-    function startLiveTicker() {
+    async function startLiveTicker() {
+        let gamedayConfigs = {};
+        try {
+            const configSnap = await get(ref(dbRealtime, 'gameday_config'));
+            if (configSnap.exists()) gamedayConfigs = configSnap.val();
+        } catch(e) { console.error(e); }
+
         onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
             const data = snapshot.val();
             const tickerEl = document.getElementById('matchupTicker');
@@ -443,13 +440,21 @@
                     if(!game.home || !game.away) return;
                     
                     let qtr = game.quarter;
-                    if (!qtr || qtr === "undefined" || qtr === "") {
-                        qtr = "PREGAME";
-                    }
+                    if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
 
                     let isPregame = (qtr === "PREGAME" || game.status === "UPCOMING");
                     let isFinal = (qtr === "FINAL" || game.status === "FINAL");
                     let isHalf = (qtr === "HALF");
+
+                    // Fallback to gameday_config if date/time are missing
+                    if (!game.date || !game.time) {
+                        const homeKey = game.home.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        const conf = gamedayConfigs[homeKey];
+                        if (conf) {
+                            if (!game.date && conf.date) game.date = conf.date;
+                            if (!game.time && conf.time) game.time = conf.time;
+                        }
+                    }
 
                     let statusText = "QTR " + qtr;
                     let clockText = "";
@@ -457,17 +462,11 @@
 
                     if (isPregame) {
                         statusColor = "color: #9ca3af;";
-                        let fDate = game.date ? formatGameDate(game.date) : "PREGAME";
-                        let fTime = game.time ? formatGameTime(game.time) : "TBA";
+                        let fDate = game.date ? formatGameDate(game.date) : "8/28/26";
+                        let fTime = game.time ? formatGameTime(game.time) : "7:00 PM";
                         
-                        if (fDate === "PREGAME") {
-                            statusText = "PREGAME";
-                            clockText = fTime;
-                        } else {
-                            // Merge Date and Time so they stack on the ticker
-                            statusText = fDate;
-                            clockText = fTime;
-                        }
+                        statusText = fDate;
+                        clockText = fTime;
                     } else if (isFinal) {
                         statusColor = "color: #9ca3af;";
                         statusText = "FINAL";
@@ -482,7 +481,6 @@
                     let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
                     let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
 
-                    // Fetch logos and classifications using lowercase matching
                     const safeHomeName = (game.home || '').trim().toLowerCase();
                     const safeAwayName = (game.away || '').trim().toLowerCase();
 
@@ -492,9 +490,8 @@
                     const finalHomeLogo = homeData.logo || game.homeLogo || '';
                     const finalAwayLogo = awayData.logo || game.awayLogo || '';
 
-                    // Add the classification badges if they exist
-                    const homeClassHtml = homeData.classification ? `<span style="font-size:12px; color:#aaa; font-weight:normal; margin-left:4px;">${homeData.classification}</span>` : '';
-                    const awayClassHtml = awayData.classification ? `<span style="font-size:12px; color:#aaa; font-weight:normal; margin-left:4px;">${awayData.classification}</span>` : '';
+                    const homeClassHtml = homeData.classification ? `<span style="font-size:11px; color:#fbbf24; font-weight:800; margin-left:4px; vertical-align:top;">${homeData.classification}</span>` : '';
+                    const awayClassHtml = awayData.classification ? `<span style="font-size:11px; color:#fbbf24; font-weight:800; margin-left:4px; vertical-align:top;">${awayData.classification}</span>` : '';
 
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
@@ -529,14 +526,12 @@
         const authTitle = document.getElementById("authNavTitle");
         const authSub = document.getElementById("authNavSub");
         
-        // Grab elements for dynamic updates
         const communityBtn = document.getElementById("communityNavBtn");
         const commTitle = document.getElementById("commNavTitle");
         const commSub = document.getElementById("commNavSub");
         const commIcon = document.getElementById("commNavIcon");
 
         if (user) {
-            // SET FAN ZONE TO LOGGED IN STATE
             if(communityBtn) {
                 communityBtn.href = "community.html";
                 commTitle.innerHTML = "Fan Zone Community";
@@ -568,7 +563,6 @@
             }
 
         } else {
-            // SET FAN ZONE TO LOCKED GUEST STATE
             if(communityBtn) {
                 communityBtn.href = "login.html";
                 commTitle.innerHTML = `Fan Zone Community <i class="fa-solid fa-lock text-sm ml-1 opacity-70"></i>`;
