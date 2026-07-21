@@ -394,7 +394,7 @@
                 </div>
             </div>
 
-            <!-- New Public Creation Panel -->
+            <!-- Public Creation Panel -->
             <div id="publicCreatePanel" class="hidden content-card rounded-2xl p-6 mb-6 border-2 border-blue-400 bg-blue-50 text-center shadow-lg relative overflow-hidden transition-colors duration-500">
                 <h3 class="font-head text-3xl uppercase tracking-wide text-blue-900 mb-2"><i class="fa-solid fa-calendar-plus text-blue-600 mr-2"></i> Configure Matchup</h3>
                 <p class="text-sm text-blue-800 mb-5 font-medium relative z-10">There is no matchup configured for this team yet. Help the community by setting up the game details!</p>
@@ -494,7 +494,7 @@
                         </div>
                     </div>
                     
-                    <!-- NEW DISCLAIMER AND REPORT SECTION -->
+                    <!-- DISCLAIMER AND REPORT SECTION -->
                     <div class="mt-6 pt-4 border-t border-gray-300">
                         <p class="text-[10px] leading-tight text-gray-500 italic mb-3">
                             <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1"></i>
@@ -579,10 +579,10 @@
         const dbRealtime = getDatabase(app);     
 
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory";
-        const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfaIQSgGhAJToV2a5Vhvrov7kVMFbTEqJOi-LrsM9mCD6ZMPQ/formResponse';
         
         window.currentUserProfile = null;
         window.currentMatchupData = null; 
+        window.globalTeamDict = {}; // Store all teams for cross-referencing
 
         // State Tracking
         let isUserLoggedIn = false;
@@ -862,6 +862,18 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: async function(results) {
+                    // 1. Build a master dictionary of all teams
+                    results.data.forEach(r => {
+                        const sName = cleanText(r['School']);
+                        if(sName) {
+                            window.globalTeamDict[sName.toLowerCase()] = {
+                                logo: cleanText(r['Logo']),
+                                mascot: cleanText(r['Mascot'])
+                            };
+                        }
+                    });
+
+                    // 2. Find the current team
                     const teamRow = results.data.find(r => {
                         const school = r['School'] ? cleanText(r['School']) : '';
                         return school.toLowerCase() === teamParam.toLowerCase();
@@ -1366,28 +1378,91 @@
             btn.innerText = "Saving..."; btn.disabled = true;
 
             const teamParam = new URLSearchParams(window.location.search).get('team');
-            const safeKey = cleanText(teamParam).toUpperCase().replace(/[^A-Z0-9]/g, '');
-            const usernameToSave = window.currentUserProfile?.username || "Fan";
+            const opponentInput = document.getElementById('inpOpponent').value.trim();
+            const homeAway = document.getElementById('inpHomeAway').value;
 
-            const matchupData = {
+            // Look up logos from the global dictionary
+            const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
+            const oppTeamData = window.globalTeamDict[opponentInput.toLowerCase()] || {};
+
+            const myLogo = myTeamData.logo || "";
+            const oppLogo = oppTeamData.logo || "";
+
+            const safeKey = cleanText(teamParam).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const oppSafeKey = cleanText(opponentInput).toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+            const usernameToSave = window.currentUserProfile?.username || "Fan";
+            const curDate = new Date().toISOString();
+
+            // Data for Current Team's Page
+            const matchupDataA = {
                 yourTeam: teamParam,
-                opponent: document.getElementById('inpOpponent').value,
+                yourTeamLogo: myLogo,
+                opponent: opponentInput,
+                oppLogo: oppLogo,
                 date: document.getElementById('inpDate').value,
                 time: document.getElementById('inpGameTime').value,
-                homeAway: document.getElementById('inpHomeAway').value,
+                homeAway: homeAway,
                 address: document.getElementById('inpAddress').value,
                 updatedBy: usernameToSave,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: curDate
             };
 
+            // Data for Opponent Team's Page (Inverts Home/Away)
+            let invertedHomeAway = "Neutral";
+            if (homeAway === "Home") invertedHomeAway = "Away";
+            if (homeAway === "Away") invertedHomeAway = "Home";
+
+            const matchupDataB = {
+                yourTeam: opponentInput,
+                yourTeamLogo: oppLogo,
+                opponent: teamParam,
+                oppLogo: myLogo,
+                date: document.getElementById('inpDate').value,
+                time: document.getElementById('inpGameTime').value,
+                homeAway: invertedHomeAway,
+                address: document.getElementById('inpAddress').value,
+                updatedBy: usernameToSave,
+                lastUpdated: curDate
+            };
+
+            // Data for the Live Score Ticker (index.html)
+            let homeName = homeAway === "Home" ? teamParam : (homeAway === "Away" ? opponentInput : teamParam);
+            let awayName = homeAway === "Home" ? opponentInput : (homeAway === "Away" ? teamParam : opponentInput);
+
+            const safeHome = homeName.replace(/[^a-zA-Z0-9]/g, '');
+            const safeAway = awayName.replace(/[^a-zA-Z0-9]/g, '');
+            const gameKey = [safeHome, safeAway].sort().join('_');
+
+            const liveScoreInit = {
+                home: homeName,
+                away: awayName,
+                homeLogo: homeAway === "Home" ? myLogo : oppLogo,
+                awayLogo: homeAway === "Home" ? oppLogo : myLogo,
+                homeScore: 0,
+                awayScore: 0,
+                quarter: "PREGAME",
+                clock: "12:00",
+                status: "UPCOMING",
+                updatedBy: usernameToSave,
+                lastUpdated: curDate
+            };
+
+            // Execute Firebase Multipath Update
             try {
-                await update(ref(dbRealtime, 'gameday_config/' + safeKey), matchupData);
+                const updates = {};
+                updates['gameday_config/' + safeKey] = matchupDataA;           // Updates Team A
+                updates['gameday_config/' + oppSafeKey] = matchupDataB;        // Updates Team B
+                updates['live_scores/' + gameKey] = liveScoreInit;             // Pushes to Ticker
+
+                await update(ref(dbRealtime), updates);
+                
                 window.closePublicMatchupModal(null, true);
-                alert("Matchup created successfully! Refreshing...");
+                alert("Matchup synced across all pages successfully!");
                 window.location.reload();
             } catch (err) {
                 console.error(err);
-                alert("Error saving matchup.");
+                alert("Error saving matchup. Check permissions.");
             } finally {
                 btn.innerText = "Save Matchup"; btn.disabled = false;
             }
