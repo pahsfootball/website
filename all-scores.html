@@ -105,21 +105,23 @@
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 border-t-4 border-pahs-gold flex flex-col" id="shareModalContent">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
                 <h2 class="font-head text-3xl uppercase tracking-wide text-blue-700 m-0 leading-none flex items-center gap-2">
-                    <i class="fa-solid fa-share"></i> Share to Fan Zone
+                    <i class="fa-solid fa-share-nodes"></i> Share Score
                 </h2>
                 <button onclick="closeShareModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
             </div>
             <div class="p-6 bg-white">
-                <p class="text-sm text-gray-600 mb-3 font-body font-bold">Preview your post:</p>
-                <div id="sharePostPreview" class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 font-body text-sm text-gray-800 whitespace-pre-wrap leading-relaxed shadow-inner">
-                    <!-- Post content gets injected here -->
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="closeShareModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                <p class="text-sm text-gray-600 mb-3 font-body font-bold">Add your thoughts or edit the update:</p>
+                <textarea id="sharePostPreview" rows="6" class="w-full p-4 mb-6 rounded-xl border border-gray-300 shadow-inner font-body text-sm text-gray-800 outline-none focus:border-pahs-gold focus:ring-2 focus:ring-pahs-gold/30 transition-all resize-none"></textarea>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button" onclick="closeShareModal()" class="w-full sm:w-1/3 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-xs sm:text-sm shadow">
                         Cancel
                     </button>
-                    <button id="confirmShareBtn" onclick="confirmShareToFanZone()" class="flex-1 bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow">
-                        Post to Fan Zone
+                    <button id="submitShareFanZoneBtn" onclick="confirmShareToFanZone(false)" class="w-full sm:w-1/3 bg-blue-600 text-white font-head font-bold text-lg sm:text-xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all">
+                        Fan Zone
+                    </button>
+                    <button id="submitShareExternalBtn" onclick="confirmShareToFanZone(true)" class="w-full sm:w-1/3 bg-green-600 text-white font-head font-bold text-lg sm:text-xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i> Share Out
                     </button>
                 </div>
             </div>
@@ -179,6 +181,17 @@
         window.currentGameMap = {}; // Tracks live game data for sharing
         window.pendingShareData = null; // Tracks data while confirmation modal is open
 
+        // PROFANITY FILTER
+        const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
+        function filterProfanity(text) {
+            let filteredText = text;
+            badWords.forEach(word => {
+                const regex = new RegExp('\\b' + word + '\\b', 'gi');
+                filteredText = filteredText.replace(regex, '***');
+            });
+            return filteredText;
+        }
+
         const formatTeamUrl = (teamName) => {
             if (!teamName) return '#';
             return `gameday.html?team=${encodeURIComponent(teamName.trim())}`;
@@ -212,7 +225,8 @@
         window.openShareModal = (content) => {
             const overlay = document.getElementById('shareModalOverlay');
             const modalContent = document.getElementById('shareModalContent');
-            document.getElementById('sharePostPreview').innerText = content;
+            
+            document.getElementById('sharePostPreview').value = content;
             
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
@@ -276,30 +290,49 @@
             window.pendingShareData = {
                 btnElement: btnElement,
                 originalHtml: btnElement.innerHTML,
-                game: game,
-                content: content
+                game: game
             };
 
             // Trigger the confirmation modal
             window.openShareModal(content);
         };
 
-        window.confirmShareToFanZone = async () => {
+        window.confirmShareToFanZone = async (shareExternally = false) => {
             if (!window.pendingShareData || !currentUser) return;
 
-            const { btnElement, originalHtml, game, content } = window.pendingShareData;
-            const confirmBtn = document.getElementById('confirmShareBtn');
-            const confirmOriginalHtml = confirmBtn.innerHTML;
+            const { btnElement, originalHtml, game } = window.pendingShareData;
+            const finalContent = document.getElementById('sharePostPreview').value.trim();
+            
+            if (!finalContent) {
+                alert("Post cannot be empty.");
+                return;
+            }
+            if (finalContent.length > 500) {
+                alert("Post is too long. Maximum 500 characters allowed.");
+                return;
+            }
 
-            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
-            confirmBtn.disabled = true;
+            const btn1 = document.getElementById('submitShareFanZoneBtn');
+            const btn2 = document.getElementById('submitShareExternalBtn');
+            const origText1 = btn1.innerHTML;
+            const origText2 = btn2.innerHTML;
+
+            if(shareExternally) {
+                btn2.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            } else {
+                btn1.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            }
+            btn1.disabled = true;
+            btn2.disabled = true;
+
+            const cleanContent = filterProfanity(finalContent);
 
             try {
                 const newRef = push(ref(dbRealtime, 'fanzone_posts'));
                 await set(newRef, {
                     authorId: currentUser.uid,
                     authorUsername: window.currentUserProfile ? window.currentUserProfile.username : "Fan",
-                    content: content,
+                    content: cleanContent,
                     taggedTeam: game.home,
                     taggedTeam2: game.away,
                     timestamp: new Date().toISOString()
@@ -308,24 +341,44 @@
                 window.closeShareModal();
                 
                 // Show success on the card's button
-                btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Shared';
-                btnElement.classList.replace('text-blue-700', 'text-green-700');
-                btnElement.classList.replace('bg-blue-50', 'bg-green-50');
-                btnElement.classList.replace('border-blue-200', 'border-green-300');
-                
-                setTimeout(() => {
-                    btnElement.innerHTML = originalHtml;
-                    btnElement.classList.replace('text-green-700', 'text-blue-700');
-                    btnElement.classList.replace('bg-green-50', 'bg-blue-50');
-                    btnElement.classList.replace('border-green-300', 'border-blue-200');
-                }, 3000);
+                if(btnElement) {
+                    btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Shared';
+                    btnElement.classList.replace('text-blue-700', 'text-green-700');
+                    btnElement.classList.replace('bg-blue-50', 'bg-green-50');
+                    btnElement.classList.replace('border-blue-200', 'border-green-300');
+                    
+                    setTimeout(() => {
+                        btnElement.innerHTML = originalHtml;
+                        btnElement.classList.replace('text-green-700', 'text-blue-700');
+                        btnElement.classList.replace('bg-green-50', 'bg-blue-50');
+                        btnElement.classList.replace('border-green-300', 'border-blue-200');
+                        btnElement.disabled = false;
+                    }, 3000);
+                }
+
+                if(shareExternally) {
+                    const postUrl = window.location.origin + window.location.pathname.replace(/all-scores\.html.*/i, 'community.html') + "?post=" + newRef.key;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Live Score Update | PAHS Football',
+                            text: 'Check out this live score update on the Fan Zone!',
+                            url: postUrl
+                        }).catch(console.error);
+                    } else {
+                        navigator.clipboard.writeText(postUrl).then(() => {
+                            alert("Link copied to clipboard!");
+                        });
+                    }
+                }
 
             } catch (err) {
                 console.error("Share error:", err);
                 alert("Failed to share to Fan Zone.");
             } finally {
-                confirmBtn.innerHTML = confirmOriginalHtml;
-                confirmBtn.disabled = false;
+                btn1.innerHTML = origText1;
+                btn2.innerHTML = origText2;
+                btn1.disabled = false;
+                btn2.disabled = false;
             }
         };
 
@@ -397,12 +450,12 @@
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-gray-200 pb-3 relative z-10">
                             <div class="flex items-center gap-2">
                                 <div id="dot-class" class="hidden"></div>
                                 <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                 <span id="badge-text" class="bg-gray-200 text-gray-800 border border-gray-300 text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">PREGAME</span>
                                 <span id="clock-text" class="font-mono font-bold text-xs text-gray-600">TBA</span>
                             </div>
@@ -414,6 +467,7 @@
                                     ${homeLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
+                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold"></span>
                                 <span id="home-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                             <div class="text-2xl sm:text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
@@ -422,6 +476,7 @@
                                     ${awayLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
+                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold"></span>
                                 <span id="away-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                         </div>
@@ -431,7 +486,7 @@
                                 <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                             </div>
                             <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
-                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
                             </div>
                         </div>
                     </div>
@@ -765,9 +820,6 @@
                     const homeClass = homeData.classification ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${homeData.classification}</span>` : '';
                     const awayClass = awayData.classification ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${awayData.classification}</span>` : '';
 
-                    const homeRec = game.homeRecord || homeData.record || '0-0';
-                    const awayRec = game.awayRecord || awayData.record || '0-0';
-
                     const homeLogoHtml = finalHomeLogo 
                         ? `<img src="${finalHomeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
                         : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
@@ -802,31 +854,31 @@
                     ` : "";
 
                     const cardHTML = `
-                        <div class="content-card rounded-2xl p-5 border-2 ${cardBorder} flex flex-col relative bg-white transition-all duration-300 ${updateAnimClass}">
+                        <div class="content-card rounded-2xl p-4 sm:p-5 border-2 ${cardBorder} flex flex-col relative bg-white transition-all duration-300 ${updateAnimClass}">
                             ${updateOverlayHtml}
-                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-200 pb-3 relative z-10 gap-2">
                                 <div class="flex items-center gap-2">
                                     <div class="${dotClass}"></div>
                                     <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="window.shareToFanZone(this, '${game.id}')" title="Share update to Fan Zone" class="text-[10px] bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                    <button onclick="window.shareToFanZone(this, '${game.id}')" title="Share update to Fan Zone" class="text-[10px] bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase">
                                         <i class="fa-solid fa-share"></i> Share
                                     </button>
-                                    <button onclick="popoutScoreboard('${encodeURIComponent(game.home)}', '${encodeURIComponent(game.away)}', '${game.id}', '${encodeURIComponent(finalHomeLogo)}', '${encodeURIComponent(finalAwayLogo)}', '${encodeURIComponent(homeClass || '')}', '${encodeURIComponent(awayClass || '')}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                                    <button onclick="window.popoutScoreboard('${encodeURIComponent(game.home)}', '${encodeURIComponent(game.away)}', '${game.id}', '${encodeURIComponent(finalHomeLogo)}', '${encodeURIComponent(finalAwayLogo)}', '${encodeURIComponent(homeClass || '')}', '${encodeURIComponent(awayClass || '')}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase">
                                         <i class="fa-solid fa-up-right-from-square"></i> Pop Out
                                     </button>
                                     <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
                                     ${clockHtml}
                                 </div>
                             </div>
-                            <div class="flex justify-between items-center px-2 flex-grow relative z-10">
+                            <div class="flex justify-between items-center px-1 sm:px-2 flex-grow relative z-10">
                                 <a href="${homeUrl}" class="flex flex-col items-center w-5/12 cursor-pointer group transition-transform duration-200 hover:scale-105">
                                     <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
                                         ${homeLogoHtml}
                                     </div>
                                     <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}${homeClass}</span>
-                                    <span class="text-[11px] text-gray-500 font-mono font-bold">(${homeRec})</span>
+                                    <span class="text-[11px] text-gray-500 font-mono font-bold"></span>
                                     <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
                                 </a>
                                 <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
@@ -835,16 +887,16 @@
                                         ${awayLogoHtml}
                                     </div>
                                     <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}${awayClass}</span>
-                                    <span class="text-[11px] text-gray-500 font-mono font-bold">(${awayRec})</span>
+                                    <span class="text-[11px] text-gray-500 font-mono font-bold"></span>
                                     <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
                                 </a>
                             </div>
                             <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
                                 <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
-                                    <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800">@${game.updatedBy || "System"}</span>
+                                    <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                                 </div>
-                                <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right">
-                                    <i class="fa-regular fa-clock mr-1"></i> ${updatedText}
+                                <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                                    <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live
                                 </div>
                             </div>
                         </div>
