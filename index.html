@@ -378,6 +378,29 @@
     const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
     let teamLogoDictionary = {};
 
+    function formatGameTime(timeStr) {
+        if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
+        try {
+            let [hh, mm] = timeStr.split(':');
+            let h = parseInt(hh);
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${mm} ${ampm}`;
+        } catch(e) { return timeStr; }
+    }
+
+    function formatGameDate(dateStr) {
+        if (!dateStr) return "PREGAME";
+        try {
+            let [y, m, d] = dateStr.split('-');
+            let dObj = new Date(y, m - 1, d);
+            if (!isNaN(dObj)) {
+                return dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+            }
+        } catch(e) {}
+        return "PREGAME";
+    }
+
     Papa.parse(MASTER_TEAMS_CSV, {
         download: true,
         header: true,
@@ -388,6 +411,7 @@
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
                 
                 if (teamName && logoUrl) {
+                    // Force lowercase for bulletproof matching
                     teamLogoDictionary[teamName.trim().toLowerCase()] = logoUrl.trim();
                 }
             });
@@ -412,7 +436,6 @@
                 games.forEach(game => {
                     if(!game.home || !game.away) return;
                     
-                    // Fallback to PREGAME if quarter is undefined, empty, or literally "undefined"
                     let qtr = game.quarter;
                     if (!qtr || qtr === "undefined" || qtr === "") {
                         qtr = "PREGAME";
@@ -423,18 +446,23 @@
                     let isHalf = (qtr === "HALF");
 
                     let statusText = "QTR " + qtr;
-                    if(isPregame) statusText = "PREGAME";
-                    else if(isFinal) statusText = "FINAL";
-                    else if(isHalf) statusText = "HALFTIME";
-
                     let clockText = "";
+                    let statusColor = "color: #ef4444; animation: pulse 2s infinite;";
+
                     if (isPregame) {
-                        clockText = (!game.clock || game.clock === "12:00" || game.clock.trim() === "" || game.clock === "undefined") ? "TBA" : game.clock;
-                    } else if (!isFinal && !isHalf) {
+                        statusColor = "color: #9ca3af;";
+                        statusText = game.date ? formatGameDate(game.date) : "PREGAME";
+                        clockText = game.time ? formatGameTime(game.time) : "TBA";
+                    } else if (isFinal) {
+                        statusColor = "color: #9ca3af;";
+                        statusText = "FINAL";
+                        clockText = "";
+                    } else if (isHalf) {
+                        statusText = "HALFTIME";
+                        clockText = "";
+                    } else {
                         clockText = game.clock || "12:00";
                     }
-                    
-                    let statusColor = (isPregame || isFinal) ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
 
                     let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
                     let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
