@@ -204,7 +204,7 @@
         <div class="modal-content">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
                 <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 m-0 leading-none flex items-center gap-2">
-                    <i class="fa-solid fa-share-nodes text-blue-600"></i> Share to Fan Zone
+                    <i class="fa-solid fa-share-nodes text-blue-600"></i> Share Score
                 </h2>
                 <button onclick="closeShareScoreModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
             </div>
@@ -212,14 +212,17 @@
                 <p class="text-sm text-gray-600 mb-3 font-body leading-relaxed">
                     Add your own message above or below the live score update!
                 </p>
-                <textarea id="shareScoreContent" rows="6" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm"></textarea>
+                <textarea id="shareScoreContent" rows="6" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 resize-none font-body text-sm outline-none focus:border-pahs-gold focus:ring-2 focus:ring-pahs-gold/30 transition-all"></textarea>
                 
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeShareScoreModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button" onclick="closeShareScoreModal(event, true)" class="w-full sm:w-1/3 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-xs sm:text-sm shadow">
                         Cancel
                     </button>
-                    <button id="submitShareScoreBtn" onclick="submitSharedScore()" class="flex-1 bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
-                        Post to Fan Zone
+                    <button id="submitShareScoreBtn" onclick="submitSharedScore(false)" class="w-full sm:w-1/3 bg-blue-600 text-white font-head font-bold text-lg sm:text-xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all">
+                        Fan Zone
+                    </button>
+                    <button id="submitShareExternalBtn" onclick="submitSharedScore(true)" class="w-full sm:w-1/3 bg-green-600 text-white font-head font-bold text-lg sm:text-xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-green-700 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i> Share Out
                     </button>
                 </div>
             </div>
@@ -388,28 +391,31 @@
         <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-30 border-b border-white/10">
             <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
                 
-                <div class="flex items-center gap-2 md:gap-4">
-                    <a href="teams.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">GameDay Teams</span>
+                <div class="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+                    <a href="index.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                        <i class="fa-solid fa-house"></i>
+                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Home</span>
+                    </a>
+                    <a href="teams.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                        <i class="fa-solid fa-users"></i>
+                        <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Teams</span>
                     </a>
                     
-                    <!-- NEW: ALL SCORES BUTTON -->
-                    <a href="all-scores.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
                         <i class="fa-solid fa-list-ol"></i>
                         <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">All Scores</span>
                     </a>
 
-                    <a href="community.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <a href="community.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-[color:var(--team-text,#000)] border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
                         <i class="fa-solid fa-comments"></i>
                         <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Fan Zone</span>
                     </a>
-                    <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2">GameDay Central</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2 whitespace-nowrap">GameDay Central</h1>
                 </div>
 
-                <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+                <div class="flex items-center gap-2 font-head text-2xl tracking-wide flex-shrink-0 ml-4">
                     <i class="fa-solid fa-football text-[#fbbf24]"></i>
-                    <span class="font-bold">PAHS<span class="text-[#fbbf24]">Football</span></span>
+                    <span class="font-bold hidden sm:inline">PAHS<span class="text-[#fbbf24]">Football</span></span>
                 </div>
             </div>
         </nav>
@@ -500,14 +506,17 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
-                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><span id="sb-live-dot" class="w-3 h-3 rounded-full bg-pahs-gold transition-colors duration-500"></span> Live Scoreboard</h3>
-                    <div class="flex items-center gap-3">
-                        <button id="btn-popout" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                <!-- RESPONSIVE FIX: Changed to flex-col sm:flex-row and allowed the buttons to wrap -->
+                <div class="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 mb-6 border-b border-gray-300 pb-3">
+                    <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
+                        <span id="sb-live-dot" class="w-3 h-3 rounded-full bg-pahs-gold transition-colors duration-500"></span> Live Scoreboard
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <button id="btn-popout" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase">
                             <i class="fa-solid fa-up-right-from-square"></i> Pop Out
                         </button>
                         <span id="sb-status" class="bg-pahs-gold text-[color:var(--team-text,#000)] transition-colors duration-500 text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span>
-                        <span id="sb-clock" class="font-mono font-bold text-gray-700 hidden sm:block">12:00</span>
+                        <span id="sb-clock" class="font-mono font-bold text-gray-700">12:00</span>
                         <button onclick="openShareScoreModal()" class="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
                             <i class="fa-solid fa-share-nodes"></i> Share
                         </button>
@@ -932,7 +941,7 @@
                     </style>
                 </head>
                 <body>
-                    <div id="card-container" class="content-card rounded-2xl p-5 border-2 border-gray-200 shadow-sm flex flex-col relative bg-white transition-all duration-300">
+                    <div id="card-container" class="content-card rounded-2xl p-4 sm:p-5 border-2 border-gray-200 shadow-sm flex flex-col relative bg-white transition-all duration-300">
                         <div id="update-overlay" style="display:none;" class="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center rounded-2xl font-head text-4xl text-red-600 pointer-events-none border-4 border-pahs-gold shadow-2xl">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-bolt text-yellow-500 animate-pulse"></i> 
@@ -940,40 +949,40 @@
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-200 pb-3 relative z-10 gap-2">
                             <div class="flex items-center gap-2">
                                 <div id="dot-class" class="hidden"></div>
                                 <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                 <span id="badge-text" class="bg-gray-200 text-gray-800 border border-gray-300 text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">PREGAME</span>
                                 <span id="clock-text" class="font-mono font-bold text-xs text-gray-600">TBA</span>
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center px-2 flex-grow relative z-10">
+                        <div class="flex justify-between items-center px-1 sm:px-2 flex-grow relative z-10">
                             <div class="flex flex-col items-center w-5/12">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
                                     ${homeLogoHtml}
                                 </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
-                                <span id="home-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                                <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
+                                <span id="home-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
-                            <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
+                            <div class="text-2xl sm:text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
                             <div class="flex flex-col items-center w-5/12">
-                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
                                     ${awayLogoHtml}
                                 </div>
-                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
-                                <span id="away-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                                <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
+                                <span id="away-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                         </div>
                         
                         <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
-                            <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
                                 <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                             </div>
-                            <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
                                 <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
                             </div>
                         </div>
@@ -1081,8 +1090,8 @@
                             dotClass.className = dClass;
 
                             if (justUpdated) {
-                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
-                                updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} SCORE UPDATE!\` : "SCORE UPDATE!";
+                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
+                                updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} UPDATE!\` : "UPDATE!";
                                 updateOverlay.style.display = "flex";
                                 
                                 updateOverlay.classList.remove('animate-fade-out-delayed');
@@ -1094,7 +1103,7 @@
                                     card.classList.remove('anim-score-update');
                                 }, 3500);
                             } else {
-                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
+                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
                             }
 
                             document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
@@ -1790,16 +1799,23 @@
             }
         };
 
-        window.submitSharedScore = async function() {
-            const btn = document.getElementById('submitShareScoreBtn');
+        window.submitSharedScore = async function(shareExternally = false) {
+            const btn1 = document.getElementById('submitShareScoreBtn');
+            const btn2 = document.getElementById('submitShareExternalBtn');
             const content = document.getElementById('shareScoreContent').value.trim();
-            const origText = btn.innerText;
+            const origText1 = btn1.innerHTML;
+            const origText2 = btn2.innerHTML;
             
             if (content === "") return window.showToast("Post cannot be empty.", "error");
             if (content.length > 500) return window.showToast("Post is too long. Max 500 characters.", "error");
 
-            btn.innerText = "Posting...";
-            btn.disabled = true;
+            if(shareExternally) {
+                btn2.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            } else {
+                btn1.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            }
+            btn1.disabled = true;
+            btn2.disabled = true;
 
             const cleanContent = filterProfanity(content);
             const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
@@ -1819,12 +1835,29 @@
                 
                 window.closeShareScoreModal(null, true);
                 window.showToast("Score shared to the Fan Zone successfully!", "success");
+
+                if(shareExternally) {
+                    const postUrl = window.location.origin + window.location.pathname.replace(/gameday\.html.*/i, 'community.html') + "?post=" + newPostRef.key;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Live Score Update | PAHS Football',
+                            text: 'Check out this live score update on the Fan Zone!',
+                            url: postUrl
+                        }).catch(console.error);
+                    } else {
+                        navigator.clipboard.writeText(postUrl).then(() => {
+                            window.showToast("Link copied to clipboard!", "success");
+                        });
+                    }
+                }
             } catch (error) { 
                 console.error(error);
                 window.showToast("Failed to communicate with server.", "error"); 
             } finally {
-                btn.innerText = origText;
-                btn.disabled = false;
+                btn1.innerHTML = origText1;
+                btn2.innerHTML = origText2;
+                btn1.disabled = false;
+                btn2.disabled = false;
             }
         };
 
