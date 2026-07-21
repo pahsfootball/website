@@ -196,6 +196,7 @@
 
     </main>
 
+    <!-- POST CREATION MODAL -->
     <div id="createPostModalOverlay" class="modal-overlay" onclick="closeCreatePostModal(event)">
         <div class="modal-content">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -231,6 +232,7 @@
         </div>
     </div>
 
+    <!-- USER PROFILE MODAL -->
     <div id="userProfileModalOverlay" class="modal-overlay" onclick="closeUserProfileModal(event)">
         <div class="modal-content border-t-8 border-pahs-gold">
             <button onclick="closeUserProfileModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
@@ -263,6 +265,7 @@
         </div>
     </div>
 
+    <!-- POST VIEWER MODAL -->
     <div id="postModalOverlay" class="modal-overlay" onclick="closePostModal(event)">
         <div class="modal-content" id="postModalContentBlock">
             <button onclick="closePostModal(event, true)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition text-3xl leading-none z-10">&times;</button>
@@ -276,6 +279,7 @@
         </div>
     </div>
 
+    <!-- POST EDIT MODAL -->
     <div id="editModalOverlay" class="modal-overlay" onclick="closeEditModal(event)">
         <div class="modal-content">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -305,6 +309,7 @@
         </div>
     </div>
 
+    <!-- POST DELETE MODAL -->
     <div id="deleteModalOverlay" class="modal-overlay" onclick="closeDeleteModal(event)">
         <div class="modal-content" style="border-top-color: #ef4444;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -329,6 +334,7 @@
         </div>
     </div>
 
+    <!-- POST REPORT MODAL -->
     <div id="reportModalOverlay" class="modal-overlay" onclick="closeReportModal(event)">
         <div class="modal-content" style="border-top-color: #dc2626;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -368,6 +374,7 @@
         </div>
     </div>
 
+    <!-- EXTERNAL LINK WARNING -->
     <div id="linkWarningModal" class="modal-overlay" onclick="closeLinkWarning(event)">
         <div class="modal-content" style="border-top-color: #f59e0b;">
             <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
@@ -421,7 +428,7 @@
 
         // *** GLOBAL VARIABLES ***
         let currentUser = null;
-        let currentUserProfile = null;
+        window.currentUserProfile = null; // Explicitly attach to window for module scope
         let currentPosts = []; 
         let validTeams = new Set();
         let teamLogoDictionary = {};
@@ -618,15 +625,15 @@
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) {
-                        currentUserProfile = userDoc.data();
-                        window.userCache[user.uid] = currentUserProfile; 
+                        window.currentUserProfile = userDoc.data();
+                        window.userCache[user.uid] = window.currentUserProfile; 
                     }
                 } catch(e) {
                     console.error("Auth error:", e);
                 }
             } else {
                 currentUser = null;
-                currentUserProfile = null;
+                window.currentUserProfile = null;
                 createBtn.classList.add('hidden');
                 loginPrompt.classList.remove('hidden');
             }
@@ -960,6 +967,7 @@
                 tagsHtml += buildTag(post.taggedTeam2);
             }
 
+            // --- RANK LOGIC ---
             const pts = window.authorPointsCache[post.authorId] || 0;
             let bIcon = '<i class="fa-solid fa-user text-slate-400 text-sm"></i>';
             let bClass = 'bg-slate-50 border-slate-200 shadow-sm';
@@ -1003,6 +1011,7 @@
                 bTitle = 'Fan'; 
             }
 
+            // --- ROLE TAG LOGIC FOR IN-FEED POSTS ---
             let roleTagHtml = '';
             if (post.authorUsername && post.authorUsername.toUpperCase() === 'PAHSFOOTBALL') {
                 roleTagHtml = `<span class="bg-black text-pahs-gold text-[9px] px-1.5 py-0.5 rounded ml-2 uppercase font-bold tracking-wider border border-pahs-gold shadow-sm" title="Official PAHS Football Account"><i class="fa-solid fa-check-circle mr-0.5"></i> Site Owner</span>`;
@@ -1163,10 +1172,10 @@
             const scope = scopeElem ? scopeElem.value : 'global';
 
             if (scope === 'following') {
-                if (!currentUser || !currentUserProfile) {
+                if (!currentUser || !window.currentUserProfile) {
                     postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
                 } else {
-                    const followingList = currentUserProfile.following || [];
+                    const followingList = window.currentUserProfile.following || [];
                     postsToRender = postsToRender.filter(p => 
                         p.authorUsername === 'PAHSFOOTBALL' || 
                         p.authorId === currentUser.uid ||     
@@ -1270,7 +1279,7 @@
             btn.innerText = "Posting..."; 
             btn.disabled = true;
 
-            const username = currentUserProfile ? currentUserProfile.username : "Fan";
+            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
             
             let finalTeamTag = "";
             if (team1 !== "") {
@@ -1498,8 +1507,8 @@
             window.currentReportedPostContent = p.content;
             window.currentReportedPostAuthor = p.authorUsername;
             
-            document.getElementById('reportFirstName').value = currentUserProfile?.firstName || "";
-            document.getElementById('reportLastName').value = currentUserProfile?.lastName || "";
+            document.getElementById('reportFirstName').value = window.currentUserProfile?.firstName || "";
+            document.getElementById('reportLastName').value = window.currentUserProfile?.lastName || "";
             document.getElementById('reportEmail').value = currentUser?.email || "";
             
             const overlay = document.getElementById('reportModalOverlay');
@@ -1538,7 +1547,7 @@
                 await update(ref(dbRealtime, 'fanzone_posts/' + id), {
                     flagged: true,
                     flaggedByUid: currentUser.uid,
-                    flaggedByUsername: currentUserProfile?.username || "Unknown",
+                    flaggedByUsername: window.currentUserProfile?.username || "Unknown",
                     flaggedReason: reason,
                     flaggedAt: new Date().toISOString()
                 });
