@@ -1230,7 +1230,6 @@
             const teamParam = new URLSearchParams(window.location.search).get('team') || "";
             const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
             const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
-            
             const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || "");
             const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
 
@@ -1604,6 +1603,8 @@
                 awayScore: 0,
                 quarter: "PREGAME",
                 clock: "12:00",
+                date: document.getElementById('inpDate').value,
+                time: document.getElementById('inpGameTime').value,
                 status: "UPCOMING",
                 updatedBy: usernameToSave,
                 lastUpdated: curDate
@@ -1629,6 +1630,8 @@
                 updates['live_scores/' + gameKey + '/away'] = awayName;
                 updates['live_scores/' + gameKey + '/homeLogo'] = homeAway === "Home" ? myLogo : oppLogo;
                 updates['live_scores/' + gameKey + '/awayLogo'] = homeAway === "Home" ? oppLogo : myLogo;
+                updates['live_scores/' + gameKey + '/date'] = document.getElementById('inpDate').value;
+                updates['live_scores/' + gameKey + '/time'] = document.getElementById('inpGameTime').value;
                 updates['live_scores/' + gameKey + '/updatedBy'] = usernameToSave;
                 updates['live_scores/' + gameKey + '/lastUpdated'] = curDate;
             } else {
@@ -1772,7 +1775,6 @@
             });
         });
 
-        // --- SUGGEST LOGO LOGIC ---
         window.openSuggestLogoModal = function(teamRole, e) {
             if (e) {
                 e.preventDefault();
