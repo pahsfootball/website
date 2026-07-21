@@ -376,7 +376,9 @@
     const dbRealtime = getDatabase(app);
 
     const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
-    let teamLogoDictionary = {};
+    
+    // Store logos AND classification (Class) for each team
+    let globalTeamDict = {};
 
     function formatGameTime(timeStr) {
         if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
@@ -395,7 +397,8 @@
             let [y, m, d] = dateStr.split('-');
             let dObj = new Date(y, m - 1, d);
             if (!isNaN(dObj)) {
-                return dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                // Returns M/D/YY format (e.g., 8/28/26)
+                return `${dObj.getMonth()+1}/${dObj.getDate()}/${dObj.getFullYear().toString().slice(-2)}`;
             }
         } catch(e) {}
         return "PREGAME";
@@ -409,10 +412,13 @@
             results.data.forEach(row => {
                 const teamName = row['School'] || row['Team Name'] || row['Team'];
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                const teamClass = row['Class'] || "";
                 
-                if (teamName && logoUrl) {
-                    // Force lowercase for bulletproof matching
-                    teamLogoDictionary[teamName.trim().toLowerCase()] = logoUrl.trim();
+                if (teamName) {
+                    globalTeamDict[teamName.trim().toLowerCase()] = {
+                        logo: logoUrl ? logoUrl.trim() : '',
+                        classification: teamClass.trim()
+                    };
                 }
             });
             startLiveTicker();
@@ -451,8 +457,17 @@
 
                     if (isPregame) {
                         statusColor = "color: #9ca3af;";
-                        statusText = game.date ? formatGameDate(game.date) : "PREGAME";
-                        clockText = game.time ? formatGameTime(game.time) : "TBA";
+                        let fDate = game.date ? formatGameDate(game.date) : "PREGAME";
+                        let fTime = game.time ? formatGameTime(game.time) : "TBA";
+                        
+                        if (fDate === "PREGAME") {
+                            statusText = "PREGAME";
+                            clockText = fTime;
+                        } else {
+                            // Merge Date and Time so they stack on the ticker
+                            statusText = fDate;
+                            clockText = fTime;
+                        }
                     } else if (isFinal) {
                         statusColor = "color: #9ca3af;";
                         statusText = "FINAL";
@@ -467,20 +482,27 @@
                     let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
                     let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
 
-                    // Fetch logos using lowercase matching
+                    // Fetch logos and classifications using lowercase matching
                     const safeHomeName = (game.home || '').trim().toLowerCase();
                     const safeAwayName = (game.away || '').trim().toLowerCase();
 
-                    const finalHomeLogo = teamLogoDictionary[safeHomeName] || game.homeLogo || '';
-                    const finalAwayLogo = teamLogoDictionary[safeAwayName] || game.awayLogo || '';
+                    const homeData = globalTeamDict[safeHomeName] || {};
+                    const awayData = globalTeamDict[safeAwayName] || {};
+
+                    const finalHomeLogo = homeData.logo || game.homeLogo || '';
+                    const finalAwayLogo = awayData.logo || game.awayLogo || '';
+
+                    // Add the classification badges if they exist
+                    const homeClassHtml = homeData.classification ? `<span style="font-size:12px; color:#aaa; font-weight:normal; margin-left:4px;">${homeData.classification}</span>` : '';
+                    const awayClassHtml = awayData.classification ? `<span style="font-size:12px; color:#aaa; font-weight:normal; margin-left:4px;">${awayData.classification}</span>` : '';
 
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
-                        <span class="team-name">${game.away}</span>
+                        <span class="team-name">${game.away}${awayClassHtml}</span>
                         ${awayScoreHtml}
                         <span class="vs">VS</span>
                         <img src="${finalHomeLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalHomeLogo ? '' : 'display:none;'}" alt="Logo">
-                        <span class="team-name">${game.home}</span>
+                        <span class="team-name">${game.home}${homeClassHtml}</span>
                         ${homeScoreHtml}
                         <div class="game-info">
                             <span class="game-date" style="${statusColor}">${statusText}</span>
