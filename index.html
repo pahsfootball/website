@@ -388,7 +388,6 @@
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
                 
                 if (teamName && logoUrl) {
-                    // Force lowercase for bulletproof matching
                     teamLogoDictionary[teamName.trim().toLowerCase()] = logoUrl.trim();
                 }
             });
@@ -413,18 +412,27 @@
                 games.forEach(game => {
                     if(!game.home || !game.away) return;
                     
-                    let isPregame = (game.quarter === "PREGAME" || game.status === "UPCOMING");
-                    let isFinal = (game.quarter === "FINAL" || game.status === "FINAL");
-                    let isHalf = (game.quarter === "HALF");
+                    // Fallback to PREGAME if quarter is undefined, empty, or literally "undefined"
+                    let qtr = game.quarter;
+                    if (!qtr || qtr === "undefined" || qtr === "") {
+                        qtr = "PREGAME";
+                    }
 
-                    let statusText = "QTR " + game.quarter;
+                    let isPregame = (qtr === "PREGAME" || game.status === "UPCOMING");
+                    let isFinal = (qtr === "FINAL" || game.status === "FINAL");
+                    let isHalf = (qtr === "HALF");
+
+                    let statusText = "QTR " + qtr;
                     if(isPregame) statusText = "PREGAME";
-                    if(isFinal) statusText = "FINAL";
-                    if(isHalf) statusText = "HALFTIME";
+                    else if(isFinal) statusText = "FINAL";
+                    else if(isHalf) statusText = "HALFTIME";
 
                     let clockText = "";
-                    if (isPregame) clockText = game.clock || "TBA";
-                    else if (!isFinal && !isHalf) clockText = game.clock || "12:00";
+                    if (isPregame) {
+                        clockText = (!game.clock || game.clock === "12:00" || game.clock.trim() === "" || game.clock === "undefined") ? "TBA" : game.clock;
+                    } else if (!isFinal && !isHalf) {
+                        clockText = game.clock || "12:00";
+                    }
                     
                     let statusColor = (isPregame || isFinal) ? "color: #9ca3af;" : "color: #ef4444; animation: pulse 2s infinite;";
 
