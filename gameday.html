@@ -273,15 +273,16 @@
                 <form id="publicMatchupForm" class="space-y-4">
                     <div>
                         <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Opponent</label>
-                        <input type="text" id="inpOpponent" required class="input-box w-full p-2 rounded-lg text-sm" placeholder="Enter opponent school name">
+                        <input type="text" id="inpOpponent" list="teamsList" required class="input-box w-full p-2 rounded-lg text-sm" placeholder="Search or select school name...">
+                        <datalist id="teamsList"></datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Your Record</label>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1" id="lblYourRecord">Team Record</label>
                             <input type="text" id="inpYourRecord" class="input-box w-full p-2 rounded-lg text-sm" placeholder="e.g. 1-0">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Opponent Record</label>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1" id="lblOppRecord">Opponent Record</label>
                             <input type="text" id="inpOppRecord" class="input-box w-full p-2 rounded-lg text-sm" placeholder="e.g. 0-1">
                         </div>
                     </div>
@@ -458,6 +459,7 @@
                                 <i class="fa-solid fa-image"></i> Suggest Logo
                             </button>
                         </div>
+
                     </div>
                 </div>
 
@@ -751,9 +753,16 @@
                     if (teamData.address) document.getElementById('inpAddress').value = teamData.address;
                 }
             }
+
+            // Also update Opponent Record Label when Opponent changes
+            const lblOppRec = document.getElementById('lblOppRecord');
+            if (lblOppRec) {
+                lblOppRec.innerText = oppTeam ? `${oppTeam} Record` : "Opponent Record";
+            }
         };
 
         document.getElementById('inpHomeAway').addEventListener('change', window.autoFillLocation);
+        document.getElementById('inpOpponent').addEventListener('input', window.autoFillLocation);
         document.getElementById('inpOpponent').addEventListener('blur', window.autoFillLocation);
 
         const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
@@ -1241,10 +1250,15 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: async function(results) {
+                    const datalistEl = document.getElementById('teamsList');
+                    const teamNamesList = [];
+
                     results.data.forEach(r => {
                         const sName = cleanText(r['School']);
                         if(sName) {
+                            teamNamesList.push(sName);
                             window.globalTeamDict[sName.toLowerCase()] = {
+                                rawName: sName,
                                 logo: cleanText(r['Logo']),
                                 mascot: cleanText(r['Mascot']),
                                 stadium: cleanText(r['FieldName']),
@@ -1254,6 +1268,14 @@
                             };
                         }
                     });
+
+                    // Populate Autocomplete Datalist
+                    if (datalistEl) {
+                        datalistEl.innerHTML = Array.from(new Set(teamNamesList))
+                            .sort()
+                            .map(name => `<option value="${escapeHTML(name)}">`)
+                            .join('');
+                    }
 
                     const teamRow = results.data.find(r => {
                         const school = r['School'] ? cleanText(r['School']) : '';
@@ -1804,13 +1826,18 @@
                 return window.requireAuth("You must be logged in to create or edit a matchup.");
             }
 
+            const teamParam = new URLSearchParams(window.location.search).get('team') || "";
+            const myDict = window.globalTeamDict[teamParam.toLowerCase()] || {};
+
+            // Dynamic Labels with Team Names
+            document.getElementById('lblYourRecord').innerText = `${teamParam || "Your Team"} Record`;
+
             if (window.currentMatchupData) {
                 const game = window.currentMatchupData;
-                const teamParam = new URLSearchParams(window.location.search).get('team') || "";
-                const myDict = window.globalTeamDict[teamParam.toLowerCase()] || {};
                 const oppDict = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
 
                 document.getElementById('inpOpponent').value = game.opponent || "";
+                document.getElementById('lblOppRecord').innerText = game.opponent ? `${game.opponent} Record` : "Opponent Record";
                 document.getElementById('inpYourRecord').value = game.yourTeamRecord || myDict.record || "0-0";
                 document.getElementById('inpOppRecord').value = game.oppRecord || oppDict.record || "0-0";
                 document.getElementById('inpDate').value = game.date || "";
@@ -1820,8 +1847,7 @@
                 document.getElementById('inpAddress').value = game.address || "";
             } else {
                 document.getElementById('publicMatchupForm').reset();
-                const teamParam = new URLSearchParams(window.location.search).get('team') || "";
-                const myDict = window.globalTeamDict[teamParam.toLowerCase()] || {};
+                document.getElementById('lblOppRecord').innerText = "Opponent Record";
                 document.getElementById('inpYourRecord').value = myDict.record || "0-0";
                 window.autoFillLocation();
             }
