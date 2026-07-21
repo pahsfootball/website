@@ -29,6 +29,7 @@
 
         body { margin: 0; padding: 0; background-color: var(--bg-main); font-family: var(--font-body); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
+        /* --- MODERN HEADER --- */
         .app-header { position: relative; height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
         .header-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('PAHSFOOTBALLblkgld.jpg'); background-size: cover; background-position: center; z-index: 0; filter: grayscale(80%) opacity(0.6); }
         .header-gradient { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(173,173,173,0) 0%, var(--bg-main) 100%); z-index: 1; }
@@ -37,6 +38,7 @@
         .header-title { font-family: var(--font-head); font-size: 42px; text-transform: uppercase; letter-spacing: 2px; color: #18181b; margin: 0; line-height: 1; text-shadow: 0 2px 10px rgba(255,255,255,0.5); }
         .header-subtitle { font-size: 14px; text-transform: uppercase; letter-spacing: 5px; color: #18181b; font-weight: 800; margin-top: 5px; }
 
+        /* --- TICKER STYLES --- */
         .ticker-title-bar { background-color: var(--dark-header); color: var(--gold-base); text-align: center; font-family: var(--font-head); font-size: 18px; letter-spacing: 2px; padding: 6px 0 0 0; border-top: 3px solid var(--gold-base); }
         .ticker-container { width: 100%; background: var(--dark-header); border-bottom: 3px solid var(--gold-base); overflow: hidden; white-space: nowrap; padding: 8px 0 12px 0; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .ticker-wrapper { display: inline-block; animation: ticker 25s linear infinite; will-change: transform; padding-left: 100vw; }
@@ -52,6 +54,7 @@
         .game-date { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; font-weight: 700; }
         .game-time { font-family: var(--font-body); font-size: 11px; color: var(--gold-base); font-weight: bold; }
 
+        /* --- CONTENT AREA & CARDS --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; display: grid; gap: 16px; animation: fadeIn 0.8s ease-out; }
         .nav-card { background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px 24px; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; width: 100%; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
         button.nav-card { cursor: pointer; text-align: left; font-family: inherit; }
@@ -435,10 +438,22 @@
             if (!data) {
                 html = '<div class="matchup-card"><span class="team-name text-gray-400">NO ACTIVE MATCHUPS</span></div>';
             } else {
-                const games = Object.values(data);
+                const rawGames = Object.values(data);
+                
+                // Deduplicate games by normalized key
+                const seenKeys = new Set();
+                const games = [];
+                
+                rawGames.forEach(game => {
+                    if (!game.home || !game.away) return;
+                    const matchKey = [game.home.trim().toLowerCase(), game.away.trim().toLowerCase()].sort().join('_');
+                    if (!seenKeys.has(matchKey)) {
+                        seenKeys.add(matchKey);
+                        games.push(game);
+                    }
+                });
+
                 games.forEach(game => {
-                    if(!game.home || !game.away) return;
-                    
                     let qtr = game.quarter;
                     if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
 
@@ -507,10 +522,6 @@
                         </div>
                     </a>`;
                 });
-                
-                if(games.length > 0 && games.length < 8) {
-                    html = html + html + html + html; 
-                }
             }
             tickerEl.innerHTML = html;
         });
