@@ -264,7 +264,8 @@
                             <option value="Away">Away</option>
                             <option value="Neutral">Neutral</option>
                         </select>
-                        <input type="text" id="inpAddress" class="input-box w-full p-2 rounded-lg text-sm" placeholder="Stadium Name or Address">
+                        <input type="text" id="inpStadium" class="input-box w-full p-2 rounded-lg text-sm mb-2" placeholder="Stadium Name (e.g. Spartan Stadium)">
+                        <input type="text" id="inpAddress" class="input-box w-full p-2 rounded-lg text-sm" placeholder="Full Address or City">
                     </div>
                     <button type="submit" id="btnSubmitMatchup" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
                         Save Matchup
@@ -616,6 +617,29 @@
             }
         };
 
+        // --- AUTO FILL LOCATION LOGIC ---
+        window.autoFillLocation = function() {
+            const homeAway = document.getElementById('inpHomeAway').value;
+            const myTeam = new URLSearchParams(window.location.search).get('team') || "";
+            const oppTeam = document.getElementById('inpOpponent').value.trim();
+            
+            let targetTeam = "";
+            if (homeAway === "Home") targetTeam = myTeam;
+            else if (homeAway === "Away") targetTeam = oppTeam;
+
+            if (targetTeam && window.globalTeamDict) {
+                const teamData = window.globalTeamDict[targetTeam.toLowerCase()];
+                if (teamData) {
+                    if (teamData.stadium) document.getElementById('inpStadium').value = teamData.stadium;
+                    if (teamData.address) document.getElementById('inpAddress').value = teamData.address;
+                }
+            }
+        };
+
+        // Attach listeners for auto-fill immediately
+        document.getElementById('inpHomeAway').addEventListener('change', window.autoFillLocation);
+        document.getElementById('inpOpponent').addEventListener('blur', window.autoFillLocation);
+
         // --- COLOR LOGIC ---
         const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
 
@@ -879,7 +903,9 @@
                         if(sName) {
                             window.globalTeamDict[sName.toLowerCase()] = {
                                 logo: cleanText(r['Logo']),
-                                mascot: cleanText(r['Mascot'])
+                                mascot: cleanText(r['Mascot']),
+                                stadium: cleanText(r['FieldName']),
+                                address: cleanText(r['FieldLocation']) || cleanText(r['City'])
                             };
                         }
                     });
@@ -1380,10 +1406,12 @@
                 document.getElementById('inpDate').value = window.currentMatchupData.date || "";
                 document.getElementById('inpGameTime').value = window.currentMatchupData.time || "";
                 document.getElementById('inpHomeAway').value = window.currentMatchupData.homeAway || "Home";
+                document.getElementById('inpStadium').value = window.currentMatchupData.stadium || "";
                 document.getElementById('inpAddress').value = window.currentMatchupData.address || "";
             } else {
                 if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Set Matchup';
                 document.getElementById('publicMatchupForm').reset();
+                window.autoFillLocation(); // Auto-fill home stadium initially
             }
 
             const overlay = document.getElementById('publicMatchupModal');
@@ -1433,6 +1461,7 @@
                 date: document.getElementById('inpDate').value,
                 time: document.getElementById('inpGameTime').value,
                 homeAway: homeAway,
+                stadium: document.getElementById('inpStadium').value,
                 address: document.getElementById('inpAddress').value,
                 updatedBy: usernameToSave,
                 lastUpdated: curDate
@@ -1451,6 +1480,7 @@
                 date: document.getElementById('inpDate').value,
                 time: document.getElementById('inpGameTime').value,
                 homeAway: invertedHomeAway,
+                stadium: document.getElementById('inpStadium').value,
                 address: document.getElementById('inpAddress').value,
                 updatedBy: usernameToSave,
                 lastUpdated: curDate
