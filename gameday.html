@@ -57,13 +57,41 @@
         .input-box:focus { border-color: var(--team-primary, #fbbf24); outline: none; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         
         .btn-dynamic { background-color: var(--team-primary); color: var(--team-text); border: 1px solid var(--team-primary); }
+
+        /* --- CUSTOM TOAST NOTIFICATIONS --- */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast-message { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-radius: 12px; color: white; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .toast-error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        @keyframes slideInToast { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+        .toast-fade-out { animation: fadeOutToast 0.4s ease forwards; }
+        @keyframes fadeOutToast { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(120%); opacity: 0; } }
     </style>
 </head>
 <body class="antialiased relative">
 
+    <div id="toast-container"></div>
+
     <div id="loading-overlay">
         <i class="fa-solid fa-football fa-spin text-4xl text-pahs-gold mb-4"></i>
         <h2 class="font-head text-2xl text-gray-800" id="loading-text">Loading GameDay Data...</h2>
+    </div>
+
+    <!-- Login Required Prompt Modal -->
+    <div id="authPromptModal" class="modal-overlay" onclick="closeAuthPrompt(event)">
+        <div class="modal-content text-center" style="border-top-color: #ef4444;">
+            <div class="p-6 bg-white">
+                <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2 class="font-head text-3xl uppercase tracking-wide text-gray-900 mb-2">Access Denied</h2>
+                <p class="text-sm text-gray-600 mb-6 font-body" id="authPromptMsg">You must be logged in to access this feature.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeAuthPrompt(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">Cancel</button>
+                    <a href="login.html" class="flex-1 bg-pahs-dark text-pahs-gold font-bold uppercase tracking-wider py-3 rounded-xl hover:brightness-110 transition-all text-sm shadow border border-pahs-gold flex items-center justify-center">Go to Login</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="claim-team-prompt" class="hidden min-h-screen flex items-center justify-center p-4">
@@ -591,15 +619,46 @@
         
         window.currentUserProfile = null;
         window.currentMatchupData = null; 
-        window.globalTeamDict = {}; // Store all teams for cross-referencing
+        window.globalTeamDict = {}; 
 
-        // State Tracking
         let isUserLoggedIn = false;
         let isUserAdmin = false;
         let isActiveGame = false;
         let isTeamClaimed = false; 
 
-        // --- EXTERNAL LINK WARNING LOGIC ---
+        // --- CUSTOM TOAST NOTIFICATION LOGIC ---
+        window.showToast = function(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === "success" ? "toast-success" : "toast-error";
+            const icon = type === "success" ? "fa-check-circle" : "fa-circle-exclamation";
+            
+            toast.className = `toast-message ${bgColor}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('toast-fade-out');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        };
+
+        // --- AUTH PROMPT LOGIC ---
+        window.requireAuth = function(message) {
+            document.getElementById('authPromptMsg').innerText = message;
+            document.getElementById('authPromptModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeAuthPrompt = function(e, force = false) {
+            if (force || (e && e.target.id === 'authPromptModal')) {
+                document.getElementById('authPromptModal').style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        };
+
         window.openExternalLink = function(e, url) {
             if (e) {
                 e.preventDefault();
@@ -620,7 +679,6 @@
             }
         };
 
-        // --- AUTO FILL LOCATION LOGIC ---
         window.autoFillLocation = function() {
             const homeAway = document.getElementById('inpHomeAway').value;
             const myTeam = new URLSearchParams(window.location.search).get('team') || "";
@@ -639,11 +697,9 @@
             }
         };
 
-        // Attach listeners for auto-fill immediately
         document.getElementById('inpHomeAway').addEventListener('change', window.autoFillLocation);
         document.getElementById('inpOpponent').addEventListener('blur', window.autoFillLocation);
 
-        // --- COLOR LOGIC ---
         const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
 
         function normalizeColor(c) {
@@ -684,7 +740,6 @@
             return str.replace(/\*/g, '').trim();
         }
 
-        // --- PROFANITY & LINKS ---
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         
         function filterProfanity(text) {
@@ -713,7 +768,6 @@
                 }
                 const displayUrl = cleanUrl.length > 30 ? cleanUrl.substring(0, 30) + '...' : cleanUrl;
                 
-                // Bypass warning for PAHSFootball domains
                 if (cleanUrl.toLowerCase().includes('pahsfootball.com')) {
                     return `<a href="${cleanUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-bold underline text-xs" onclick="event.stopPropagation()">${displayUrl}</a>`;
                 }
@@ -724,7 +778,11 @@
 
         window.sharePage = function() {
             if (navigator.share) { navigator.share({ title: document.title, url: window.location.href }).catch(console.error); } 
-            else { navigator.clipboard.writeText(window.location.href).then(() => { alert("Link copied!"); }); }
+            else { 
+                navigator.clipboard.writeText(window.location.href).then(() => { 
+                    window.showToast("Link copied to clipboard!", "success"); 
+                }); 
+            }
         };
         
         window.copyAddress = function() {
@@ -744,7 +802,6 @@
             }
         };
 
-        // --- FETCH EMBEDDED FAN ZONE POSTS ---
         function listenToEmbeddedPosts(homeTeam, awayTeam) {
             const container = document.getElementById('embedFeedContainer');
             const postsRef = ref(dbRealtime, 'fanzone_posts');
@@ -805,7 +862,6 @@
             });
         }
 
-        // --- CENTRAL UI CONTROLLER ---
         function updateUIState() {
             const loginPanel = document.getElementById('authActionPanel');
             const adminTopBar = document.getElementById('adminTopBar');
@@ -827,7 +883,6 @@
                 if(sbCard) sbCard.classList.remove('hidden');
             }
 
-            // Always show the create panel if there's no active game
             if (!isActiveGame) {
                 if(publicCreatePanel) publicCreatePanel.classList.remove('hidden');
             }
@@ -852,7 +907,6 @@
             }
         }
 
-        // --- AUTH CHECK ---
         onAuthStateChanged(auth, async (user) => {
             const teamParam = new URLSearchParams(window.location.search).get('team');
             
@@ -886,7 +940,6 @@
             updateUIState();
         });
 
-        // --- MAIN DATA LOADER (CSV to UI) ---
         document.addEventListener("DOMContentLoaded", () => {
             const teamParam = new URLSearchParams(window.location.search).get('team');
             if (!teamParam) { 
@@ -900,7 +953,6 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: async function(results) {
-                    // 1. Build a master dictionary of all teams
                     results.data.forEach(r => {
                         const sName = cleanText(r['School']);
                         if(sName) {
@@ -913,7 +965,6 @@
                         }
                     });
 
-                    // 2. Find the current team
                     const teamRow = results.data.find(r => {
                         const school = r['School'] ? cleanText(r['School']) : '';
                         return school.toLowerCase() === teamParam.toLowerCase();
@@ -936,7 +987,6 @@
 
                         document.getElementById('loading-overlay').style.display = 'none';
 
-                        // Check/set last updated values for the disclaimer
                         if (game.lastUpdated) {
                             const updateDate = new Date(game.lastUpdated);
                             document.getElementById('ui-last-time').innerText = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -944,7 +994,6 @@
                         }
                         document.getElementById('ui-last-user').innerText = game.updatedBy ? `@${game.updatedBy}` : "System";
 
-                        // --- TICKET AND BROADCAST LOGIC ---
                         const ticketLink = game.ticketLink || teamRow['TicketLink'] || teamRow['Tickets'] || "";
                         const broadcastInfo = game.broadcast || teamRow['Broadcast'] || teamRow['Radio'] || "None Listed";
 
@@ -963,7 +1012,6 @@
                         if (!game.yourTeam) {
                             isActiveGame = false;
                             
-                            // --- OFFSEASON FALLBACK STATE ---
                             document.getElementById('main-app').classList.remove('hidden');
                             document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
                             
@@ -992,7 +1040,6 @@
                             document.getElementById('ui-opp-fallback').style.display = 'flex'; 
                             document.getElementById('ui-opp-fallback').innerText = "TBD"; 
 
-                            // Update Links for Offseason
                             document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(cleanText(teamRow['School']))}`;
                             document.getElementById('link-opp-team').href = "javascript:void(0);";
                             document.getElementById('link-opp-team').classList.remove('hover:scale-105');
@@ -1025,7 +1072,6 @@
 
                         } else {
                             isActiveGame = true;
-                            
                             window.currentMatchupData = game;
                             
                             document.getElementById('main-app').classList.remove('hidden');
@@ -1034,11 +1080,18 @@
                             document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
                             document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
                             document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
+
+                            // ROBUST LOGO LOGIC - Global Dict priority
+                            const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
+                            const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
+                            
+                            const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || teamRow['Logo'] || "");
+                            const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
                             
                             const yourLogoEl = document.getElementById('ui-your-logo');
                             const yourFallbackEl = document.getElementById('ui-your-fallback');
-                            if(game.yourTeamLogo && game.yourTeamLogo.trim() !== "") { 
-                                yourLogoEl.src = game.yourTeamLogo; 
+                            if(activeYourLogo.trim() !== "") { 
+                                yourLogoEl.src = activeYourLogo; 
                                 yourLogoEl.style.display = 'block'; 
                                 yourFallbackEl.style.display = 'none'; 
                             } else { 
@@ -1053,8 +1106,8 @@
                             
                             const oppLogoEl = document.getElementById('ui-opp-logo');
                             const oppFallbackEl = document.getElementById('ui-opp-fallback');
-                            if(game.oppLogo && game.oppLogo.trim() !== "") { 
-                                oppLogoEl.src = game.oppLogo; 
+                            if(activeOppLogo.trim() !== "") { 
+                                oppLogoEl.src = activeOppLogo; 
                                 oppLogoEl.style.display = 'block'; 
                                 oppFallbackEl.style.display = 'none'; 
                             } else { 
@@ -1063,7 +1116,6 @@
                                 oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
                             }
 
-                            // Update Links for Active Game
                             document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(game.yourTeam)}`;
                             document.getElementById('link-opp-team').href = `gameday.html?team=${encodeURIComponent(game.opponent)}`;
                             document.getElementById('link-opp-team').classList.add('hover:scale-105');
@@ -1139,6 +1191,12 @@
             const awayName = (!isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
             const gameKey = [homeName, awayName].sort().join('_');
             
+            // Prioritize Global Dict for logos
+            const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
+            const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
+            const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || "");
+            const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
+
             const sbCard = document.getElementById('basicScoreboardCard');
             const statusBadge = document.getElementById('sb-status');
             const liveDot = document.getElementById('sb-live-dot');
@@ -1173,8 +1231,8 @@
                     else if (data.possession === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
                     else { homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden'); }
 
-                    const finalHomeLogo = (data.homeLogo && data.homeLogo.trim() !== "") ? data.homeLogo : (isHomeSide ? game.yourTeamLogo : game.oppLogo);
-                    const finalAwayLogo = (data.awayLogo && data.awayLogo.trim() !== "") ? data.awayLogo : (!isHomeSide ? game.yourTeamLogo : game.oppLogo);
+                    const finalHomeLogo = isHomeSide ? activeYourLogo : activeOppLogo;
+                    const finalAwayLogo = !isHomeSide ? activeYourLogo : activeOppLogo;
 
                     if(finalHomeLogo && finalHomeLogo.trim() !== "") { 
                         hLogo.src = finalHomeLogo; 
@@ -1229,8 +1287,8 @@
                     statusBadge.innerText = "PREGAME";
                     statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded uppercase tracking-widest border";
                     
-                    let hUrl = isHomeSide ? game.yourTeamLogo : game.oppLogo; 
-                    let aUrl = !isHomeSide ? game.yourTeamLogo : game.oppLogo;
+                    let hUrl = isHomeSide ? activeYourLogo : activeOppLogo; 
+                    let aUrl = !isHomeSide ? activeYourLogo : activeOppLogo;
                     
                     if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
                     else { hLogo.style.display = 'none'; hFall.style.display='block'; }
@@ -1243,7 +1301,7 @@
 
         window.openScoreModal = async function() {
             const game = window.currentMatchupData;
-            if (!game || !game.yourTeam) return alert("Game data hasn't loaded yet.");
+            if (!game || !game.yourTeam) return window.showToast("Game data hasn't loaded yet.", "error");
             
             const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
@@ -1300,11 +1358,17 @@
 
             const usernameToSave = window.currentUserProfile?.username || "Fan";
 
+            // Enforce Global Logos
+            const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
+            const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
+            const myLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || "");
+            const oppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
+
             const updateData = {
                 home: isHomeSide ? game.yourTeam : game.opponent,
                 away: !isHomeSide ? game.yourTeam : game.opponent,
-                homeLogo: isHomeSide ? game.yourTeamLogo : game.oppLogo,
-                awayLogo: !isHomeSide ? game.yourTeamLogo : game.oppLogo,
+                homeLogo: isHomeSide ? myLogo : oppLogo,
+                awayLogo: !isHomeSide ? myLogo : oppLogo,
                 homeScore: parseInt(document.getElementById('inpHomeScore').value) || 0,
                 awayScore: parseInt(document.getElementById('inpAwayScore').value) || 0,
                 quarter: qtr,
@@ -1319,21 +1383,18 @@
                 window.closeScoreModal(); 
                 btn.innerText = origText; 
                 btn.disabled = false;
+                window.showToast("Score updated successfully!", "success");
             }).catch(err => {
-                alert("Error updating score."); 
+                window.showToast("Error updating score.", "error"); 
                 btn.innerText = origText; 
                 btn.disabled = false;
             });
         });
 
-        // --- SHARE SCORE MODAL ---
         window.openShareScoreModal = function(e) {
             if (e) e.stopPropagation();
             if (!auth.currentUser) {
-                if(confirm("You must be logged in to post to the Fan Zone. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
+                return window.requireAuth("You must be logged in to post to the Fan Zone.");
             }
 
             const homeName = document.getElementById('sb-home-name').innerText;
@@ -1369,8 +1430,8 @@
             const content = document.getElementById('shareScoreContent').value.trim();
             const origText = btn.innerText;
             
-            if (content === "") return alert("Post cannot be empty.");
-            if (content.length > 500) return alert("Post is too long. Max 500 characters.");
+            if (content === "") return window.showToast("Post cannot be empty.", "error");
+            if (content.length > 500) return window.showToast("Post is too long. Max 500 characters.", "error");
 
             btn.innerText = "Posting...";
             btn.disabled = true;
@@ -1392,29 +1453,24 @@
                 });
                 
                 window.closeShareScoreModal(null, true);
-                alert("Score shared to the Fan Zone successfully!");
+                window.showToast("Score shared to the Fan Zone successfully!", "success");
             } catch (error) { 
                 console.error(error);
-                alert("Failed to communicate with server."); 
+                window.showToast("Failed to communicate with server.", "error"); 
             } finally {
                 btn.innerText = origText;
                 btn.disabled = false;
             }
         };
 
-        // --- PUBLIC MATCHUP LOGIC ---
         window.openPublicMatchupModal = function(e) {
             if (e) e.preventDefault();
             if (!isUserLoggedIn) {
-                if(confirm("You must be logged in to create or edit a matchup. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
+                return window.requireAuth("You must be logged in to create or edit a matchup.");
             }
 
             const modalTitle = document.getElementById('modalMatchupTitle');
 
-            // Pre-fill form if a game is currently active
             if (window.currentMatchupData && isActiveGame) {
                 if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Matchup';
                 document.getElementById('inpOpponent').value = window.currentMatchupData.opponent || "";
@@ -1426,7 +1482,7 @@
             } else {
                 if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Set Matchup';
                 document.getElementById('publicMatchupForm').reset();
-                window.autoFillLocation(); // Auto-fill home stadium initially
+                window.autoFillLocation(); 
             }
 
             const overlay = document.getElementById('publicMatchupModal');
@@ -1450,16 +1506,14 @@
             const opponentInput = document.getElementById('inpOpponent').value.trim();
             const homeAway = document.getElementById('inpHomeAway').value;
 
-            // Track previous game info to handle cleanup if opponent changed
             const oldGame = window.currentMatchupData;
             const oldOpponent = (oldGame && oldGame.opponent) ? oldGame.opponent.trim() : null;
 
-            // Look up logos from the global dictionary
+            // Strict Logo Parsing logic 
             const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
             const oppTeamData = window.globalTeamDict[opponentInput.toLowerCase()] || {};
-
-            const myLogo = myTeamData.logo || "";
-            const oppLogo = oppTeamData.logo || "";
+            const myLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (oldGame ? oldGame.yourTeamLogo : "");
+            const oppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (oldGame ? oldGame.oppLogo : "");
 
             const safeKey = cleanText(teamParam).toUpperCase().replace(/[^A-Z0-9]/g, '');
             const oppSafeKey = cleanText(opponentInput).toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -1467,7 +1521,6 @@
             const usernameToSave = window.currentUserProfile?.username || "Fan";
             const curDate = new Date().toISOString();
 
-            // Data for Current Team's Page
             const matchupDataA = {
                 yourTeam: teamParam,
                 yourTeamLogo: myLogo,
@@ -1482,7 +1535,6 @@
                 lastUpdated: curDate
             };
 
-            // Data for Opponent Team's Page (Inverts Home/Away)
             let invertedHomeAway = "Neutral";
             if (homeAway === "Home") invertedHomeAway = "Away";
             if (homeAway === "Away") invertedHomeAway = "Home";
@@ -1501,7 +1553,6 @@
                 lastUpdated: curDate
             };
 
-            // Data for the Live Score Ticker (index.html)
             let homeName = homeAway === "Home" ? teamParam : (homeAway === "Away" ? opponentInput : teamParam);
             let awayName = homeAway === "Home" ? opponentInput : (homeAway === "Away" ? teamParam : opponentInput);
 
@@ -1523,10 +1574,8 @@
                 lastUpdated: curDate
             };
 
-            // Prepare Firebase Updates
             const updates = {};
 
-            // If opponent was changed during edit, wipe the old opponent's page and old live score
             if (oldOpponent && oldOpponent.toLowerCase() !== opponentInput.toLowerCase()) {
                 const oldOppSafeKey = cleanText(oldOpponent).toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const oldHome = (oldGame.homeAway === "Away" ? oldOpponent : teamParam).replace(/[^a-zA-Z0-9]/g, '');
@@ -1537,11 +1586,9 @@
                 updates['live_scores/' + oldGameKey] = null;
             }
 
-            // Apply new/updated records
             updates['gameday_config/' + safeKey] = matchupDataA;          
             updates['gameday_config/' + oppSafeKey] = matchupDataB;       
 
-            // For live_scores: maintain current scores if just editing time/location of existing matchup
             if (oldOpponent && oldOpponent.toLowerCase() === opponentInput.toLowerCase()) {
                 updates['live_scores/' + gameKey + '/home'] = homeName;
                 updates['live_scores/' + gameKey + '/away'] = awayName;
@@ -1553,29 +1600,28 @@
                 updates['live_scores/' + gameKey] = liveScoreInit;
             }
 
-            // Execute Firebase Multipath Update
             try {
                 await update(ref(dbRealtime), updates);
                 
                 window.closePublicMatchupModal(null, true);
-                alert("Matchup updated and synced successfully!");
-                window.location.reload();
+                window.showToast("Matchup updated and synced successfully!", "success");
+                
+                // Allow the toast animation to run before reloading the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
             } catch (err) {
                 console.error(err);
-                alert("Error saving matchup. Check permissions.");
-            } finally {
+                window.showToast("Error saving matchup. Check permissions.", "error");
                 btn.innerText = "Save Matchup"; btn.disabled = false;
             }
         });
 
-        // --- REPORTING LOGIC ---
         window.openReportModal = function(e) {
             if (e) e.preventDefault();
             if (!isUserLoggedIn) {
-                if(confirm("You must be logged in to report data. Go to login?")) {
-                    window.location.href = "login.html";
-                }
-                return;
+                return window.requireAuth("You must be logged in to report data.");
             }
             const overlay = document.getElementById('reportModal');
             overlay.style.display = 'flex';
@@ -1611,16 +1657,15 @@
                 });
                 
                 window.closeReportModal(null, true);
-                alert("Report submitted to the moderation team. Thank you!");
+                window.showToast("Report submitted to the moderation team. Thank you!", "success");
             } catch (err) {
                 console.error(err);
-                alert("Error submitting report.");
+                window.showToast("Error submitting report.", "error");
             } finally {
                 btn.innerText = "Submit Report"; btn.disabled = false;
             }
         });
 
-        // --- SUGGEST LINK MODAL LOGIC ---
         window.openSuggestLinkModal = function() {
             const overlay = document.getElementById('suggestLinkModalOverlay');
             overlay.style.display = 'flex';
@@ -1683,20 +1728,16 @@
             .then(() => {
                  btn.style.display = 'none'; 
                  msg.classList.remove('hidden'); 
-                 msg.style.color = '#10b981'; 
-                 msg.innerText = 'Link Submitted Successfully!';
+                 window.showToast("Link Submitted Successfully!", "success");
                  setTimeout(() => { window.closeSuggestLinkModal(null, true); }, 2000);
             }).catch(() => { 
                 btn.innerText = 'Try Again'; 
                 btn.disabled = false; 
                 btn.style.opacity = '1'; 
-                msg.classList.remove('hidden'); 
-                msg.style.color = '#ef4444'; 
-                msg.innerText = 'Error sending request.'; 
+                window.showToast("Error sending request.", "error");
             });
         });
 
-        // --- WEATHER FETCH LOGIC ---
         async function fetchWeather(address, gameDateObj) {
             const weatherEl = document.getElementById('ui-weather');
 
