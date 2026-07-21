@@ -407,11 +407,13 @@
                 const teamName = row['School'] || row['Team Name'] || row['Team'];
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
                 const teamClass = row['Class'] || "";
+                const teamRec = row['Record'] || row['2026Record'] || "0-0";
                 
                 if (teamName) {
                     globalTeamDict[teamName.trim().toLowerCase()] = {
                         logo: logoUrl ? logoUrl.trim() : '',
-                        classification: teamClass.trim()
+                        classification: teamClass.trim(),
+                        record: teamRec.trim()
                     };
                 }
             });
@@ -440,7 +442,7 @@
             } else {
                 const rawGames = Object.values(data);
                 
-                // Deduplicate games by normalized key
+                // Deduplicate games by normalized matchup key
                 const seenKeys = new Set();
                 const games = [];
                 
@@ -461,7 +463,6 @@
                     let isFinal = (qtr === "FINAL" || game.status === "FINAL");
                     let isHalf = (qtr === "HALF");
 
-                    // Fallback to gameday_config if date/time are missing
                     if (!game.date || !game.time) {
                         const homeKey = game.home.toUpperCase().replace(/[^A-Z0-9]/g, '');
                         const conf = gamedayConfigs[homeKey];
@@ -508,13 +509,16 @@
                     const homeClassHtml = homeData.classification ? `<span style="font-size:11px; color:#fbbf24; font-weight:800; margin-left:4px; vertical-align:top;">${homeData.classification}</span>` : '';
                     const awayClassHtml = awayData.classification ? `<span style="font-size:11px; color:#fbbf24; font-weight:800; margin-left:4px; vertical-align:top;">${awayData.classification}</span>` : '';
 
+                    const homeRec = game.homeRecord || homeData.record || '0-0';
+                    const awayRec = game.awayRecord || awayData.record || '0-0';
+
                     html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
-                        <span class="team-name">${game.away}${awayClassHtml}</span>
+                        <span class="team-name">${game.away} <span style="font-size:12px; color:#aaa; font-weight:normal;">(${awayRec})</span>${awayClassHtml}</span>
                         ${awayScoreHtml}
                         <span class="vs">VS</span>
                         <img src="${finalHomeLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalHomeLogo ? '' : 'display:none;'}" alt="Logo">
-                        <span class="team-name">${game.home}${homeClassHtml}</span>
+                        <span class="team-name">${game.home} <span style="font-size:12px; color:#aaa; font-weight:normal;">(${homeRec})</span>${homeClassHtml}</span>
                         ${homeScoreHtml}
                         <div class="game-info">
                             <span class="game-date" style="${statusColor}">${statusText}</span>
