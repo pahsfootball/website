@@ -63,13 +63,13 @@
         <div class="max-w-7xl mx-auto flex flex-col gap-5">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4 w-full md:w-auto">
-                    <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
+                    <a href="index.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-lg transition-all duration-300">
                         <i class="fa-solid fa-house text-xs"></i>
-                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Home</span>
+                        <span class="font-bold font-head text-lg pt-0.5 uppercase">Home</span>
                     </a>
-                    <a href="all-scores.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                        <i class="fa-solid fa-list-ol text-xs"></i>
-                        <span class="text-sm font-bold font-head text-lg pt-0.5 uppercase">Scores</span>
+                    <a href="all-scores.html" class="group flex items-center gap-2 px-6 py-2.5 bg-pahs-gold text-black border border-pahs-gold hover:bg-white hover:border-white rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-list-ol text-sm animate-pulse"></i>
+                        <span class="font-bold font-head text-xl pt-0.5 uppercase tracking-wide">Live Scores</span>
                     </a>
                 </div>
                 <h1 class="text-3xl font-bold font-head text-white tracking-wide uppercase hidden md:block">Statewide <span class="text-pahs-gold">Teams</span></h1>
@@ -354,7 +354,7 @@
         const dSet = new Set(), cSet = new Set();
         data.forEach(r => { if(r.district) dSet.add(r.district); if(r.classification) cSet.add(r.classification); });
         const romanToInt = (str) => { const map = { "I":1, "II":2, "III":3, "IV":4, "V":5, "VI":6, "VII":7, "VIII":8, "IX":9, "X":10, "XI":11, "XII":12 }; return map[str.trim().toUpperCase()] || 0; };
-        const sortDistricts = (a, b) => { const rA = romanToInt(a), rB = romanToInt(b); if (rA > 0 && rB > 0) return rA - rB; const nA = parseInt(a.replace(/\D/g, '')), nB = parseInt(b.replace(/\D/g, '')); if (!isNaN(nA) && !isNaN(nB)) return nA - nB; return a.localeCompare(b, undefined, {numeric: true}); };
+        const sortDistricts = (a, b) => { const rA = romanToInt(a), rB = romanToInt(b); if (rA > 0 && rB > 0) return rA - rB; const nA = parseInt(a.replace(/\D/g, '')); const nB = parseInt(b.replace(/\D/g, '')); if (!isNaN(nA) && !isNaN(nB)) return nA - nB; return a.localeCompare(b, undefined, {numeric: true}); };
         Array.from(dSet).sort(sortDistricts).forEach(d => els.district.add(new Option(`District ${d}`, d)));
         Array.from(cSet).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(c => els.class.add(new Option(`Class ${c}`, c)));
     }
