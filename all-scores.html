@@ -30,9 +30,9 @@
 
         /* --- SCORE UPDATE ANIMATIONS --- */
         @keyframes scoreUpdateAnim {
-            0% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
-            15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
-            50% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
+            0% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
+            15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
+            50% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
             100% { transform: scale(1); }
         }
         .anim-score-update {
@@ -41,11 +41,11 @@
         }
         
         @keyframes fadeOutDelayed {
-            0%, 60% { opacity: 1; }
+            0%, 70% { opacity: 1; }
             100% { opacity: 0; visibility: hidden; }
         }
         .animate-fade-out-delayed {
-            animation: fadeOutDelayed 3s forwards;
+            animation: fadeOutDelayed 3.5s forwards;
         }
     </style>
 </head>
@@ -94,7 +94,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
@@ -126,7 +126,8 @@
         };
 
         function formatGameTime(timeStr) {
-            if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
+            if (!timeStr || timeStr === "undefined") return "7:00 PM";
+            if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) return timeStr;
             try {
                 let [hh, mm] = timeStr.split(':');
                 let h = parseInt(hh);
@@ -137,7 +138,7 @@
         }
 
         function formatGameDate(dateStr) {
-            if (!dateStr) return "PREGAME";
+            if (!dateStr || dateStr === "undefined") return "PREGAME";
             try {
                 let [y, m, d] = dateStr.split('-');
                 let dObj = new Date(y, m - 1, d);
@@ -145,10 +146,89 @@
                     return `${dObj.getMonth()+1}/${dObj.getDate()}/${dObj.getFullYear().toString().slice(-2)}`;
                 }
             } catch(e) {}
-            return "PREGAME";
+            return dateStr;
         }
 
-        // Fetch team logos and classes first, then load schedule
+        // --- POP-OUT SCOREBOARD WINDOW LOGIC ---
+        window.popoutScoreboard = function(home, away, gameKey) {
+            const w = 450, h = 320;
+            const left = (screen.width/2)-(w/2);
+            const top = (screen.height/2)-(h/2);
+            const pop = window.open('', `sb_${gameKey}`, `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no`);
+            
+            pop.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${home} vs ${away} - Live Tracker</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        body { background: #0f0f0f; color: white; font-family: 'Inter', sans-serif; margin:0; padding:16px; user-select:none; }
+                        .pop-card { background: #18181b; border: 2px solid #fbbf24; border-radius: 16px; padding: 20px; box-shadow: 0 0 25px rgba(251,191,36,0.3); }
+                        @keyframes flash { 0%,100%{transform:scale(1);} 50%{transform:scale(1.2);color:#ef4444;} }
+                        .score-changed { animation: flash 0.8s ease-in-out 3; }
+                    </style>
+                </head>
+                <body>
+                    <div class="pop-card">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                            <span class="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5" id="sb-status">
+                                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> PREGAME
+                            </span>
+                            <span class="font-mono font-bold text-sm text-gray-300" id="sb-clock">12:00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-center">
+                            <div class="w-5/12">
+                                <div class="font-head text-2xl uppercase font-bold text-white truncate">${home}</div>
+                                <div class="text-6xl font-mono font-black text-yellow-400 mt-1" id="home-score">0</div>
+                            </div>
+                            <div class="text-2xl font-black text-gray-600">-</div>
+                            <div class="w-5/12">
+                                <div class="font-head text-2xl uppercase font-bold text-white truncate">${away}</div>
+                                <div class="text-6xl font-mono font-black text-yellow-400 mt-1" id="away-score">0</div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4 text-[10px] text-gray-500 uppercase tracking-widest border-t border-gray-800/80 pt-2">
+                            PAHSFootball Live Tracker • Auto-Updating
+                        </div>
+                    </div>
+                    <script type="module">
+                        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+                        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+                        const app = initializeApp(${JSON.stringify(firebaseConfig)});
+                        const db = getDatabase(app);
+                        let prevH = null, prevA = null;
+                        onValue(ref(db, 'live_scores/' + '${gameKey}'), (snap) => {
+                            const d = snap.val();
+                            if (d) {
+                                const hEl = document.getElementById('home-score');
+                                const aEl = document.getElementById('away-score');
+                                if (prevH !== null && d.homeScore !== prevH) {
+                                    hEl.innerText = d.homeScore;
+                                    hEl.classList.add('score-changed');
+                                    setTimeout(() => hEl.classList.remove('score-changed'), 3000);
+                                } else { hEl.innerText = d.homeScore || 0; }
+
+                                if (prevA !== null && d.awayScore !== prevA) {
+                                    aEl.innerText = d.awayScore;
+                                    aEl.classList.add('score-changed');
+                                    setTimeout(() => aEl.classList.remove('score-changed'), 3000);
+                                } else { aEl.innerText = d.awayScore || 0; }
+
+                                prevH = d.homeScore; prevA = d.awayScore;
+                                document.getElementById('sb-status').innerText = d.quarter || d.status || "LIVE";
+                                document.getElementById('sb-clock').innerText = d.clock || "12:00";
+                            }
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `);
+        };
+
+        // Parse Master Teams CSV
         Papa.parse(MASTER_TEAMS_CSV, {
             download: true,
             header: true,
@@ -167,7 +247,6 @@
                     }
                 });
 
-                // Now load the base schedule
                 Papa.parse(SCHEDULE_CSV_URL, {
                     download: true,
                     header: true,
@@ -210,7 +289,14 @@
             }
         });
 
-        function startFirebaseListener() {
+        async function startFirebaseListener() {
+            // Also fetch gameday_config to cross-reference missing dates/times
+            let gamedayConfigs = {};
+            try {
+                const configSnap = await get(ref(dbRealtime, 'gameday_config'));
+                if (configSnap.exists()) gamedayConfigs = configSnap.val();
+            } catch(e) { console.error(e); }
+
             onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
                 const liveData = snapshot.val() || {};
                 const mergedGamesArray = [];
@@ -230,12 +316,30 @@
                 for (let key in tempGamesMap) {
                     const game = tempGamesMap[key];
                     game.justUpdated = false;
-                    if (!isFirstLoad && previousScores[key]) {
-                        if (previousScores[key].homeScore !== game.homeScore || previousScores[key].awayScore !== game.awayScore) {
-                            game.justUpdated = true;
+                    game.pointsAdded = 0;
+
+                    // Cross-reference date/time from gameday_config if missing in live_scores
+                    if (!game.date || !game.time) {
+                        const homeKey = game.home.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        const conf = gamedayConfigs[homeKey];
+                        if (conf) {
+                            if (!game.date && conf.date) game.date = conf.date;
+                            if (!game.time && conf.time) game.time = conf.time;
                         }
                     }
-                    previousScores[key] = { homeScore: game.homeScore, awayScore: game.awayScore };
+
+                    if (!isFirstLoad && previousScores[key]) {
+                        const prevH = previousScores[key].homeScore || 0;
+                        const prevA = previousScores[key].awayScore || 0;
+                        const currH = game.homeScore || 0;
+                        const currA = game.awayScore || 0;
+
+                        if (currH !== prevH || currA !== prevA) {
+                            game.justUpdated = true;
+                            game.pointsAdded = Math.max(currH - prevH, currA - prevA);
+                        }
+                    }
+                    previousScores[key] = { homeScore: game.homeScore || 0, awayScore: game.awayScore || 0 };
                     mergedGamesArray.push(game);
                 }
 
@@ -256,7 +360,7 @@
                         if (s === 'FINAL' || q === 'FINAL') return 4;
                         if (q === 'PREGAME' || s === 'UPCOMING' || s === 'PREGAME') return 3;
                         if (q === 'HALF') return 2;
-                        return 1; // LIVE action
+                        return 1; 
                     };
                     const weightA = getWeight(a.status, a.quarter);
                     const weightB = getWeight(b.status, b.quarter);
@@ -285,11 +389,13 @@
                     let clockHtml = "";
 
                     if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
-                        badgeText = game.date ? formatGameDate(game.date) : "PREGAME";
-                        badgeClass = "bg-gray-200 text-gray-800 border border-gray-300"; 
+                        let fDate = game.date ? formatGameDate(game.date) : "8/28/26";
+                        let fTime = game.time ? formatGameTime(game.time) : "7:00 PM";
+                        
+                        badgeText = fDate;
+                        badgeClass = "bg-gray-200 text-gray-800 border border-gray-300 font-bold"; 
                         cardBorder = "border-gray-200 shadow-sm";
-                        let timeStr = game.time ? formatGameTime(game.time) : "TBA";
-                        clockHtml = `<span class="font-mono font-bold text-sm text-gray-600">${timeStr}</span>`;
+                        clockHtml = `<span class="font-mono font-bold text-xs text-gray-600">${fTime}</span>`;
                     } else if (qtrUpper === "HALF") {
                         badgeText = "HALFTIME";
                         badgeClass = "bg-yellow-600 text-black";
@@ -344,10 +450,14 @@
                     const homeUrl = formatTeamUrl(game.home);
                     const awayUrl = formatTeamUrl(game.away);
 
+                    let ptsNotice = game.pointsAdded > 0 ? `+${game.pointsAdded} ` : '';
                     let updateAnimClass = game.justUpdated ? "anim-score-update" : "";
                     let updateOverlayHtml = game.justUpdated ? `
-                        <div class="absolute inset-0 bg-white/95 z-50 flex items-center justify-center rounded-2xl font-head text-4xl text-red-600 animate-fade-out-delayed pointer-events-none border-4 border-pahs-gold shadow-2xl">
-                            <i class="fa-solid fa-bolt text-yellow-500 mr-3 animate-pulse"></i> SCORE UPDATE
+                        <div class="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center rounded-2xl font-head text-4xl text-red-600 animate-fade-out-delayed pointer-events-none border-4 border-pahs-gold shadow-2xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-yellow-500 animate-pulse"></i> 
+                                <span>${ptsNotice}SCORE UPDATE!</span>
+                            </div>
                         </div>
                     ` : "";
 
@@ -360,6 +470,9 @@
                                     <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                    <button onclick="popoutScoreboard('${game.home.replace(/'/g, "\\'")}', '${game.away.replace(/'/g, "\\'")}', '${game.id}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                                        <i class="fa-solid fa-up-right-from-square"></i> Pop Out
+                                    </button>
                                     <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
                                     ${clockHtml}
                                 </div>
