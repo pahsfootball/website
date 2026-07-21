@@ -49,20 +49,28 @@
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased relative">
 
     <nav class="bg-pahs-dark text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="teams.html" class="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase">Back</span>
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+                <a href="index.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Home</span>
                 </a>
-                <h1 class="text-3xl font-bold font-head tracking-wide hidden sm:block uppercase">Statewide Scores</h1>
+                <a href="teams.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Teams</span>
+                </a>
+                <a href="community.html" class="group flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-pahs-gold text-white hover:text-black border border-white/10 hover:border-pahs-gold rounded-lg transition-all duration-300 whitespace-nowrap">
+                    <i class="fa-solid fa-comments"></i>
+                    <span class="font-bold font-head text-lg pt-0.5 tracking-wide uppercase hidden sm:block">Fan Zone</span>
+                </a>
+                <h1 class="text-2xl md:text-3xl font-bold font-head tracking-wide hidden lg:block uppercase ml-2">Statewide Scores</h1>
             </div>
-            <div class="flex items-center gap-2 font-head text-2xl tracking-wide">
+            <div class="flex items-center gap-2 font-head text-2xl tracking-wide flex-shrink-0 ml-4">
                 <i class="fa-solid fa-list-ol text-pahs-gold"></i>
-                <span class="font-bold">PAHS<span class="text-pahs-gold">Football</span></span>
+                <span class="font-bold hidden sm:inline">PAHS<span class="text-pahs-gold">Football</span></span>
             </div>
         </div>
     </nav>
@@ -91,6 +99,32 @@
         </div>
 
     </main>
+
+    <!-- SHARE CONFIRMATION MODAL -->
+    <div id="shareModalOverlay" class="fixed inset-0 bg-black/80 z-[100] backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300" onclick="if(event.target === this) closeShareModal()">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 border-t-4 border-pahs-gold flex flex-col" id="shareModalContent">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-blue-700 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-share"></i> Share to Fan Zone
+                </h2>
+                <button onclick="closeShareModal()" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-3 font-body font-bold">Preview your post:</p>
+                <div id="sharePostPreview" class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 font-body text-sm text-gray-800 whitespace-pre-wrap leading-relaxed shadow-inner">
+                    <!-- Post content gets injected here -->
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeShareModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <button id="confirmShareBtn" onclick="confirmShareToFanZone()" class="flex-1 bg-blue-600 text-white font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-blue-700 transition-all text-sm shadow">
+                        Post to Fan Zone
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -143,6 +177,7 @@
         let isFirstLoad = true;  
         let globalTeamDict = {}; 
         window.currentGameMap = {}; // Tracks live game data for sharing
+        window.pendingShareData = null; // Tracks data while confirmation modal is open
 
         const formatTeamUrl = (teamName) => {
             if (!teamName) return '#';
@@ -173,7 +208,40 @@
             return dateStr;
         }
 
-        // --- FAN ZONE SHARE LOGIC ---
+        // --- FAN ZONE SHARE MODAL LOGIC ---
+        window.openShareModal = (content) => {
+            const overlay = document.getElementById('shareModalOverlay');
+            const modalContent = document.getElementById('shareModalContent');
+            document.getElementById('sharePostPreview').innerText = content;
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            // Animation
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeShareModal = () => {
+            const overlay = document.getElementById('shareModalOverlay');
+            const modalContent = document.getElementById('shareModalContent');
+            
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+                window.pendingShareData = null; // Clear pending data
+            }, 300);
+        };
+
         window.shareToFanZone = async (btnElement, gameId) => {
             if (!currentUser) {
                 return alert("You must be logged in to share updates to the Fan Zone!");
@@ -181,11 +249,6 @@
 
             const game = window.currentGameMap[gameId];
             if (!game) return alert("Error: Game data not found.");
-
-            // Give visual feedback to button
-            const originalText = btnElement.innerHTML;
-            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btnElement.disabled = true;
 
             let qtr = game.quarter || "PREGAME";
             let stat = game.status || "UPCOMING";
@@ -209,6 +272,28 @@
                 content = `🚨 SCORE UPDATE:\n\n${game.home} - ${game.homeScore || 0}\n${game.away} - ${game.awayScore || 0}\n\n🕒 Status: ${qtrText} ${cText}`.trim();
             }
 
+            // Save data for confirmation
+            window.pendingShareData = {
+                btnElement: btnElement,
+                originalHtml: btnElement.innerHTML,
+                game: game,
+                content: content
+            };
+
+            // Trigger the confirmation modal
+            window.openShareModal(content);
+        };
+
+        window.confirmShareToFanZone = async () => {
+            if (!window.pendingShareData || !currentUser) return;
+
+            const { btnElement, originalHtml, game, content } = window.pendingShareData;
+            const confirmBtn = document.getElementById('confirmShareBtn');
+            const confirmOriginalHtml = confirmBtn.innerHTML;
+
+            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            confirmBtn.disabled = true;
+
             try {
                 const newRef = push(ref(dbRealtime, 'fanzone_posts'));
                 await set(newRef, {
@@ -220,37 +305,38 @@
                     timestamp: new Date().toISOString()
                 });
                 
+                window.closeShareModal();
+                
+                // Show success on the card's button
                 btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Shared';
                 btnElement.classList.replace('text-blue-700', 'text-green-700');
                 btnElement.classList.replace('bg-blue-50', 'bg-green-50');
                 btnElement.classList.replace('border-blue-200', 'border-green-300');
                 
                 setTimeout(() => {
-                    btnElement.innerHTML = originalText;
+                    btnElement.innerHTML = originalHtml;
                     btnElement.classList.replace('text-green-700', 'text-blue-700');
                     btnElement.classList.replace('bg-green-50', 'bg-blue-50');
                     btnElement.classList.replace('border-green-300', 'border-blue-200');
-                    btnElement.disabled = false;
                 }, 3000);
 
             } catch (err) {
                 console.error("Share error:", err);
                 alert("Failed to share to Fan Zone.");
-                btnElement.innerHTML = originalText;
-                btnElement.disabled = false;
+            } finally {
+                confirmBtn.innerHTML = confirmOriginalHtml;
+                confirmBtn.disabled = false;
             }
         };
 
         // --- ENHANCED POP-OUT SCOREBOARD WINDOW LOGIC ---
-        window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc, homeRecEnc, awayRecEnc) {
+        window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc) {
             const home = decodeURIComponent(homeEnc);
             const away = decodeURIComponent(awayEnc);
             const homeLogo = decodeURIComponent(homeLogoEnc);
             const awayLogo = decodeURIComponent(awayLogoEnc);
             const homeClass = decodeURIComponent(homeClassEnc);
             const awayClass = decodeURIComponent(awayClassEnc);
-            const homeRec = decodeURIComponent(homeRecEnc || '0-0');
-            const awayRec = decodeURIComponent(awayRecEnc || '0-0');
 
             const w = 480, h = 320; 
             const left = (screen.width/2)-(w/2);
@@ -328,7 +414,6 @@
                                     ${homeLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
-                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold">(${homeRec})</span>
                                 <span id="home-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                             <div class="text-2xl sm:text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
@@ -337,7 +422,6 @@
                                     ${awayLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
-                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold">(${awayRec})</span>
                                 <span id="away-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                         </div>
@@ -729,7 +813,7 @@
                                     <button onclick="window.shareToFanZone(this, '${game.id}')" title="Share update to Fan Zone" class="text-[10px] bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
                                         <i class="fa-solid fa-share"></i> Share
                                     </button>
-                                    <button onclick="popoutScoreboard('${encodeURIComponent(game.home)}', '${encodeURIComponent(game.away)}', '${game.id}', '${encodeURIComponent(finalHomeLogo)}', '${encodeURIComponent(finalAwayLogo)}', '${encodeURIComponent(homeData.classification || '')}', '${encodeURIComponent(awayData.classification || '')}', '${encodeURIComponent(homeRec)}', '${encodeURIComponent(awayRec)}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                                    <button onclick="popoutScoreboard('${encodeURIComponent(game.home)}', '${encodeURIComponent(game.away)}', '${game.id}', '${encodeURIComponent(finalHomeLogo)}', '${encodeURIComponent(finalAwayLogo)}', '${encodeURIComponent(homeClass || '')}', '${encodeURIComponent(awayClass || '')}')" title="Pop out scoreboard" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
                                         <i class="fa-solid fa-up-right-from-square"></i> Pop Out
                                     </button>
                                     <span class="${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">${badgeText}</span>
