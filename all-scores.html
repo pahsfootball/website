@@ -97,6 +97,7 @@
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
+        const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUYZtoan7SgDO6VUi3LT50wFPSMdObEfM",
@@ -117,6 +118,7 @@
         let baseScheduleGames = {}; 
         let previousScores = {}; 
         let isFirstLoad = true;  
+        let globalTeamDict = {}; 
 
         const formatTeamUrl = (teamName) => {
             if (!teamName) return '#';
@@ -140,49 +142,71 @@
                 let [y, m, d] = dateStr.split('-');
                 let dObj = new Date(y, m - 1, d);
                 if (!isNaN(dObj)) {
-                    return dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                    return `${dObj.getMonth()+1}/${dObj.getDate()}/${dObj.getFullYear().toString().slice(-2)}`;
                 }
             } catch(e) {}
             return "PREGAME";
         }
 
-        Papa.parse(SCHEDULE_CSV_URL, {
+        // Fetch team logos and classes first, then load schedule
+        Papa.parse(MASTER_TEAMS_CSV, {
             download: true,
             header: true,
             skipEmptyLines: true,
-            complete: function(results) {
-                const games = results.data;
-                
-                games.forEach(game => {
-                    if (!game.HomeTeam || !game.AwayTeam) return;
-
-                    const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
-                    const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
-                    const gameKey = [homeNameStr, awayNameStr].sort().join('_');
-
-                    baseScheduleGames[gameKey] = {
-                        id: gameKey,
-                        home: game.HomeTeam,
-                        away: game.AwayTeam,
-                        homeLogo: game.HomeLogo || "",
-                        awayLogo: game.AwayLogo || "",
-                        homeScore: 0,
-                        awayScore: 0,
-                        status: "PREGAME",
-                        quarter: "PREGAME",
-                        clock: game.Time || "12:00",
-                        date: game.Date || "", 
-                        time: game.Time || "", 
-                        updatedBy: "Schedule",
-                        lastUpdated: new Date(0).toISOString() 
-                    };
+            complete: function(masterResults) {
+                masterResults.data.forEach(row => {
+                    const teamName = row['School'] || row['Team Name'] || row['Team'];
+                    const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                    const teamClass = row['Class'] || "";
+                    
+                    if (teamName) {
+                        globalTeamDict[teamName.trim().toLowerCase()] = {
+                            logo: logoUrl ? logoUrl.trim() : '',
+                            classification: teamClass.trim()
+                        };
+                    }
                 });
 
-                startFirebaseListener();
-            },
-            error: function(err) {
-                console.error("Error loading schedule CSV", err);
-                startFirebaseListener(); 
+                // Now load the base schedule
+                Papa.parse(SCHEDULE_CSV_URL, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const games = results.data;
+                        
+                        games.forEach(game => {
+                            if (!game.HomeTeam || !game.AwayTeam) return;
+
+                            const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
+                            const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
+                            const gameKey = [homeNameStr, awayNameStr].sort().join('_');
+
+                            baseScheduleGames[gameKey] = {
+                                id: gameKey,
+                                home: game.HomeTeam,
+                                away: game.AwayTeam,
+                                homeLogo: game.HomeLogo || "",
+                                awayLogo: game.AwayLogo || "",
+                                homeScore: 0,
+                                awayScore: 0,
+                                status: "PREGAME",
+                                quarter: "PREGAME",
+                                clock: game.Time || "12:00",
+                                date: game.Date || "", 
+                                time: game.Time || "", 
+                                updatedBy: "Schedule",
+                                lastUpdated: new Date(0).toISOString() 
+                            };
+                        });
+
+                        startFirebaseListener();
+                    },
+                    error: function(err) {
+                        console.error("Error loading schedule CSV", err);
+                        startFirebaseListener(); 
+                    }
+                });
             }
         });
 
@@ -249,7 +273,6 @@
                     let dotClass = "hidden";
                     let cardBorder = "border-gray-300 shadow-md";
 
-                    // Sanitize the inputs to establish bulletproof fallbacks
                     let qtr = game.quarter;
                     if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
                     
@@ -286,12 +309,25 @@
                         clockHtml = `<span class="font-mono font-bold text-sm text-red-600 animate-pulse">${clockText}</span>`;
                     }
 
-                    const homeLogoHtml = game.homeLogo 
-                        ? `<img src="${game.homeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
+                    // Attach Logos and Classification
+                    const safeHomeName = (game.home || '').trim().toLowerCase();
+                    const safeAwayName = (game.away || '').trim().toLowerCase();
+
+                    const homeData = globalTeamDict[safeHomeName] || {};
+                    const awayData = globalTeamDict[safeAwayName] || {};
+
+                    const finalHomeLogo = homeData.logo || game.homeLogo || '';
+                    const finalAwayLogo = awayData.logo || game.awayLogo || '';
+
+                    const homeClass = homeData.classification ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${homeData.classification}</span>` : '';
+                    const awayClass = awayData.classification ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${awayData.classification}</span>` : '';
+
+                    const homeLogoHtml = finalHomeLogo 
+                        ? `<img src="${finalHomeLogo}" alt="${game.home}" class="w-full h-full object-contain p-1">`
                         : `<span class="font-bold text-lg text-gray-500 uppercase">${game.home.substring(0,3)}</span>`;
                     
-                    const awayLogoHtml = game.awayLogo 
-                        ? `<img src="${game.awayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
+                    const awayLogoHtml = finalAwayLogo 
+                        ? `<img src="${finalAwayLogo}" alt="${game.away}" class="w-full h-full object-contain p-1">`
                         : `<span class="font-bold text-lg text-gray-500 uppercase">${game.away.substring(0,3)}</span>`;
 
                     let updatedText = "Unknown";
@@ -333,7 +369,7 @@
                                     <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
                                         ${homeLogoHtml}
                                     </div>
-                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}</span>
+                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.home}${homeClass}</span>
                                     <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.homeScore || 0}</span>
                                 </a>
                                 <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
@@ -341,7 +377,7 @@
                                     <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 group-hover:border-pahs-gold group-hover:shadow-md">
                                         ${awayLogoHtml}
                                     </div>
-                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}</span>
+                                    <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 transition-colors duration-200 group-hover:text-pahs-gold">${game.away}${awayClass}</span>
                                     <span class="text-5xl font-mono font-black mt-1 text-gray-900">${game.awayScore || 0}</span>
                                 </a>
                             </div>
