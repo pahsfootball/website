@@ -524,11 +524,17 @@
         }
 
         function linkify(text) {
-            const urlRegex = /(https?:\/\/[^\s<]+)/g;
+            // Added 'i' flag for case-insensitivity (catches Https://) 
+            // Added support for links that start with just 'www.'
+            const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
+            
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
                 
-                const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+                // If the user pasted a link starting with www., automatically prepend https:// for the href
+                const absoluteUrl = cleanUrl.toLowerCase().startsWith('www.') ? 'https://' + cleanUrl : cleanUrl;
+                
+                const ytMatch = absoluteUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if (ytMatch && ytMatch[1]) {
                     return `
                         <div class="mt-3 mb-2 rounded-xl overflow-hidden border border-gray-300 shadow-sm relative pt-[56.25%] w-full" onclick="event.stopPropagation()">
@@ -539,16 +545,16 @@
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
 
                 // BYPASS WARNING FOR PAHSFOOTBALL DOMAINS
-                if (cleanUrl.toLowerCase().includes('pahsfootball.com')) {
+                if (absoluteUrl.toLowerCase().includes('pahsfootball.com')) {
                     return `
-                        <a href="${cleanUrl}" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
+                        <a href="${absoluteUrl}" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                             <i class="fa-solid fa-link"></i> ${displayUrl}
                         </a>`;
                 }
 
                 // SHOW WARNING MODAL FOR ALL OTHER EXTERNAL LINKS
                 return `
-                    <span onclick="window.openExternalLink(event, '${cleanUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
+                    <span onclick="window.openExternalLink(event, '${absoluteUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
                     </span>`;
             });
