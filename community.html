@@ -140,6 +140,20 @@
             <a href="login.html" class="inline-block bg-pahs-gold text-black font-head font-bold text-xl uppercase tracking-widest py-2 px-8 rounded-lg shadow-md hover:brightness-110 transition-all">Sign In</a>
         </div>
 
+        <!-- ADMIN MODERATION PANEL (HIDDEN BY DEFAULT) -->
+        <div id="adminControls" class="hidden flex-col sm:flex-row items-center justify-between mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-3 text-red-800 font-bold uppercase tracking-wider text-sm mb-3 sm:mb-0">
+                <i class="fa-solid fa-shield-halved text-2xl text-red-500"></i>
+                <div>
+                    <span class="block text-xl font-head leading-none text-red-700">Admin Moderation</span>
+                    <span class="text-[10px] text-red-500 tracking-widest">Only visible to PAHSFOOTBALL</span>
+                </div>
+            </div>
+            <button id="toggleReviewBtn" onclick="window.toggleAdminReviewMode()" class="w-full sm:w-auto bg-red-600 text-white font-bold uppercase tracking-widest py-2.5 px-6 rounded-xl hover:bg-red-700 transition-all text-sm shadow-md flex justify-center items-center gap-2">
+                Review Flagged (<span id="flaggedCount">0</span>)
+            </button>
+        </div>
+
         <div id="feedControls" class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
@@ -435,8 +449,9 @@
         let teamColorDictionary = {};
         let initialDeepLinkChecked = false;
         
-        // --- PAGINATION / SHOW MORE STATE ---
+        // --- PAGINATION & ADMIN STATE ---
         let visiblePostCount = 5;
+        window.isAdminReviewMode = false;
 
         window.authorPointsCache = {}; 
         window.userCache = {}; 
@@ -652,6 +667,21 @@
             window.renderFeed();
         };
 
+        // --- ADMIN REVIEW MODE TOGGLE ---
+        window.toggleAdminReviewMode = function() {
+            window.isAdminReviewMode = !window.isAdminReviewMode;
+            const btn = document.getElementById('toggleReviewBtn');
+            if (window.isAdminReviewMode) {
+                btn.classList.replace('bg-red-600', 'bg-gray-800');
+                btn.classList.replace('hover:bg-red-700', 'hover:bg-gray-900');
+                btn.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Exit Review Mode`;
+            } else {
+                btn.classList.replace('bg-gray-800', 'bg-red-600');
+                btn.classList.replace('hover:bg-gray-900', 'hover:bg-red-700');
+            }
+            window.resetPageAndRender();
+        };
+
         // --- REFRESH BUTTON LISTENER ---
         document.getElementById('refreshFeedBtn').addEventListener('click', () => {
             const icon = document.getElementById('refreshIcon');
@@ -728,7 +758,7 @@
                 
                 // Deep Link Check
                 if (!initialDeepLinkChecked) {
-                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlParams = newSearchParams(window.location.search);
                     const targetPost = urlParams.get('post');
                     if (targetPost) {
                         window.openPostModal(targetPost);
@@ -1035,6 +1065,7 @@
                 `;
             }
 
+            // --- MODERATION DISPLAY LOGIC ---
             if (post.flagged && !isAdmin) {
                 return {
                     color: '#e5e7eb',
@@ -1128,6 +1159,22 @@
 
             if (!feedContainer) return;
 
+            const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
+
+            const adminControls = document.getElementById('adminControls');
+            if (isAdmin) {
+                adminControls.classList.remove('hidden');
+                adminControls.classList.add('flex');
+                const flaggedCount = currentPosts.filter(p => p.flagged).length;
+                if (!window.isAdminReviewMode) {
+                    document.getElementById('toggleReviewBtn').innerHTML = `Review Flagged (<span id="flaggedCount">${flaggedCount}</span>)`;
+                }
+            } else {
+                adminControls.classList.add('hidden');
+                adminControls.classList.remove('flex');
+                window.isAdminReviewMode = false;
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const targetPostId = urlParams.get('post');
 
@@ -1163,30 +1210,35 @@
             }
             
             let postsToRender = [...currentPosts];
-            const filterElem = document.getElementById('feedTeamFilter');
-            const filter = filterElem ? filterElem.value.trim().toLowerCase() : "";
-            const scopeElem = document.getElementById('feedScope');
-            const scope = scopeElem ? scopeElem.value : 'global';
 
-            if (scope === 'following') {
-                if (!currentUser || !window.currentUserProfile) {
-                    postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
-                } else {
-                    const followingList = window.currentUserProfile.following || [];
-                    postsToRender = postsToRender.filter(p => 
-                        p.authorUsername === 'PAHSFOOTBALL' || 
-                        p.authorId === currentUser.uid ||     
-                        followingList.includes(p.authorId)     
-                    );
+            if (window.isAdminReviewMode && isAdmin) {
+                postsToRender = postsToRender.filter(p => p.flagged);
+            } else {
+                const filterElem = document.getElementById('feedTeamFilter');
+                const filter = filterElem ? filterElem.value.trim().toLowerCase() : "";
+                const scopeElem = document.getElementById('feedScope');
+                const scope = scopeElem ? scopeElem.value : 'global';
+
+                if (scope === 'following') {
+                    if (!currentUser || !window.currentUserProfile) {
+                        postsToRender = postsToRender.filter(p => p.authorUsername === 'PAHSFOOTBALL');
+                    } else {
+                        const followingList = window.currentUserProfile.following || [];
+                        postsToRender = postsToRender.filter(p => 
+                            p.authorUsername === 'PAHSFOOTBALL' || 
+                            p.authorId === currentUser.uid ||     
+                            followingList.includes(p.authorId)     
+                        );
+                    }
                 }
-            }
 
-            if (filter !== "") {
-                postsToRender = postsToRender.filter(post => {
-                    const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
-                    const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
-                    return tag1.includes(filter) || tag2.includes(filter);
-                });
+                if (filter !== "") {
+                    postsToRender = postsToRender.filter(post => {
+                        const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
+                        const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
+                        return tag1.includes(filter) || tag2.includes(filter);
+                    });
+                }
             }
             
             if (postsToRender.length === 0) {
@@ -1540,7 +1592,6 @@
             const id = window.currentReportedPostId;
 
             try {
-                // 1. Instantly flag in Firebase so it blurs on the site
                 await update(ref(dbRealtime, 'fanzone_posts/' + id), {
                     flagged: true,
                     flaggedByUid: currentUser.uid,
@@ -1549,7 +1600,6 @@
                     flaggedAt: new Date().toISOString()
                 });
 
-                // 2. Send backup alert to Google Form
                 const params = new URLSearchParams();
                 const reportBody = `REASON: ${reason}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${id}`;
                 params.append("entry.1967997366", reportBody);
