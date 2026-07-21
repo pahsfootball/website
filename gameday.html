@@ -330,6 +330,32 @@
         </div>
     </div>
 
+    <!-- Suggest Logo Modal -->
+    <div id="suggestLogoModalOverlay" class="modal-overlay" onclick="closeSuggestLogoModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-pahs-dark flex justify-between items-center border-b border-gray-800">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-pahs-gold m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-image"></i> Suggest Logo
+                </h2>
+                <button onclick="closeSuggestLogoModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-5 font-body leading-relaxed">
+                    Submit a direct link (URL) to a high-quality logo for <strong id="logoSuggestTeamName" class="text-gray-900">this team</strong>. An admin will review it before it goes live.
+                </p>
+                <form id="suggestLogoForm">
+                    <input type="hidden" id="logoSuggestTeamInput">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Image URL (Link)</label>
+                    <input type="url" id="sugLogoUrl" required placeholder="https://example.com/logo.png" class="input-box w-full p-3 rounded-xl text-gray-800 mb-4 font-body text-sm outline-none focus:border-pahs-gold transition-colors">
+                    
+                    <button type="submit" id="btnSubmitLogo" class="w-full bg-blue-600 text-white font-head font-bold text-2xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all mt-2">
+                        Submit Logo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="main-app" class="hidden">
         
         <div id="adminTopBar" class="hidden bg-[#18181b] border-b-4 border-pahs-gold shadow-lg w-full z-40 relative">
@@ -384,34 +410,45 @@
                     <div class="flex items-center justify-center gap-2 md:gap-8 relative z-10">
                         
                         <!-- Your Team Link Container -->
-                        <a id="link-your-team" href="#" class="text-center flex-1 flex flex-col items-center group transition-transform duration-300 hover:scale-105">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative transition-colors duration-500 group-hover:shadow-[0_0_15px_rgba(251,191,36,0.6)]">
-                                <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='flex';">
-                                <span id="ui-your-fallback" class="hidden text-3xl font-black font-head text-black absolute">TEA</span>
-                            </div>
-                            <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-pahs-gold transition-colors">Loading...</h3>
-                            <div class="flex items-center justify-center gap-2 mt-2">
-                                <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
-                                <span id="ui-your-record" class="text-pahs-gold text-xs font-bold transition-colors duration-500"></span>
-                            </div>
-                        </a>
+                        <div class="text-center flex-1 flex flex-col items-center">
+                            <a id="link-your-team" href="#" class="group transition-transform duration-300 hover:scale-105 flex flex-col items-center">
+                                <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-pahs-gold shadow-lg mb-3 overflow-hidden relative transition-colors duration-500 group-hover:shadow-[0_0_15px_rgba(251,191,36,0.6)]">
+                                    <img id="ui-your-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-your-fallback').style.display='flex';">
+                                    <span id="ui-your-fallback" class="hidden text-3xl font-black font-head text-black absolute">TEA</span>
+                                </div>
+                                <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-pahs-gold transition-colors">Loading...</h3>
+                                <div class="flex items-center justify-center gap-2 mt-2">
+                                    <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
+                                    <span id="ui-your-record" class="text-pahs-gold text-xs font-bold transition-colors duration-500"></span>
+                                </div>
+                            </a>
+                            <button onclick="openSuggestLogoModal('home', event)" class="mt-2 text-[10px] text-gray-400 hover:text-white uppercase tracking-widest underline transition-colors relative z-20">
+                                <i class="fa-solid fa-image"></i> Suggest Logo
+                            </button>
+                        </div>
                         
                         <div class="flex flex-col items-center px-2 md:px-4">
                             <div class="text-3xl md:text-5xl font-black font-head text-white italic opacity-90 drop-shadow-md">VS</div>
                         </div>
                         
                         <!-- Opponent Link Container -->
-                        <a id="link-opp-team" href="#" class="text-center flex-1 flex flex-col items-center group transition-transform duration-300 hover:scale-105">
-                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                                <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='flex';">
-                                <span id="ui-opp-fallback" class="hidden text-3xl font-black font-head text-black absolute">OPP</span>
-                            </div>
-                            <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-gray-300 transition-colors">Loading...</h3>
-                            <div class="flex items-center justify-center gap-2 mt-2">
-                                <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
-                                <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
-                            </div>
-                        </a>
+                        <div class="text-center flex-1 flex flex-col items-center">
+                            <a id="link-opp-team" href="#" class="group transition-transform duration-300 hover:scale-105 flex flex-col items-center">
+                                <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-4 border-gray-500 shadow-lg mb-3 overflow-hidden relative group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                    <img id="ui-opp-logo" src="" class="w-full h-full object-contain p-2 z-10 bg-white" onerror="this.style.display='none'; document.getElementById('ui-opp-fallback').style.display='flex';">
+                                    <span id="ui-opp-fallback" class="hidden text-3xl font-black font-head text-black absolute">OPP</span>
+                                </div>
+                                <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-gray-300 transition-colors">Loading...</h3>
+                                <div class="flex items-center justify-center gap-2 mt-2">
+                                    <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
+                                    <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                                </div>
+                            </a>
+                            <button onclick="openSuggestLogoModal('away', event)" class="mt-2 text-[10px] text-gray-400 hover:text-white uppercase tracking-widest underline transition-colors relative z-20">
+                                <i class="fa-solid fa-image"></i> Suggest Logo
+                            </button>
+                        </div>
+
                     </div>
                 </div>
 
@@ -1081,7 +1118,6 @@
                             document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
                             document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
 
-                            // ROBUST LOGO LOGIC - Global Dict priority
                             const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
                             const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
                             
@@ -1191,9 +1227,10 @@
             const awayName = (!isHomeSide ? (game.yourTeam || "") : (game.opponent || "")).replace(/[^a-zA-Z0-9]/g, '');
             const gameKey = [homeName, awayName].sort().join('_');
             
-            // Prioritize Global Dict for logos
-            const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
+            const teamParam = new URLSearchParams(window.location.search).get('team') || "";
+            const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
             const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
+            
             const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || "");
             const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
 
@@ -1358,7 +1395,6 @@
 
             const usernameToSave = window.currentUserProfile?.username || "Fan";
 
-            // Enforce Global Logos
             const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
             const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
             const myLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || "");
@@ -1509,7 +1545,6 @@
             const oldGame = window.currentMatchupData;
             const oldOpponent = (oldGame && oldGame.opponent) ? oldGame.opponent.trim() : null;
 
-            // Strict Logo Parsing logic 
             const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
             const oppTeamData = window.globalTeamDict[opponentInput.toLowerCase()] || {};
             const myLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (oldGame ? oldGame.yourTeamLogo : "");
@@ -1606,7 +1641,6 @@
                 window.closePublicMatchupModal(null, true);
                 window.showToast("Matchup updated and synced successfully!", "success");
                 
-                // Allow the toast animation to run before reloading the page
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -1736,6 +1770,87 @@
                 btn.style.opacity = '1'; 
                 window.showToast("Error sending request.", "error");
             });
+        });
+
+        // --- SUGGEST LOGO LOGIC ---
+        window.openSuggestLogoModal = function(teamRole, e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            const game = window.currentMatchupData;
+            let teamName = "";
+            
+            if (!isActiveGame || !game) {
+                const urlTeam = new URLSearchParams(window.location.search).get('team');
+                if (teamRole === 'home') {
+                    teamName = urlTeam || "Home Team";
+                } else {
+                    teamName = "Opponent";
+                }
+            } else {
+                let isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
+                if (teamRole === 'home') {
+                    teamName = isHomeSide ? game.yourTeam : game.opponent;
+                } else {
+                    teamName = !isHomeSide ? game.yourTeam : game.opponent;
+                }
+            }
+
+            document.getElementById('logoSuggestTeamName').innerText = teamName;
+            document.getElementById('logoSuggestTeamInput').value = teamName;
+            
+            const overlay = document.getElementById('suggestLogoModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeSuggestLogoModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'suggestLogoModalOverlay')) {
+                const overlay = document.getElementById('suggestLogoModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    document.body.style.overflow = '';
+                    document.getElementById('suggestLogoForm').reset();
+                    document.getElementById('btnSubmitLogo').disabled = false;
+                    document.getElementById('btnSubmitLogo').innerText = 'Submit Logo';
+                }, 300);
+            }
+        };
+
+        document.getElementById('suggestLogoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitLogo'); 
+            btn.innerText = 'Submitting...'; 
+            btn.disabled = true; 
+            
+            const teamName = document.getElementById('logoSuggestTeamInput').value;
+            const logoUrl = document.getElementById('sugLogoUrl').value.trim();
+            const username = window.currentUserProfile?.username || "Guest";
+            const uid = auth.currentUser ? auth.currentUser.uid : "anonymous";
+            
+            try {
+                const newSuggestionRef = push(ref(dbRealtime, 'logo_suggestions'));
+                await set(newSuggestionRef, {
+                    team: teamName,
+                    url: logoUrl,
+                    submittedByUsername: username,
+                    submittedByUid: uid,
+                    timestamp: new Date().toISOString(),
+                    status: "pending"
+                });
+                
+                window.closeSuggestLogoModal(null, true);
+                window.showToast("Logo suggestion submitted for review!", "success");
+            } catch (err) {
+                console.error(err);
+                window.showToast("Error submitting suggestion.", "error");
+                btn.innerText = "Submit Logo";
+                btn.disabled = false;
+            }
         });
 
         async function fetchWeather(address, gameDateObj) {
