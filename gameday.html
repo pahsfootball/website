@@ -43,14 +43,14 @@
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
         @keyframes scoreUpdateAnim {
-            0% { border-color: var(--team-primary); box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
-            15% { border-color: #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.9); transform: scale(1.03); }
-            50% { border-color: var(--team-primary); box-shadow: 0 0 20px rgba(251,191,36,0.8); transform: scale(1.02); }
+            0% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
+            15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
+            50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
             100% { transform: scale(1); }
         }
         .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
-        @keyframes fadeOutDelayed { 0%, 60% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .animate-fade-out-delayed { animation: fadeOutDelayed 3s forwards; }
+        @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+        .animate-fade-out-delayed { animation: fadeOutDelayed 3.5s forwards; }
 
         .embed-post-card { background: #ffffff; border: 1px solid #d1d5db; border-left: 4px solid var(--team-primary, #fbbf24); }
         .input-box { background: #ffffff; border: 2px solid #d1d5db; transition: all 0.3s ease; }
@@ -277,6 +277,16 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Your Record</label>
+                            <input type="text" id="inpYourRecord" class="input-box w-full p-2 rounded-lg text-sm" placeholder="e.g. 1-0">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Opponent Record</label>
+                            <input type="text" id="inpOppRecord" class="input-box w-full p-2 rounded-lg text-sm" placeholder="e.g. 0-1">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
                             <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Date</label>
                             <input type="date" id="inpDate" required class="input-box w-full p-2 rounded-lg text-sm">
                         </div>
@@ -419,7 +429,7 @@
                                 <h3 id="ui-your-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-pahs-gold transition-colors">Loading...</h3>
                                 <div class="flex items-center justify-center gap-2 mt-2">
                                     <p id="ui-your-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
-                                    <span id="ui-your-record" class="text-pahs-gold text-xs font-bold transition-colors duration-500"></span>
+                                    <span id="ui-your-record" class="text-pahs-gold text-xs font-bold font-mono"></span>
                                 </div>
                             </a>
                             <button onclick="openSuggestLogoModal('home', event)" class="mt-2 text-[10px] text-gray-400 hover:text-white uppercase tracking-widest underline transition-colors relative z-20">
@@ -441,14 +451,13 @@
                                 <h3 id="ui-opp-name" class="text-white font-head text-xl md:text-3xl tracking-wide uppercase leading-none group-hover:text-gray-300 transition-colors">Loading...</h3>
                                 <div class="flex items-center justify-center gap-2 mt-2">
                                     <p id="ui-opp-mascot" class="text-gray-400 text-xs font-bold uppercase"></p>
-                                    <span id="ui-opp-record" class="text-gray-400 text-xs font-bold"></span>
+                                    <span id="ui-opp-record" class="text-gray-400 text-xs font-bold font-mono"></span>
                                 </div>
                             </a>
                             <button onclick="openSuggestLogoModal('away', event)" class="mt-2 text-[10px] text-gray-400 hover:text-white uppercase tracking-widest underline transition-colors relative z-20">
                                 <i class="fa-solid fa-image"></i> Suggest Logo
                             </button>
                         </div>
-
                     </div>
                 </div>
 
@@ -474,10 +483,20 @@
                 </div>
             </div>
 
-            <div id="basicScoreboardCard" class="hidden content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500">
+            <div id="basicScoreboardCard" class="hidden content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500 relative">
+                <div id="sb-update-overlay" style="display:none;" class="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center rounded-2xl font-head text-4xl text-red-600 pointer-events-none border-4 border-pahs-gold shadow-2xl">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-yellow-500 animate-pulse"></i> 
+                        <span id="sb-update-text">SCORE UPDATE!</span>
+                    </div>
+                </div>
+
                 <div class="flex justify-between items-center mb-6 border-b border-gray-300 pb-3">
                     <h3 class="font-head text-2xl uppercase tracking-wide text-gray-900 flex items-center gap-2"><span id="sb-live-dot" class="w-3 h-3 rounded-full bg-pahs-gold transition-colors duration-500"></span> Live Scoreboard</h3>
                     <div class="flex items-center gap-3">
+                        <button id="btn-popout" class="text-[10px] bg-gray-100 hover:bg-pahs-gold hover:text-black border border-gray-300 font-bold px-2 py-0.5 rounded transition-colors flex items-center gap-1 uppercase mr-1">
+                            <i class="fa-solid fa-up-right-from-square"></i> Pop Out
+                        </button>
                         <span id="sb-status" class="bg-pahs-gold text-[color:var(--team-text,#000)] transition-colors duration-500 text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span>
                         <span id="sb-clock" class="font-mono font-bold text-gray-700 hidden sm:block">12:00</span>
                         <button onclick="openShareScoreModal()" class="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
@@ -839,6 +858,238 @@
             }
         };
 
+        // --- POPOUT SCOREBOARD WINDOW ---
+        window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc) {
+            const home = decodeURIComponent(homeEnc);
+            const away = decodeURIComponent(awayEnc);
+            const homeLogo = decodeURIComponent(homeLogoEnc);
+            const awayLogo = decodeURIComponent(awayLogoEnc);
+            const homeClass = decodeURIComponent(homeClassEnc);
+            const awayClass = decodeURIComponent(awayClassEnc);
+
+            const w = 480, h = 300; 
+            const left = (screen.width/2)-(w/2);
+            const top = (screen.height/2)-(h/2);
+            const pop = window.open('', `sb_${gameKey}`, `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no`);
+            
+            const homeLogoHtml = homeLogo 
+                ? `<img src="${homeLogo}" alt="${home}" class="w-full h-full object-contain p-1">`
+                : `<span class="font-bold text-lg text-gray-500 uppercase">${home.substring(0,3)}</span>`;
+            
+            const awayLogoHtml = awayLogo 
+                ? `<img src="${awayLogo}" alt="${away}" class="w-full h-full object-contain p-1">`
+                : `<span class="font-bold text-lg text-gray-500 uppercase">${away.substring(0,3)}</span>`;
+
+            const homeClassHtml = homeClass ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${homeClass}</span>` : '';
+            const awayClassHtml = awayClass ? `<span class="text-[10px] text-gray-400 font-bold ml-1 align-top">${awayClass}</span>` : '';
+
+            pop.document.open();
+            pop.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${home} vs ${away} - Live Tracker</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <script>
+                        tailwind.config = {
+                            theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } }, fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] } } }
+                        }
+                    <\/script>
+                    <style>
+                        body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
+                        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; }
+                        .pulse-live { animation: pulseLive 2s infinite; }
+                        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+                        
+                        @keyframes scoreUpdateAnim {
+                            0% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
+                            15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
+                            50% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
+                            100% { transform: scale(1); }
+                        }
+                        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
+                        
+                        @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+                        .animate-fade-out-delayed { animation: fadeOutDelayed 3.5s forwards; }
+                    </style>
+                </head>
+                <body>
+                    <div id="card-container" class="content-card rounded-2xl p-5 border-2 border-gray-200 shadow-sm flex flex-col relative bg-white transition-all duration-300">
+                        <div id="update-overlay" style="display:none;" class="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center rounded-2xl font-head text-4xl text-red-600 pointer-events-none border-4 border-pahs-gold shadow-2xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-yellow-500 animate-pulse"></i> 
+                                <span id="update-text">SCORE UPDATE!</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3 relative z-10">
+                            <div class="flex items-center gap-2">
+                                <div id="dot-class" class="hidden"></div>
+                                <span class="font-head text-xl uppercase tracking-wide text-gray-800 line-clamp-1">Matchup</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span id="badge-text" class="bg-gray-200 text-gray-800 border border-gray-300 text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest">PREGAME</span>
+                                <span id="clock-text" class="font-mono font-bold text-xs text-gray-600">TBA</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center px-2 flex-grow relative z-10">
+                            <div class="flex flex-col items-center w-5/12">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                    ${homeLogoHtml}
+                                </div>
+                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
+                                <span id="home-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                            </div>
+                            <div class="text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
+                            <div class="flex flex-col items-center w-5/12">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow-sm mb-2 overflow-hidden transition-colors duration-200 border-pahs-gold shadow-md">
+                                    ${awayLogoHtml}
+                                </div>
+                                <span class="font-head text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
+                                <span id="away-score" class="text-5xl font-mono font-black mt-1 text-gray-900">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
+                            <div class="text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
+                            </div>
+                            <div class="text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
+                            </div>
+                        </div>
+                    </div>
+
+                    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"><\/script>
+                    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"><\/script>
+                    <script>
+                        firebase.initializeApp(${JSON.stringify(firebaseConfig)});
+                        const db = firebase.database();
+                        
+                        let prevH = null, prevA = null;
+                        
+                        function formatGameTime(timeStr) {
+                            if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
+                            try {
+                                let [hh, mm] = timeStr.split(':');
+                                let h = parseInt(hh);
+                                let ampm = h >= 12 ? 'PM' : 'AM';
+                                h = h % 12 || 12;
+                                return \`\${h}:\${mm} \${ampm}\`;
+                            } catch(e) { return timeStr; }
+                        }
+
+                        function formatGameDate(dateStr) {
+                            if (!dateStr) return "PREGAME";
+                            try {
+                                let [y, m, d] = dateStr.split('-');
+                                let dObj = new Date(y, m - 1, d);
+                                if (!isNaN(dObj)) return \`\${dObj.getMonth()+1}/\${dObj.getDate()}/\${dObj.getFullYear().toString().slice(-2)}\`;
+                            } catch(e) {}
+                            return "PREGAME";
+                        }
+
+                        db.ref('live_scores/' + '${gameKey}').on('value', (snap) => {
+                            const game = snap.val();
+                            if (!game) return;
+
+                            const card = document.getElementById('card-container');
+                            const updateOverlay = document.getElementById('update-overlay');
+                            const updateText = document.getElementById('update-text');
+                            const hScore = document.getElementById('home-score');
+                            const aScore = document.getElementById('away-score');
+                            const badgeText = document.getElementById('badge-text');
+                            const clockText = document.getElementById('clock-text');
+                            const dotClass = document.getElementById('dot-class');
+                            
+                            let currH = game.homeScore || 0;
+                            let currA = game.awayScore || 0;
+                            let pointsAdded = 0;
+                            let justUpdated = false;
+
+                            if (prevH !== null && prevA !== null) {
+                                if (currH !== prevH || currA !== prevA) {
+                                    justUpdated = true;
+                                    pointsAdded = Math.max(currH - prevH, currA - prevA);
+                                }
+                            }
+                            prevH = currH;
+                            prevA = currA;
+
+                            hScore.innerText = currH;
+                            aScore.innerText = currA;
+
+                            let qtr = game.quarter;
+                            if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
+                            
+                            let stat = game.status;
+                            if (!stat || stat === "undefined" || stat === "") stat = "UPCOMING";
+
+                            const statusUpper = stat.toUpperCase();
+                            const qtrUpper = qtr.toUpperCase();
+
+                            let bText = "", bClass = "", dClass = "hidden", cBorder = "border-gray-300 shadow-md", cHtml = "";
+
+                            if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
+                                bText = game.date ? formatGameDate(game.date) : "PREGAME";
+                                bClass = "bg-gray-200 text-gray-800 border border-gray-300 font-bold";
+                                cBorder = "border-gray-200 shadow-sm";
+                                let timeStr = game.time ? formatGameTime(game.time) : "TBA";
+                                cHtml = \`<span class="font-mono font-bold text-xs text-gray-600">\${timeStr}</span>\`;
+                            } else if (qtrUpper === "HALF") {
+                                bText = "HALFTIME";
+                                bClass = "bg-yellow-600 text-black";
+                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                                cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                            } else if (statusUpper === "FINAL" || qtrUpper === "FINAL") {
+                                bText = "FINAL";
+                                bClass = "bg-gray-800 text-white";
+                                cBorder = "border-gray-400 shadow-sm opacity-80";
+                                cHtml = "";
+                            } else {
+                                bText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
+                                bClass = "bg-red-600 text-white animate-pulse";
+                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
+                                cBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
+                                let cText = game.clock || "12:00";
+                                if(cText === "undefined" || cText.trim() === "") cText = "12:00";
+                                cHtml = \`<span class="font-mono font-bold text-sm text-red-600 animate-pulse">\${cText}</span>\`;
+                            }
+
+                            badgeText.className = bClass + " text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest";
+                            badgeText.innerText = bText;
+                            clockText.outerHTML = \`<span id="clock-text" class="flex items-center">\${cHtml}</span>\`;
+                            dotClass.className = dClass;
+
+                            if (justUpdated) {
+                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
+                                updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} SCORE UPDATE!\` : "SCORE UPDATE!";
+                                updateOverlay.style.display = "flex";
+                                
+                                updateOverlay.classList.remove('animate-fade-out-delayed');
+                                void updateOverlay.offsetWidth;
+                                updateOverlay.classList.add('animate-fade-out-delayed');
+
+                                setTimeout(() => {
+                                    updateOverlay.style.display = "none";
+                                    card.classList.remove('anim-score-update');
+                                }, 3500);
+                            } else {
+                                card.className = \`content-card rounded-2xl p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
+                            }
+
+                            document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `);
+            pop.document.close();
+        };
+
         function listenToEmbeddedPosts(homeTeam, awayTeam) {
             const container = document.getElementById('embedFeedContainer');
             const postsRef = ref(dbRealtime, 'fanzone_posts');
@@ -997,7 +1248,9 @@
                                 logo: cleanText(r['Logo']),
                                 mascot: cleanText(r['Mascot']),
                                 stadium: cleanText(r['FieldName']),
-                                address: cleanText(r['FieldLocation']) || cleanText(r['City'])
+                                address: cleanText(r['FieldLocation']) || cleanText(r['City']),
+                                record: cleanText(r['Record']) || cleanText(r['2026Record']) || "0-0",
+                                classification: cleanText(r['Class']) || ""
                             };
                         }
                     });
@@ -1046,6 +1299,8 @@
                         
                         document.getElementById('ui-broadcast').innerHTML = linkify(escapeHTML(broadcastInfo));
 
+                        const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
+                        
                         if (!game.yourTeam) {
                             isActiveGame = false;
                             
@@ -1054,7 +1309,7 @@
                             
                             document.getElementById('ui-your-name').innerText = cleanText(teamRow['School']);
                             document.getElementById('ui-your-mascot').innerText = cleanText(teamRow['Mascot']) || cleanText(teamRow['Team']) || "";
-                            document.getElementById('ui-your-record').innerText = "";
+                            document.getElementById('ui-your-record').innerText = `(${myTeamData.record || '0-0'})`;
                             
                             const logoUrl = cleanText(teamRow['Logo']);
                             const yourLogoEl = document.getElementById('ui-your-logo');
@@ -1114,13 +1369,12 @@
                             document.getElementById('main-app').classList.remove('hidden');
                             document.getElementById('ui-week').innerText = game.week ? `WEEK ${game.week.replace(/week/i, '').trim()} MATCHUP` : "MATCHUP";
                             
-                            document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
-                            document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || "";
-                            document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : "";
-
-                            const myTeamData = window.globalTeamDict[(game.yourTeam || "").toLowerCase()] || {};
                             const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
                             
+                            document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
+                            document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || myTeamData.mascot || "";
+                            document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : `(${myTeamData.record || '0-0'})`;
+
                             const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || teamRow['Logo'] || "");
                             const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
                             
@@ -1137,8 +1391,8 @@
                             }
 
                             document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
-                            document.getElementById('ui-opp-mascot').innerText = game.oppMascot || "";
-                            document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : "";
+                            document.getElementById('ui-opp-mascot').innerText = game.oppMascot || oppTeamData.mascot || "";
+                            document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : `(${oppTeamData.record || '0-0'})`;
                             
                             const oppLogoEl = document.getElementById('ui-opp-logo');
                             const oppFallbackEl = document.getElementById('ui-opp-fallback');
@@ -1220,6 +1474,8 @@
             }, 1000);
         }
 
+        let livePrevH = null, livePrevA = null;
+
         function listenToLiveScore(game) {
             const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
             
@@ -1238,6 +1494,25 @@
             const liveDot = document.getElementById('sb-live-dot');
             const updaterText = document.getElementById('sb-updated-by');
             const sbClock = document.getElementById('sb-clock');
+            const btnPopout = document.getElementById('btn-popout');
+
+            const finalHomeLogo = isHomeSide ? activeYourLogo : activeOppLogo;
+            const finalAwayLogo = !isHomeSide ? activeYourLogo : activeOppLogo;
+            
+            const homeClass = isHomeSide ? myTeamData.classification : oppTeamData.classification;
+            const awayClass = !isHomeSide ? myTeamData.classification : oppTeamData.classification;
+
+            btnPopout.onclick = () => {
+                window.popoutScoreboard(
+                    encodeURIComponent(isHomeSide ? game.yourTeam : game.opponent),
+                    encodeURIComponent(!isHomeSide ? game.yourTeam : game.opponent),
+                    gameKey,
+                    encodeURIComponent(finalHomeLogo),
+                    encodeURIComponent(finalAwayLogo),
+                    encodeURIComponent(homeClass || ''),
+                    encodeURIComponent(awayClass || '')
+                );
+            };
 
             onValue(ref(dbRealtime, 'live_scores/' + gameKey), (snapshot) => {
                 document.getElementById('sb-home-name').innerText = isHomeSide ? game.yourTeam : game.opponent;
@@ -1252,8 +1527,22 @@
                 const data = snapshot.val();
                 
                 if (data) {
-                    document.getElementById('sb-home-score').innerText = data.homeScore || 0;
-                    document.getElementById('sb-away-score').innerText = data.awayScore || 0;
+                    let currH = data.homeScore || 0;
+                    let currA = data.awayScore || 0;
+                    let justUpdated = false;
+                    let pointsAdded = 0;
+
+                    if (livePrevH !== null && livePrevA !== null) {
+                        if (currH !== livePrevH || currA !== livePrevA) {
+                            justUpdated = true;
+                            pointsAdded = Math.max(currH - livePrevH, currA - livePrevA);
+                        }
+                    }
+                    livePrevH = currH;
+                    livePrevA = currA;
+
+                    document.getElementById('sb-home-score').innerText = currH;
+                    document.getElementById('sb-away-score').innerText = currA;
                     sbClock.innerText = data.clock || "12:00";
                     updaterText.innerText = data.updatedBy ? `@${data.updatedBy}` : "System";
 
@@ -1266,9 +1555,6 @@
                     if (data.possession === 'home') { homePossIcon.classList.remove('hidden'); awayPossIcon.classList.add('hidden'); } 
                     else if (data.possession === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
                     else { homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden'); }
-
-                    const finalHomeLogo = isHomeSide ? activeYourLogo : activeOppLogo;
-                    const finalAwayLogo = !isHomeSide ? activeYourLogo : activeOppLogo;
 
                     if(finalHomeLogo && finalHomeLogo.trim() !== "") { 
                         hLogo.src = finalHomeLogo; 
@@ -1293,43 +1579,58 @@
                         statusBadge.innerText = "PREGAME"; 
                         statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest border";
                         liveDot.className = "w-3 h-3 rounded-full bg-pahs-gold"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500 relative";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "HALF") {
                         statusBadge.innerText = "HALFTIME"; 
                         statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500 relative";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "FINAL" || data.status === "FINAL") {
                         statusBadge.innerText = "FINAL"; 
                         statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-colors duration-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-colors duration-500 relative";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = 'none'; 
                     } else {
                         statusBadge.innerText = "QTR " + qtr; 
                         statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500";
+                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500 relative";
                         sbClock.style.display = '';
                     }
+
+                    if (justUpdated) {
+                        sbCard.classList.add('anim-score-update');
+                        const overlay = document.getElementById('sb-update-overlay');
+                        const text = document.getElementById('sb-update-text');
+                        text.innerText = pointsAdded > 0 ? `+${pointsAdded} SCORE UPDATE!` : "SCORE UPDATE!";
+                        
+                        overlay.style.display = "flex";
+                        overlay.classList.remove('animate-fade-out-delayed');
+                        void overlay.offsetWidth;
+                        overlay.classList.add('animate-fade-out-delayed');
+
+                        setTimeout(() => {
+                            overlay.style.display = "none";
+                            sbCard.classList.remove('anim-score-update');
+                        }, 3500);
+                    }
+
                 } else {
                     document.getElementById('sb-home-name').innerText = isHomeSide ? game.yourTeam : game.opponent;
                     document.getElementById('sb-away-name').innerText = !isHomeSide ? game.yourTeam : game.opponent;
                     statusBadge.innerText = "PREGAME";
                     statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded uppercase tracking-widest border";
                     
-                    let hUrl = isHomeSide ? activeYourLogo : activeOppLogo; 
-                    let aUrl = !isHomeSide ? activeYourLogo : activeOppLogo;
-                    
-                    if(hUrl && hUrl.trim() !== "") { hLogo.src = hUrl; hLogo.style.display = 'block'; hFall.style.display='none';}
+                    if(finalHomeLogo && finalHomeLogo.trim() !== "") { hLogo.src = finalHomeLogo; hLogo.style.display = 'block'; hFall.style.display='none';}
                     else { hLogo.style.display = 'none'; hFall.style.display='block'; }
                     
-                    if(aUrl && aUrl.trim() !== "") { aLogo.src = aUrl; aLogo.style.display = 'block'; aFall.style.display='none';}
+                    if(finalAwayLogo && finalAwayLogo.trim() !== "") { aLogo.src = finalAwayLogo; aLogo.style.display = 'block'; aFall.style.display='none';}
                     else { aLogo.style.display = 'none'; aFall.style.display='block'; }
                 }
             });
@@ -1498,30 +1799,33 @@
             }
         };
 
-        window.openPublicMatchupModal = function(e) {
-            if (e) e.preventDefault();
+        window.openPublicMatchupModal = function() {
             if (!isUserLoggedIn) {
                 return window.requireAuth("You must be logged in to create or edit a matchup.");
             }
 
-            const modalTitle = document.getElementById('modalMatchupTitle');
+            if (window.currentMatchupData) {
+                const game = window.currentMatchupData;
+                const teamParam = new URLSearchParams(window.location.search).get('team') || "";
+                const myDict = window.globalTeamDict[teamParam.toLowerCase()] || {};
+                const oppDict = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
 
-            if (window.currentMatchupData && isActiveGame) {
-                if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Matchup';
-                document.getElementById('inpOpponent').value = window.currentMatchupData.opponent || "";
-                document.getElementById('inpDate').value = window.currentMatchupData.date || "";
-                document.getElementById('inpGameTime').value = window.currentMatchupData.time || "";
-                document.getElementById('inpHomeAway').value = window.currentMatchupData.homeAway || "Home";
-                document.getElementById('inpStadium').value = window.currentMatchupData.stadium || "";
-                document.getElementById('inpAddress').value = window.currentMatchupData.address || "";
+                document.getElementById('inpOpponent').value = game.opponent || "";
+                document.getElementById('inpYourRecord').value = game.yourTeamRecord || myDict.record || "0-0";
+                document.getElementById('inpOppRecord').value = game.oppRecord || oppDict.record || "0-0";
+                document.getElementById('inpDate').value = game.date || "";
+                document.getElementById('inpGameTime').value = game.time || "";
+                document.getElementById('inpHomeAway').value = game.homeAway || "Home";
+                document.getElementById('inpStadium').value = game.stadium || "";
+                document.getElementById('inpAddress').value = game.address || "";
             } else {
-                if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Set Matchup';
                 document.getElementById('publicMatchupForm').reset();
-                window.autoFillLocation(); 
+                const teamParam = new URLSearchParams(window.location.search).get('team') || "";
+                const myDict = window.globalTeamDict[teamParam.toLowerCase()] || {};
+                document.getElementById('inpYourRecord').value = myDict.record || "0-0";
+                window.autoFillLocation();
             }
-
-            const overlay = document.getElementById('publicMatchupModal');
-            overlay.style.display = 'flex';
+            document.getElementById('publicMatchupModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
         };
 
@@ -1539,6 +1843,8 @@
 
             const teamParam = new URLSearchParams(window.location.search).get('team');
             const opponentInput = document.getElementById('inpOpponent').value.trim();
+            const yourRecordInput = document.getElementById('inpYourRecord').value.trim() || "0-0";
+            const oppRecordInput = document.getElementById('inpOppRecord').value.trim() || "0-0";
             const homeAway = document.getElementById('inpHomeAway').value;
 
             const oldGame = window.currentMatchupData;
@@ -1558,8 +1864,10 @@
             const matchupDataA = {
                 yourTeam: teamParam,
                 yourTeamLogo: myLogo,
+                yourTeamRecord: yourRecordInput,
                 opponent: opponentInput,
                 oppLogo: oppLogo,
+                oppRecord: oppRecordInput,
                 date: document.getElementById('inpDate').value,
                 time: document.getElementById('inpGameTime').value,
                 homeAway: homeAway,
@@ -1576,8 +1884,10 @@
             const matchupDataB = {
                 yourTeam: opponentInput,
                 yourTeamLogo: oppLogo,
+                yourTeamRecord: oppRecordInput,
                 opponent: teamParam,
                 oppLogo: myLogo,
+                oppRecord: yourRecordInput,
                 date: document.getElementById('inpDate').value,
                 time: document.getElementById('inpGameTime').value,
                 homeAway: invertedHomeAway,
@@ -1589,6 +1899,8 @@
 
             let homeName = homeAway === "Home" ? teamParam : (homeAway === "Away" ? opponentInput : teamParam);
             let awayName = homeAway === "Home" ? opponentInput : (homeAway === "Away" ? teamParam : opponentInput);
+            let homeRec = homeAway === "Home" ? yourRecordInput : (homeAway === "Away" ? oppRecordInput : yourRecordInput);
+            let awayRec = homeAway === "Home" ? oppRecordInput : (homeAway === "Away" ? yourRecordInput : oppRecordInput);
 
             const safeHome = homeName.replace(/[^a-zA-Z0-9]/g, '');
             const safeAway = awayName.replace(/[^a-zA-Z0-9]/g, '');
@@ -1601,6 +1913,8 @@
                 awayLogo: homeAway === "Home" ? oppLogo : myLogo,
                 homeScore: 0,
                 awayScore: 0,
+                homeRecord: homeRec,
+                awayRecord: awayRec,
                 quarter: "PREGAME",
                 clock: "12:00",
                 date: document.getElementById('inpDate').value,
@@ -1630,6 +1944,8 @@
                 updates['live_scores/' + gameKey + '/away'] = awayName;
                 updates['live_scores/' + gameKey + '/homeLogo'] = homeAway === "Home" ? myLogo : oppLogo;
                 updates['live_scores/' + gameKey + '/awayLogo'] = homeAway === "Home" ? oppLogo : myLogo;
+                updates['live_scores/' + gameKey + '/homeRecord'] = homeRec;
+                updates['live_scores/' + gameKey + '/awayRecord'] = awayRec;
                 updates['live_scores/' + gameKey + '/date'] = document.getElementById('inpDate').value;
                 updates['live_scores/' + gameKey + '/time'] = document.getElementById('inpGameTime').value;
                 updates['live_scores/' + gameKey + '/updatedBy'] = usernameToSave;
@@ -1640,7 +1956,6 @@
 
             try {
                 await update(ref(dbRealtime), updates);
-                
                 window.closePublicMatchupModal(null, true);
                 window.showToast("Matchup updated and synced successfully!", "success");
                 
