@@ -82,7 +82,6 @@
             <p class="text-gray-700 font-medium max-w-2xl mx-auto mt-2">Real-time scores updated by fans in the stands. Click a team's logo to view their full Game Day page.</p>
         </div>
 
-        <!-- NEW CALL TO ACTION BANNER -->
         <div class="bg-gradient-to-r from-gray-900 to-pahs-dark border-l-4 border-pahs-gold rounded-2xl p-6 mb-10 max-w-5xl mx-auto shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="text-center md:text-left flex-1">
                 <h3 class="font-head text-3xl uppercase tracking-wide text-pahs-gold mb-1">
@@ -237,7 +236,6 @@
             return dateStr;
         }
 
-        // --- FAST PARALLEL LOADING LOGIC ---
         const fetchDirectory = () => new Promise((resolve) => {
             const cachedDir = localStorage.getItem('pahs_team_directory');
             const cacheTime = localStorage.getItem('pahs_team_directory_time');
@@ -331,7 +329,6 @@
         
         initializeScoreboards();
 
-        // --- NEW EDITABLE SHARE LOGIC ---
         window.openShareModal = (content) => {
             const overlay = document.getElementById('shareModalOverlay');
             const modalContent = document.getElementById('shareModalContent');
@@ -489,7 +486,6 @@
             }
         };
 
-        // --- ENHANCED POP-OUT SCOREBOARD WINDOW LOGIC ---
         window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc) {
             const home = decodeURIComponent(homeEnc);
             const away = decodeURIComponent(awayEnc);
@@ -498,7 +494,7 @@
             const homeClass = decodeURIComponent(homeClassEnc);
             const awayClass = decodeURIComponent(awayClassEnc);
 
-            const w = 480, h = 320; 
+            const w = 520, h = 380; 
             const left = (screen.width/2)-(w/2);
             const top = (screen.height/2)-(h/2);
             const pop = window.open('', `sb_${gameKey}`, `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no`);
@@ -531,8 +527,8 @@
                         }
                     <\/script>
                     <style>
-                        body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
-                        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; }
+                        body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; }
+                        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; box-sizing: border-box; }
                         .pulse-live { animation: pulseLive 2s infinite; }
                         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
                         
@@ -644,7 +640,7 @@
                             let justUpdated = false;
 
                             if (prevH !== null && prevA !== null) {
-                                if (currH !== prevH || currA !== prevA) {
+                                if (currH > prevH || currA > prevA) {
                                     justUpdated = true;
                                     pointsAdded = Math.max(currH - prevH, currA - prevA);
                                 }
@@ -760,7 +756,7 @@
                         const currH = game.homeScore || 0;
                         const currA = game.awayScore || 0;
 
-                        if (currH !== prevH || currA !== prevA) {
+                        if (currH > prevH || currA > prevA) {
                             game.justUpdated = true;
                             game.pointsAdded = Math.max(currH - prevH, currA - prevA);
                         }
