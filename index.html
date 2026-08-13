@@ -39,12 +39,12 @@
         /* --- TICKER STYLES --- */
         .ticker-title-bar { background-color: var(--dark-header); color: var(--gold-base); text-align: center; font-family: var(--font-head); font-size: 18px; letter-spacing: 2px; padding: 6px 0 0 0; border-top: 3px solid var(--gold-base); }
         .ticker-container { width: 100%; background: var(--dark-header); border-bottom: 3px solid var(--gold-base); overflow: hidden; white-space: nowrap; padding: 8px 0 12px 0; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .ticker-wrapper { display: inline-block; animation: ticker 25s linear infinite; will-change: transform; padding-left: 100vw; }
+        .ticker-wrapper { display: inline-block; animation: ticker 25s linear infinite; will-change: transform; padding-left: 100vw; display: flex; align-items: center; gap: 8px; }
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         
-        .matchup-card { display: inline-flex; align-items: center; vertical-align: middle; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px 14px; margin: 0 8px; transition: 0.2s; text-decoration: none; cursor: pointer; }
+        .matchup-card { display: inline-flex; align-items: center; vertical-align: middle; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px 14px; transition: 0.2s; text-decoration: none; cursor: pointer; }
         .ticker-container:hover .ticker-wrapper { animation-play-state: paused; }
-        .matchup-card:hover { border-color: var(--gold-base); background: rgba(251, 191, 36, 0.1); transform: scale(1.02); }
+        .matchup-card:hover { border-color: var(--gold-base) !important; background: rgba(251, 191, 36, 0.1); transform: scale(1.02); box-shadow: 0 0 10px rgba(251,191,36,0.4) !important; }
         .team-logo { width: 24px; height: 24px; background: white; border-radius: 50%; margin-right: 8px; object-fit: contain; border: 1px solid #ccc; padding: 2px; }
         .team-name { font-family: var(--font-head); font-size: 20px; letter-spacing: 0.5px; color: #fff; text-transform: uppercase; }
         .vs { font-family: var(--font-head); color: var(--gold-base); margin: 0 10px; font-size: 16px; font-weight: bold; }
@@ -52,10 +52,26 @@
         .game-date { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; font-weight: 700; }
         .game-time { font-family: var(--font-body); font-size: 11px; color: var(--gold-base); font-weight: bold; }
 
+        /* TICKER LIVE / UPDATE ANIMATIONS */
+        .ticker-live-glow {
+            border-color: rgba(239, 68, 68, 0.6) !important;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+        @keyframes tickerScoreUpdate {
+            0% { transform: scale(1.05); box-shadow: 0 0 30px var(--update-color); border-color: var(--update-color); }
+            20% { transform: scale(1.08); box-shadow: 0 0 40px var(--update-color); border-color: var(--update-color); }
+            60% { transform: scale(1.02); box-shadow: 0 0 20px var(--update-color); border-color: var(--update-color); }
+            100% { transform: scale(1); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+        }
+        .ticker-update-anim {
+            animation: tickerScoreUpdate 4s ease-out forwards !important;
+            z-index: 20; 
+        }
+
         /* --- CONTENT AREA & CARDS --- */
         .content-area { padding: 40px 20px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; display: grid; gap: 16px; animation: fadeIn 0.8s ease-out; }
         .nav-card { 
-            --accent-color: var(--gold-base); /* default fallback */
+            --accent-color: var(--gold-base); 
             background: var(--card-bg); 
             border: 1px solid var(--border-light); 
             border-radius: 12px; 
@@ -83,7 +99,6 @@
         .nav-icon { font-size: 32px; color: #4b5563; transition: all 0.3s ease; flex-shrink: 0; margin-left: 12px; }
         .nav-card:hover .nav-icon { transform: scale(1.15) rotate(-5deg); color: var(--accent-color); }
         
-        /* Apply to all primary navigation links */
         .featured-card { background: linear-gradient(135deg, #ffffff, var(--card-bg)); border-left: 5px solid var(--accent-color); }
         .featured-card .nav-icon { color: var(--accent-color); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
 
@@ -398,6 +413,26 @@
     const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
     
     let globalTeamDict = {};
+    let previousTickerScores = {};
+    let isTickerFirstLoad = true;
+
+    const colorNameMap = { "white": "#FFFFFF", "black": "#000000", "gold": "#FFD700", "yellow": "#FFFF00", "red": "#EF4444", "blue": "#3B82F6", "green": "#22C55E", "purple": "#A855F7", "orange": "#F97316", "navy": "#1e3a8a", "navy blue": "#1e3a8a", "grey": "#64748b", "gray": "#64748b", "silver": "#94a3b8", "maroon": "#7f1d1d", "cardinal": "#991b1b", "crimson": "#be123c", "royal blue": "#2563eb", "kelly green": "#16a34a", "forest green": "#14532d", "vegas gold": "#eab308", "columbia blue": "#7dd3fc", "sky blue": "#0ea5e9", "brown": "#451a03", "teal": "#0d9488", "pink": "#f472b6", "old gold": "#ca8a04", "scarlet": "#dc2626", "dark green": "#14532d", "midnight blue": "#172554" };
+
+    function normalizeColor(c) {
+        if (!c) return null;
+        return colorNameMap[c.toLowerCase().trim()] || c;
+    }
+
+    function getTeamColor(colorString) {
+        if (!colorString) return "var(--gold-base)";
+        const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
+        let primary = normalizeColor(parts[0]);
+        let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
+        if (primary === "#000000" || primary === "#ffffff" || primary === "white" || primary === "black") {
+            return secondary || "var(--gold-base)";
+        }
+        return primary || "var(--gold-base)";
+    }
 
     function formatGameTime(timeStr) {
         if (!timeStr || timeStr === "undefined") return "7:00 PM";
@@ -433,12 +468,14 @@
                 const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
                 const teamClass = row['Class'] || "";
                 const teamRec = row['Record'] || row['2026Record'] || "0-0";
+                const teamColors = row['Colors'] || row['Color'] || "";
                 
                 if (teamName) {
                     globalTeamDict[teamName.trim().toLowerCase()] = {
                         logo: logoUrl ? logoUrl.trim() : '',
                         classification: teamClass.trim(),
-                        record: teamRec.trim()
+                        record: teamRec.trim(),
+                        colors: teamColors
                     };
                 }
             });
@@ -476,7 +513,7 @@
                     const matchKey = [game.home.trim().toLowerCase(), game.away.trim().toLowerCase()].sort().join('_');
                     if (!seenKeys.has(matchKey)) {
                         seenKeys.add(matchKey);
-                        games.push(game);
+                        games.push({ ...game, matchKey });
                     }
                 });
 
@@ -496,6 +533,30 @@
                             if (!game.time && conf.time) game.time = conf.time;
                         }
                     }
+
+                    const safeHomeName = (game.home || '').trim().toLowerCase();
+                    const safeAwayName = (game.away || '').trim().toLowerCase();
+                    const homeData = globalTeamDict[safeHomeName] || {};
+                    const awayData = globalTeamDict[safeAwayName] || {};
+
+                    let currH = game.homeScore || 0;
+                    let currA = game.awayScore || 0;
+                    let justUpdated = false;
+                    let updateColor = "var(--gold-base)";
+
+                    if (!isTickerFirstLoad && previousTickerScores[game.matchKey]) {
+                        const prevH = previousTickerScores[game.matchKey].h || 0;
+                        const prevA = previousTickerScores[game.matchKey].a || 0;
+
+                        if (currH > prevH) {
+                            justUpdated = true;
+                            updateColor = getTeamColor(homeData.colors);
+                        } else if (currA > prevA) {
+                            justUpdated = true;
+                            updateColor = getTeamColor(awayData.colors);
+                        }
+                    }
+                    previousTickerScores[game.matchKey] = { h: currH, a: currA };
 
                     let statusText = "QTR " + qtr;
                     let clockText = "";
@@ -522,12 +583,6 @@
                     let awayScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.awayScore || 0}</span>`;
                     let homeScoreHtml = isPregame ? '' : `<span class="font-mono font-bold text-xl text-white bg-white/10 px-2 py-0.5 rounded ml-2">${game.homeScore || 0}</span>`;
 
-                    const safeHomeName = (game.home || '').trim().toLowerCase();
-                    const safeAwayName = (game.away || '').trim().toLowerCase();
-
-                    const homeData = globalTeamDict[safeHomeName] || {};
-                    const awayData = globalTeamDict[safeAwayName] || {};
-
                     const finalHomeLogo = homeData.logo || game.homeLogo || '';
                     const finalAwayLogo = awayData.logo || game.awayLogo || '';
 
@@ -537,7 +592,17 @@
                     const homeRec = game.homeRecord || homeData.record || '0-0';
                     const awayRec = game.awayRecord || awayData.record || '0-0';
 
-                    html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="matchup-card">
+                    let cardClass = "matchup-card";
+                    let cardStyle = "";
+                    
+                    if (justUpdated) {
+                        cardClass += " ticker-update-anim";
+                        cardStyle = `--update-color: ${updateColor};`;
+                    } else if (!isPregame && !isFinal) {
+                        cardClass += " ticker-live-glow";
+                    }
+
+                    html += `<a href="gameday.html?team=${encodeURIComponent(game.home)}" class="${cardClass}" style="${cardStyle}">
                         <img src="${finalAwayLogo}" onerror="this.style.display='none'" class="team-logo" style="${finalAwayLogo ? '' : 'display:none;'}" alt="Logo">
                         <span class="team-name">${game.away} <span style="font-size:12px; color:#aaa; font-weight:normal;">(${awayRec})</span>${awayClassHtml}</span>
                         ${awayScoreHtml}
@@ -553,6 +618,7 @@
                 });
             }
             tickerEl.innerHTML = html;
+            isTickerFirstLoad = false;
         });
     }
 
