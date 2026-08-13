@@ -761,6 +761,7 @@
             }
         };
 
+        // --- NEW EDITABLE SHARE LOGIC ---
         window.openShareScoreModal = function(e) {
             if (e) e.stopPropagation();
             if (!auth.currentUser) {
@@ -993,7 +994,7 @@
             const homeClass = decodeURIComponent(homeClassEnc);
             const awayClass = decodeURIComponent(awayClassEnc);
 
-            const w = 480, h = 300; 
+            const w = 520, h = 380; 
             const left = (screen.width/2)-(w/2);
             const top = (screen.height/2)-(h/2);
             const pop = window.open('', `sb_${gameKey}`, `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no`);
@@ -1027,8 +1028,8 @@
                     <\/script>
                     <style>
                         :root { --team-primary: ${primaryColor}; }
-                        body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
-                        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; }
+                        body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; }
+                        .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; box-sizing: border-box; }
                         .pulse-live { animation: pulseLive 2s infinite; }
                         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
                         
@@ -1038,7 +1039,7 @@
                             50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
                             100% { transform: scale(1); border-color: var(--final-border, #e5e7eb); box-shadow: var(--final-shadow, none); }
                         }
-                        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out; z-index: 40; }
+                        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
                         
                         @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
                         .animate-fade-out-delayed { animation: fadeOutDelayed 3.5s forwards; }
