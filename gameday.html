@@ -567,6 +567,7 @@
                         </div>
                         <span class="font-head text-2xl uppercase text-center leading-tight flex items-center justify-center gap-2">
                             <span id="sb-home-name">Home</span>
+                            <i id="home-poss" class="fa-solid fa-football text-amber-700 hidden animate-pulse" title="Has Possession"></i>
                         </span>
                         <span id="sb-home-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
                     </div>
@@ -579,6 +580,7 @@
                             <span id="sb-away-fall" class="font-bold text-xl hidden">AWY</span>
                         </div>
                         <span class="font-head text-2xl uppercase text-center leading-tight flex items-center justify-center gap-2">
+                            <i id="away-poss" class="fa-solid fa-football text-amber-700 hidden animate-pulse" title="Has Possession"></i>
                             <span id="sb-away-name">Away</span>
                         </span>
                         <span id="sb-away-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
@@ -593,22 +595,19 @@
                     </div>
                     
                     <div class="relative w-full h-8 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
-                        <div id="endzone-home" class="w-8 h-full flex items-center justify-center border-r-2 border-white shrink-0 z-10 transition-colors duration-500">
-                            <span class="text-[8px] font-bold text-white -rotate-90">HOM</span>
-                        </div>
-                        <div class="flex-grow relative h-full bg-green-700">
-                            <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
-                            <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
-                            <div id="sb-drive-fill" class="absolute top-0 bottom-0 transition-all duration-1000 ease-in-out hidden flex items-center">
-                                <i id="sb-ball-icon" class="fa-solid fa-caret-right text-xl drop-shadow-md"></i>
+                        <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
+                        <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
+                        
+                        <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2.5 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
+                            <div class="relative">
+                                <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-lg drop-shadow-md"></i>
+                                <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-3 top-1/2 -translate-y-1/2 text-white text-xs hidden"></i>
+                                <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-3 top-1/2 -translate-y-1/2 text-white text-xs hidden"></i>
                             </div>
-                        </div>
-                        <div id="endzone-away" class="w-8 h-full flex items-center justify-center border-l-2 border-white shrink-0 z-10 transition-colors duration-500">
-                            <span class="text-[8px] font-bold text-white -rotate-90">AWY</span>
                         </div>
                     </div>
                     <div class="flex justify-between px-1 mt-1 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                        <span id="lbl-field-home">HOM</span>
+                        <span id="lbl-field-home">HOME</span>
                         <span>50</span>
                         <span id="lbl-field-away">AWY</span>
                     </div>
@@ -636,7 +635,7 @@
             </div>
 
             <!-- LOGIN GATE -->
-            <div id="gamedayGateModal" class="hidden content-card rounded-2xl p-8 max-w-lg mx-auto text-center border-t-8 border-pahs-gold shadow-md bg-white mb-6">
+            <div id="gamedayGateModal" class="hidden content-card rounded-2xl p-8 text-center border-t-8 border-pahs-gold shadow-md bg-white mb-6">
                 <div class="w-16 h-16 bg-amber-50 text-pahs-gold rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-pahs-gold/30">
                     <i class="fa-solid fa-lock"></i>
                 </div>
@@ -970,17 +969,6 @@
             return primary;
         }
 
-        function getTeamColor(colorString) {
-            if (!colorString) return "var(--gold-base)";
-            const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
-            let primary = normalizeColor(parts[0]);
-            let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
-            if (primary === "#000000" || primary === "#ffffff" || primary === "white" || primary === "black") {
-                return secondary || "var(--gold-base)";
-            }
-            return primary || "var(--gold-base)";
-        }
-
         function applyTeamColors(colorString) {
             const accent = getBestAccent(colorString);
             if (accent) {
@@ -1057,7 +1045,7 @@
             }
         };
 
-        window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc, homeColorEnc, awayColorEnc) {
+        window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc) {
             const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--team-primary').trim() || '#fbbf24';
 
             const home = decodeURIComponent(homeEnc);
@@ -1066,10 +1054,8 @@
             const awayLogo = decodeURIComponent(awayLogoEnc);
             const homeClass = decodeURIComponent(homeClassEnc);
             const awayClass = decodeURIComponent(awayClassEnc);
-            const homeColor = decodeURIComponent(homeColorEnc) || '#fbbf24';
-            const awayColor = decodeURIComponent(awayColorEnc) || '#4b5563';
 
-            const w = 520, h = 420; 
+            const w = 520, h = 380; 
             const left = (screen.width/2)-(w/2);
             const top = (screen.height/2)-(h/2);
             const pop = window.open('', `sb_${gameKey}`, `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=no`);
@@ -1158,7 +1144,7 @@
                             </div>
                         </div>
                         
-                        <!-- LIVE DRIVE & PLAY TICKER FOR POPOUT -->
+                        <!-- NEW LIVE DRIVE & PLAY TICKER FOR POPOUT -->
                         <div class="mt-4 pt-4 border-t border-gray-200 relative z-10">
                             <div class="bg-gray-100 rounded-lg p-2 mb-3 border border-gray-300 shadow-inner flex items-center justify-between">
                                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-microphone text-pahs-gold"></i> <span id="sb-down-dist">Waiting...</span></span>
@@ -1166,18 +1152,15 @@
                             </div>
                             
                             <div class="relative w-full h-6 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
-                                <div id="endzone-home" class="w-8 h-full flex items-center justify-center border-r-2 border-white shrink-0 z-10 transition-colors duration-500" style="background-color: ${homeColor};">
-                                    <span class="text-[8px] font-bold text-white -rotate-90">HOM</span>
-                                </div>
-                                <div class="flex-grow relative h-full bg-green-700">
-                                    <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
-                                    <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
-                                    <div id="sb-drive-fill" class="absolute top-0 bottom-0 transition-all duration-1000 ease-in-out hidden flex items-center">
-                                        <i id="sb-ball-icon" class="fa-solid fa-caret-right text-xl drop-shadow-md"></i>
+                                <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
+                                <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
+                                
+                                <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
+                                    <div class="relative">
+                                        <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-sm drop-shadow-md"></i>
+                                        <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
+                                        <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
                                     </div>
-                                </div>
-                                <div id="endzone-away" class="w-8 h-full flex items-center justify-center border-l-2 border-white shrink-0 z-10 transition-colors duration-500" style="background-color: ${awayColor};">
-                                    <span class="text-[8px] font-bold text-white -rotate-90">AWY</span>
                                 </div>
                             </div>
                             <div class="flex justify-between px-1 mt-1 text-[8px] font-bold text-gray-400 uppercase tracking-widest">
@@ -1187,14 +1170,6 @@
                             </div>
                         </div>
 
-                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
-                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
-                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
-                            </div>
-                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
-                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
-                            </div>
-                        </div>
                     </div>
 
                     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"><\/script>
@@ -1206,9 +1181,6 @@
                         let popPrevH = null, popPrevA = null;
                         let popUpdateTimeout = null;
                         
-                        const homeColor = "${homeColor}";
-                        const awayColor = "${awayColor}";
-
                         function formatGameTime(timeStr) {
                             if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
                             try {
@@ -1275,13 +1247,14 @@
                             document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
                             document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
 
-                            const driveFill = document.getElementById('sb-drive-fill');
-                            const ballIcon = document.getElementById('sb-ball-icon');
+                            const ballMarker = document.getElementById('sb-ball-marker');
+                            const dirRight = document.getElementById('sb-ball-dir-right');
+                            const dirLeft = document.getElementById('sb-ball-dir-left');
 
                             if (poss === 'none' || !yardLine) {
-                                if (driveFill) driveFill.classList.add('hidden');
+                                ballMarker.classList.add('hidden');
                             } else {
-                                if (driveFill) driveFill.classList.remove('hidden');
+                                ballMarker.classList.remove('hidden');
                                 let position = 50;
                                 const parsedYardLine = parseInt(yardLine);
                                 if (!isNaN(parsedYardLine)) {
@@ -1291,37 +1264,17 @@
                                         position = 100 - parsedYardLine;
                                     }
                                 }
+                                ballMarker.style.left = \`\${position}%\`;
 
                                 if (poss === 'home') { 
-                                    if (driveFill) {
-                                        driveFill.style.left = '0%';
-                                        driveFill.style.right = 'auto';
-                                        driveFill.style.width = \`\${position}%\`;
-                                        driveFill.style.background = \`linear-gradient(90deg, transparent, \${homeColor})\`;
-                                    }
-                                    if (ballIcon) {
-                                        ballIcon.className = "fa-solid fa-caret-right text-xl drop-shadow-md";
-                                        ballIcon.style.color = homeColor;
-                                        ballIcon.style.position = 'absolute';
-                                        ballIcon.style.right = '-8px';
-                                        ballIcon.style.left = 'auto';
-                                    }
+                                    dirRight.classList.remove('hidden');
+                                    dirLeft.classList.add('hidden');
                                 } else if (poss === 'away') {
-                                    if (driveFill) {
-                                        driveFill.style.right = '0%';
-                                        driveFill.style.left = 'auto';
-                                        driveFill.style.width = \`\${100 - position}%\`;
-                                        driveFill.style.background = \`linear-gradient(-90deg, transparent, \${awayColor})\`;
-                                    }
-                                    if (ballIcon) {
-                                        ballIcon.className = "fa-solid fa-caret-left text-xl drop-shadow-md";
-                                        ballIcon.style.color = awayColor;
-                                        ballIcon.style.position = 'absolute';
-                                        ballIcon.style.left = '-8px';
-                                        ballIcon.style.right = 'auto';
-                                    }
+                                    dirLeft.classList.remove('hidden');
+                                    dirRight.classList.add('hidden');
                                 } else {
-                                    if (driveFill) driveFill.classList.add('hidden');
+                                    dirRight.classList.add('hidden');
+                                    dirLeft.classList.add('hidden');
                                 }
                             }
 
@@ -1544,8 +1497,7 @@
                                 stadium: cleanText(r['FieldName']),
                                 address: cleanText(r['FieldLocation']) || cleanText(r['City']),
                                 record: cleanText(r['Record']) || cleanText(r['2026Record']) || "0-0",
-                                classification: cleanText(r['Class']) || "",
-                                colors: cleanText(r['Colors']) || cleanText(r['Color']) || ""
+                                classification: cleanText(r['Class']) || ""
                             };
                         }
                     });
@@ -1795,7 +1747,6 @@
             updateUIState();
         });
 
-        // Fire initialization directly instead of waiting for DOMContentLoaded to prevent race condition
         initGameDay();
 
         let timerInterval;
@@ -1843,9 +1794,6 @@
             const homeClass = isHomeSide ? myTeamData.classification : oppTeamData.classification;
             const awayClass = !isHomeSide ? myTeamData.classification : oppTeamData.classification;
 
-            const homeColor = getTeamColor(myTeamData.colors);
-            const awayColor = getTeamColor(oppTeamData.colors);
-
             btnPopout.onclick = () => {
                 window.popoutScoreboard(
                     encodeURIComponent(isHomeSide ? game.yourTeam : game.opponent),
@@ -1854,9 +1802,7 @@
                     encodeURIComponent(finalHomeLogo),
                     encodeURIComponent(finalAwayLogo),
                     encodeURIComponent(homeClass || ''),
-                    encodeURIComponent(awayClass || ''),
-                    encodeURIComponent(homeColor),
-                    encodeURIComponent(awayColor)
+                    encodeURIComponent(awayClass || '')
                 );
             };
 
@@ -1910,19 +1856,14 @@
                     document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
                     document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
 
-                    const ezHome = document.getElementById('endzone-home');
-                    if (ezHome) ezHome.style.backgroundColor = homeColor;
-                    
-                    const ezAway = document.getElementById('endzone-away');
-                    if (ezAway) ezAway.style.backgroundColor = awayColor;
-
-                    const driveFill = document.getElementById('sb-drive-fill');
-                    const ballIcon = document.getElementById('sb-ball-icon');
+                    const ballMarker = document.getElementById('sb-ball-marker');
+                    const dirRight = document.getElementById('sb-ball-dir-right');
+                    const dirLeft = document.getElementById('sb-ball-dir-left');
 
                     if (poss === 'none' || !yardLine) {
-                        if (driveFill) driveFill.classList.add('hidden');
+                        ballMarker.classList.add('hidden');
                     } else {
-                        if (driveFill) driveFill.classList.remove('hidden');
+                        ballMarker.classList.remove('hidden');
                         let position = 50;
                         const parsedYardLine = parseInt(yardLine);
                         if (!isNaN(parsedYardLine)) {
@@ -1932,37 +1873,17 @@
                                 position = 100 - parsedYardLine;
                             }
                         }
+                        ballMarker.style.left = `${position}%`;
 
                         if (poss === 'home') { 
-                            if (driveFill) {
-                                driveFill.style.left = '0%';
-                                driveFill.style.right = 'auto';
-                                driveFill.style.width = `${position}%`;
-                                driveFill.style.background = `linear-gradient(90deg, transparent, ${homeColor})`;
-                            }
-                            if (ballIcon) {
-                                ballIcon.className = "fa-solid fa-caret-right text-xl drop-shadow-md";
-                                ballIcon.style.color = homeColor;
-                                ballIcon.style.position = 'absolute';
-                                ballIcon.style.right = '-8px';
-                                ballIcon.style.left = 'auto';
-                            }
+                            dirRight.classList.remove('hidden');
+                            dirLeft.classList.add('hidden');
                         } else if (poss === 'away') {
-                            if (driveFill) {
-                                driveFill.style.right = '0%';
-                                driveFill.style.left = 'auto';
-                                driveFill.style.width = `${100 - position}%`;
-                                driveFill.style.background = `linear-gradient(-90deg, transparent, ${awayColor})`;
-                            }
-                            if (ballIcon) {
-                                ballIcon.className = "fa-solid fa-caret-left text-xl drop-shadow-md";
-                                ballIcon.style.color = awayColor;
-                                ballIcon.style.position = 'absolute';
-                                ballIcon.style.left = '-8px';
-                                ballIcon.style.right = 'auto';
-                            }
+                            dirLeft.classList.remove('hidden');
+                            dirRight.classList.add('hidden');
                         } else {
-                            if (driveFill) driveFill.classList.add('hidden');
+                            dirRight.classList.add('hidden');
+                            dirLeft.classList.add('hidden');
                         }
                     }
 
