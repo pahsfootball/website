@@ -38,11 +38,44 @@
 
         /* --- TICKER STYLES --- */
         .ticker-title-bar { background-color: var(--dark-header); color: var(--gold-base); text-align: center; font-family: var(--font-head); font-size: 18px; letter-spacing: 2px; padding: 6px 0 0 0; border-top: 3px solid var(--gold-base); }
-        .ticker-container { width: 100%; background: var(--dark-header); border-bottom: 3px solid var(--gold-base); overflow: hidden; white-space: nowrap; padding: 8px 0 12px 0; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .ticker-wrapper { display: inline-block; animation: ticker 12.5s linear infinite; will-change: transform; padding-left: 100vw; display: flex; align-items: center; gap: 8px; }
+        
+        .ticker-container { 
+            width: 100%; 
+            background: var(--dark-header); 
+            border-bottom: 3px solid var(--gold-base); 
+            overflow: hidden; 
+            padding: 8px 0 12px 0; 
+            position: relative; 
+            z-index: 10; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        }
+        
+        .ticker-wrapper { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            width: max-content; 
+            animation: ticker 12.5s linear infinite; 
+            will-change: transform; 
+            padding-left: 100vw; 
+        }
+        
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         
-        .matchup-card { display: inline-flex; align-items: center; vertical-align: middle; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px 14px; transition: 0.2s; text-decoration: none; cursor: pointer; }
+        .matchup-card { 
+            display: flex; 
+            align-items: center; 
+            flex-shrink: 0; /* Prevents the box from squishing its contents */
+            white-space: nowrap; 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 6px; 
+            padding: 6px 14px; 
+            transition: 0.2s; 
+            text-decoration: none; 
+            cursor: pointer; 
+        }
+        
         .ticker-container:hover .ticker-wrapper { animation-play-state: paused; }
         .matchup-card:hover { border-color: var(--gold-base) !important; background: rgba(251, 191, 36, 0.1); transform: scale(1.02); box-shadow: 0 0 10px rgba(251,191,36,0.4) !important; }
         .team-logo { width: 24px; height: 24px; background: white; border-radius: 50%; margin-right: 8px; object-fit: contain; border: 1px solid #ccc; padding: 2px; }
@@ -111,7 +144,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 100; backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card-bg); border: 1px solid var(--border-light); width: 100%; max-width: 450px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s ease-out; position: relative; }
         .modal-content::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-base); }
-        .modal-header { padding: 20px 24px; display: flex; justify-between: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
         .modal-header h2 { margin: 0; font-family: var(--font-head); font-size: 32px; color: var(--text-main); text-transform: uppercase; line-height: 1; }
         .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; transition: 0.2s; line-height: 1; padding: 0; }
         .close-btn:hover { color: #ef4444; }
@@ -504,6 +537,7 @@
             } else {
                 const rawGames = Object.values(data);
                 
+                // Deduplicate games by normalized matchup key
                 const seenKeys = new Set();
                 const games = [];
                 
