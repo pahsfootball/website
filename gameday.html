@@ -42,13 +42,26 @@
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
 
-        @keyframes scoreUpdateAnim {
-            0% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
-            15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
-            50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
-            100% { transform: scale(1); border-color: var(--final-border, #e5e7eb); box-shadow: var(--final-shadow, none); }
+        /* SCORE UPDATE GLOW & PARTICLES */
+        @keyframes particleExplosion {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--r)); opacity: 0; }
         }
-        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out; z-index: 40; }
+        .particle {
+            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px;
+            border-radius: 50%; pointer-events: none; opacity: 0; z-index: 50;
+        }
+
+        @keyframes scoreUpdateGlow {
+            0% { border-color: var(--update-color, #fbbf24); box-shadow: 0 0 35px var(--update-color, #fbbf24), inset 0 0 20px var(--update-color, #fbbf24); transform: scale(1.02); }
+            15% { border-color: var(--update-color, #fbbf24); box-shadow: 0 0 45px var(--update-color, #fbbf24), inset 0 0 30px var(--update-color, #fbbf24); transform: scale(1.03); }
+            100% { border-color: var(--team-primary, #fbbf24); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 0 0 transparent; transform: scale(1); }
+        }
+        .score-update-glow {
+            animation: scoreUpdateGlow 3.5s ease-out forwards;
+            z-index: 40;
+        }
+
         @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         .animate-fade-out-delayed { animation: fadeOutDelayed 3.5s forwards; }
 
@@ -413,18 +426,6 @@
         </div>
     </div>
 
-    <!-- GAMEDAY LOGIN REQUIRED GATE -->
-    <div id="gamedayGateModal" class="hidden content-card rounded-2xl p-8 max-w-lg mx-auto text-center border-t-8 border-pahs-gold shadow-2xl bg-white my-12">
-        <div class="w-20 h-20 bg-amber-50 text-pahs-gold rounded-full flex items-center justify-center mx-auto mb-4 text-4xl border border-pahs-gold/30">
-            <i class="fa-solid fa-lock"></i>
-        </div>
-        <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">GameDay Access Locked</h2>
-        <p class="text-gray-600 font-body mb-6 text-sm">Full GameDay coverage—including kickoff countdowns, live drive trackers, stadium maps, weather forecasts, and community chatter—is reserved for registered members.</p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="login.html" class="bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-md hover:brightness-110 transition border border-pahs-gold">Sign In / Register</a>
-        </div>
-    </div>
-
     <div id="main-app" class="hidden">
         
         <div id="adminTopBar" class="hidden bg-[#18181b] border-b-4 border-pahs-gold shadow-lg w-full z-40 relative">
@@ -541,7 +542,18 @@
                         <div class="countdown-box rounded-xl p-3 md:p-4 w-20 md:w-24 shadow-md"><div class="text-3xl md:text-5xl font-head font-bold text-pahs-gold transition-colors duration-500" id="cd-secs">00</div><div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Secs</div></div>
                     </div>
                 </div>
-            </div>
+
+                <!-- GAMEDAY LOGIN REQUIRED GATE -->
+                <div id="gamedayGateModal" class="hidden content-card rounded-2xl p-8 max-w-lg mx-auto text-center border-t-8 border-pahs-gold shadow-2xl bg-white mb-6">
+                    <div class="w-20 h-20 bg-amber-50 text-pahs-gold rounded-full flex items-center justify-center mx-auto mb-4 text-4xl border border-pahs-gold/30">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">GameDay Access Locked</h2>
+                    <p class="text-gray-600 font-body mb-6 text-sm">Create an account and log in for full GameDay info, live scoreboard with live drive tracker, and more!</p>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <a href="login.html" class="bg-pahs-dark text-pahs-gold font-head font-bold text-xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-md hover:brightness-110 transition border border-pahs-gold">Sign In / Register</a>
+                    </div>
+                </div>
 
             <!-- Public Creation Panel -->
             <div id="publicCreatePanel" class="hidden content-card rounded-2xl p-6 mb-6 border-2 border-blue-400 bg-blue-50 text-center shadow-lg relative overflow-hidden transition-colors duration-500">
@@ -584,8 +596,8 @@
                 </div>
 
                 <div class="flex justify-between items-center px-4">
-                    <div class="flex flex-col items-center w-1/3">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden">
+                    <div class="flex flex-col items-center w-1/3 relative" id="home-team-container">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden z-10 relative">
                             <img id="sb-home-logo" src="" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; document.getElementById('sb-home-fall').style.display='block';">
                             <span id="sb-home-fall" class="font-bold text-xl hidden">HOM</span>
                         </div>
@@ -597,8 +609,8 @@
                     
                     <div class="text-4xl font-black text-gray-300">-</div>
                     
-                    <div class="flex flex-col items-center w-1/3">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden">
+                    <div class="flex flex-col items-center w-1/3 relative" id="away-team-container">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-gray-300 shadow mb-3 overflow-hidden z-10 relative">
                             <img id="sb-away-logo" src="" class="w-full h-full object-contain p-1" onerror="this.style.display='none'; document.getElementById('sb-away-fall').style.display='block';">
                             <span id="sb-away-fall" class="font-bold text-xl hidden">AWY</span>
                         </div>
@@ -797,6 +809,29 @@
         let isUserAdmin = false;
         let isActiveGame = false;
         let isTeamClaimed = false; 
+
+        // --- PARTICLE EXPLOSION LOGIC ---
+        window.fireParticles = function(containerId, color) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            for (let i = 0; i < 40; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.backgroundColor = color;
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 100 + 30; 
+                const tx = Math.cos(angle * Math.PI / 180) * distance + 'px';
+                const ty = Math.sin(angle * Math.PI / 180) * distance + 'px';
+                const r = Math.random() * 360 + 'deg';
+                const duration = (Math.random() * 0.8 + 0.6) + 's';
+                p.style.setProperty('--tx', tx);
+                p.style.setProperty('--ty', ty);
+                p.style.setProperty('--r', r);
+                p.style.animation = `particleExplosion ${duration} ease-out forwards`;
+                container.appendChild(p);
+                setTimeout(() => p.remove(), 1500);
+            }
+        };
 
         // --- CUSTOM TOAST NOTIFICATION LOGIC ---
         window.showToast = function(message, type = "success") {
@@ -1427,19 +1462,21 @@
             if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.add('hidden');
             if(btnEditMatchup) btnEditMatchup.classList.add('hidden');
             if(countdownSection) countdownSection.classList.add('hidden');
+            if(gateModal) gateModal.classList.add('hidden');
+            if(lockedContent) lockedContent.classList.add('hidden');
 
             if (!isUserLoggedIn) {
                 // If not logged in, ensure the gated prompt is showing and content locked.
-                if(gateModal && isActiveGame) gateModal.classList.remove('hidden');
-                if(lockedContent) lockedContent.classList.add('hidden');
-                if(loginPanel && !isActiveGame) loginPanel.classList.remove('hidden');
+                if (isActiveGame) {
+                    if(gateModal) gateModal.classList.remove('hidden');
+                } else {
+                    if(loginPanel) loginPanel.classList.remove('hidden');
+                }
             } else {
                 // Logged in
-                if(gateModal) gateModal.classList.add('hidden');
-                if(lockedContent) lockedContent.classList.remove('hidden');
-
                 if (isActiveGame) {
                     if(sbCard) sbCard.classList.remove('hidden');
+                    if(lockedContent) lockedContent.classList.remove('hidden');
                     if(btnEditMatchup) btnEditMatchup.classList.remove('hidden');
                     if(countdownSection) countdownSection.classList.remove('hidden');
                     if(!isUserAdmin) {
@@ -1812,11 +1849,15 @@
                     let pointsAdded = 0;
 
                     if (livePrevH !== null && livePrevA !== null) {
-                        if (currH !== livePrevH || currA !== livePrevA) {
+                        if (currH > livePrevH || currA > livePrevA) {
                             justUpdated = true;
                             pointsAdded = Math.max(currH - livePrevH, currA - livePrevA);
                         }
                     }
+                    
+                    let homeScored = currH > livePrevH;
+                    let awayScored = currA > livePrevA;
+
                     livePrevH = currH;
                     livePrevA = currA;
 
@@ -1952,7 +1993,23 @@
                     }
 
                     if (justUpdated) {
-                        sbCard.classList.add('anim-score-update');
+                        let updateColor = '#fbbf24';
+                        
+                        if (homeScored && !awayScored) {
+                            updateColor = homeColor;
+                            window.fireParticles('home-team-container', homeColor);
+                        } else if (awayScored && !homeScored) {
+                            updateColor = awayColor;
+                            window.fireParticles('away-team-container', awayColor);
+                        } else if (homeScored && awayScored) {
+                            window.fireParticles('home-team-container', homeColor);
+                            window.fireParticles('away-team-container', awayColor);
+                            updateColor = '#fbbf24';
+                        }
+
+                        sbCard.style.setProperty('--update-color', updateColor);
+                        sbCard.classList.remove('score-update-glow');
+
                         const overlay = document.getElementById('sb-update-overlay');
                         const text = document.getElementById('sb-update-text');
                         text.innerText = pointsAdded > 0 ? `+${pointsAdded} SCORE UPDATE!` : "SCORE UPDATE!";
@@ -1961,10 +2018,12 @@
                         overlay.classList.remove('animate-fade-out-delayed');
                         void overlay.offsetWidth;
                         overlay.classList.add('animate-fade-out-delayed');
+                        
+                        sbCard.classList.add('score-update-glow');
 
                         setTimeout(() => {
                             overlay.style.display = "none";
-                            sbCard.classList.remove('anim-score-update');
+                            sbCard.classList.remove('score-update-glow');
                         }, 3500);
                     }
 
