@@ -176,7 +176,7 @@
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
         const [searchTerm, setSearchTerm] = useState('');
-        const [view, setView] = useState('table');
+        const [view, setView] = useState('analytics'); // Updated to default to analytics
         const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
         const [currentPage, setCurrentPage] = useState(1);
         const [itemsPerPage] = useState(50);
@@ -317,21 +317,15 @@
             const sortedTeams = Object.entries(counts)
                 .map(([key, count]) => ({ name: nameMap[key], count }))
                 .sort((a, b) => b.count - a.count);
-            return { topTeams: sortedTeams.slice(0, 10), totalChamps: data.length, uniqueTeams: Object.keys(counts).length };
+            // Updated to slice the top 15 teams
+            return { topTeams: sortedTeams.slice(0, 15), totalChamps: data.length, uniqueTeams: Object.keys(counts).length };
         }, [data, winnerColumn]);
 
-        // UPDATED: Chart colors gradient fading from Gold down to Black
+        // UPDATED: Chart colors gradient fading from Gold down to Black expanded to 15 colors
         const CHART_COLORS = [
-            '#fbbf24', // Index 0 (Most Championships) - Gold
-            '#e2ab21', 
-            '#c9971e', 
-            '#b0831b', 
-            '#976f18', 
-            '#7e5c15', 
-            '#654812', 
-            '#4c340f', 
-            '#33200c', 
-            '#0f0f0f'  // Index 9 (10th Most) - Black/Dark
+            '#fbbf24', '#eab222', '#d9a621', '#c8991f', '#b78d1e', 
+            '#a6801c', '#95741b', '#846719', '#735b18', '#624e16', 
+            '#514215', '#403513', '#2f2912', '#1e1c10', '#0f0f0f'
         ];
 
         if (loading) return null;
@@ -571,11 +565,13 @@
                                 <div className="flex items-center justify-between mb-8">
                                     <div>
                                         <h3 className="text-2xl font-bold font-head uppercase tracking-wide text-gray-900">Leaderboard</h3>
-                                        <p className="text-sm font-medium text-gray-600">Top 10 Schools by Championship Count</p>
+                                        {/* Updated to state Top 15 Schools */}
+                                        <p className="text-sm font-medium text-gray-600">Top 15 Schools by Championship Count</p>
                                     </div>
                                 </div>
                                 {BarChart ? (
-                                    <div className="h-[500px] w-full">
+                                    {/* Increased height to 700px to accommodate 15 teams comfortably */}
+                                    <div className="h-[700px] w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={stats.topTeams} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#d4d4d8" />
@@ -673,4 +669,3 @@
 </script>
 </body>
 </html>
-
