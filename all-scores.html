@@ -168,7 +168,6 @@
         const auth = getAuth(app);
         const dbFirestore = getFirestore(app);
 
-        // --- AUTHENTICATION STATE ---
         let currentUser = null;
         window.currentUserProfile = null;
 
@@ -582,6 +581,32 @@
                             </div>
                         </div>
                         
+                        <!-- NEW LIVE DRIVE & PLAY TICKER FOR POPOUT -->
+                        <div class="mt-4 pt-4 border-t border-gray-200 relative z-10">
+                            <div class="bg-gray-100 rounded-lg p-2 mb-3 border border-gray-300 shadow-inner flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-microphone text-pahs-gold"></i> <span id="sb-down-dist">Waiting...</span></span>
+                                <span class="text-[11px] font-body text-gray-800 font-medium truncate w-full text-right ml-4" id="sb-play-text">Awaiting play updates...</span>
+                            </div>
+                            
+                            <div class="relative w-full h-6 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
+                                <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
+                                <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
+                                
+                                <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
+                                    <div class="relative">
+                                        <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-sm drop-shadow-md"></i>
+                                        <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
+                                        <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between px-1 mt-1 text-[8px] font-bold text-gray-400 uppercase tracking-widest">
+                                <span id="lbl-field-home">HOM</span>
+                                <span>50</span>
+                                <span id="lbl-field-away">AWY</span>
+                            </div>
+                        </div>
+                        
                         <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
                             <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
                                 <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
@@ -598,7 +623,8 @@
                         firebase.initializeApp(${JSON.stringify(firebaseConfig)});
                         const db = firebase.database();
                         
-                        let prevH = null, prevA = null;
+                        let popPrevH = null, popPrevA = null;
+                        let popUpdateTimeout = null;
                         
                         function formatGameTime(timeStr) {
                             if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
@@ -625,6 +651,7 @@
                             const game = snap.val();
                             if (!game) return;
 
+                            const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
                             const card = document.getElementById('card-container');
                             const updateOverlay = document.getElementById('update-overlay');
                             const updateText = document.getElementById('update-text');
@@ -632,24 +659,72 @@
                             const aScore = document.getElementById('away-score');
                             const badgeText = document.getElementById('badge-text');
                             const clockText = document.getElementById('clock-text');
-                            const dotClass = document.getElementById('dot-class');
                             
                             let currH = game.homeScore || 0;
                             let currA = game.awayScore || 0;
                             let pointsAdded = 0;
                             let justUpdated = false;
 
-                            if (prevH !== null && prevA !== null) {
-                                if (currH > prevH || currA > prevA) {
+                            if (popPrevH !== null && popPrevA !== null) {
+                                if (currH > popPrevH || currA > popPrevA) {
                                     justUpdated = true;
-                                    pointsAdded = Math.max(currH - prevH, currA - prevA);
+                                    pointsAdded = Math.max(currH - popPrevH, currA - popPrevA);
                                 }
                             }
-                            prevH = currH;
-                            prevA = currA;
+                            popPrevH = currH;
+                            popPrevA = currA;
 
                             hScore.innerText = currH;
                             aScore.innerText = currA;
+
+                            // PLAY BY PLAY LOGIC
+                            const down = game.down || "";
+                            const toGo = game.toGo || "";
+                            const yardLine = game.yardLine || "";
+                            const yardSide = game.yardLineSide || "";
+                            const playText = game.playText || "";
+                            const poss = game.possession || "none";
+
+                            let downDistStr = "";
+                            if (down && toGo) downDistStr = \`\${down} & \${toGo}\`;
+                            else if (down) downDistStr = down;
+                            
+                            document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
+                            document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
+
+                            const ballMarker = document.getElementById('sb-ball-marker');
+                            const dirRight = document.getElementById('sb-ball-dir-right');
+                            const dirLeft = document.getElementById('sb-ball-dir-left');
+
+                            if (poss === 'none' || !yardLine) {
+                                ballMarker.classList.add('hidden');
+                            } else {
+                                ballMarker.classList.remove('hidden');
+                                let position = 50;
+                                const parsedYardLine = parseInt(yardLine);
+                                if (!isNaN(parsedYardLine)) {
+                                    if (yardSide === 'home') {
+                                        position = parsedYardLine;
+                                    } else if (yardSide === 'away') {
+                                        position = 100 - parsedYardLine;
+                                    }
+                                }
+                                ballMarker.style.left = \`\${position}%\`;
+
+                                if (poss === 'home') { 
+                                    dirRight.classList.remove('hidden');
+                                    dirLeft.classList.add('hidden');
+                                } else if (poss === 'away') {
+                                    dirLeft.classList.remove('hidden');
+                                    dirRight.classList.add('hidden');
+                                } else {
+                                    dirRight.classList.add('hidden');
+                                    dirLeft.classList.add('hidden');
+                                }
+                            }
+
+                            document.getElementById('lbl-field-home').innerText = (isHomeSide ? game.home : game.away).substring(0,3).toUpperCase();
+                            document.getElementById('lbl-field-away').innerText = (!isHomeSide ? game.home : game.away).substring(0,3).toUpperCase();
 
                             let qtr = game.quarter;
                             if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
@@ -660,7 +735,7 @@
                             const statusUpper = stat.toUpperCase();
                             const qtrUpper = qtr.toUpperCase();
 
-                            let bText = "", bClass = "", dClass = "hidden", cBorder = "border-gray-300 shadow-md", cHtml = "";
+                            let bText = "", bClass = "", cBorder = "border-gray-300 shadow-md", cHtml = "";
 
                             if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
                                 bText = game.date ? formatGameDate(game.date) : "PREGAME";
@@ -671,8 +746,7 @@
                             } else if (qtrUpper === "HALF") {
                                 bText = "HALFTIME";
                                 bClass = "bg-yellow-600 text-black";
-                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                                cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                                cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                             } else if (statusUpper === "FINAL" || qtrUpper === "FINAL") {
                                 bText = "FINAL";
                                 bClass = "bg-gray-800 text-white";
@@ -681,7 +755,6 @@
                             } else {
                                 bText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
                                 bClass = "bg-red-600 text-white animate-pulse";
-                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                                 cBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
                                 let cText = game.clock || "12:00";
                                 if(cText === "undefined" || cText.trim() === "") cText = "12:00";
@@ -691,10 +764,11 @@
                             badgeText.className = bClass + " text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest";
                             badgeText.innerText = bText;
                             clockText.outerHTML = \`<span id="clock-text" class="flex items-center">\${cHtml}</span>\`;
-                            dotClass.className = dClass;
+                            
+                            let baseCardClass = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
 
                             if (justUpdated) {
-                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
+                                card.className = baseCardClass + " anim-score-update";
                                 updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} UPDATE!\` : "UPDATE!";
                                 updateOverlay.style.display = "flex";
                                 
@@ -702,15 +776,18 @@
                                 void updateOverlay.offsetWidth;
                                 updateOverlay.classList.add('animate-fade-out-delayed');
 
-                                setTimeout(() => {
+                                if (popUpdateTimeout) clearTimeout(popUpdateTimeout);
+                                popUpdateTimeout = setTimeout(() => {
                                     updateOverlay.style.display = "none";
                                     card.classList.remove('anim-score-update');
+                                    popUpdateTimeout = null;
                                 }, 3500);
                             } else {
-                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
+                                card.className = baseCardClass;
+                                if (popUpdateTimeout) {
+                                    card.classList.add('anim-score-update');
+                                }
                             }
-
-                            document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
                         });
                     <\/script>
                 </body>
