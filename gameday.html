@@ -199,6 +199,33 @@
         </div>
     </div>
 
+    <!-- Draft FZ Post Modal -->
+    <div id="shareScoreModalOverlay" class="modal-overlay" onclick="closeShareScoreModal(event)">
+        <div class="modal-content">
+            <div class="p-5 bg-gray-100 flex justify-between items-center border-b border-gray-200">
+                <h2 class="font-head text-3xl uppercase tracking-wide text-blue-700 m-0 leading-none flex items-center gap-2">
+                    <i class="fa-solid fa-comments"></i> Draft FZ Post
+                </h2>
+                <button onclick="closeShareScoreModal(event, true)" class="text-gray-400 hover:text-red-500 transition text-3xl leading-none">×</button>
+            </div>
+            <div class="p-6 bg-white">
+                <p class="text-sm text-gray-600 mb-3 font-body font-bold">
+                    Add your insights or edit the update below before posting to the Fan Zone:
+                </p>
+                <textarea id="shareScoreContent" rows="6" class="input-box w-full p-4 mb-6 rounded-xl border border-gray-300 shadow-inner font-body text-sm text-gray-800 outline-none focus:border-pahs-gold focus:ring-2 focus:ring-pahs-gold/30 transition-all resize-none"></textarea>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeShareScoreModal(event, true)" class="flex-1 bg-gray-200 text-gray-800 font-bold uppercase tracking-wider py-3 rounded-xl hover:bg-gray-300 transition-all text-sm shadow">
+                        Cancel
+                    </button>
+                    <button id="submitShareScoreBtn" onclick="submitSharedScore()" class="flex-1 bg-blue-600 text-white font-head font-bold text-xl uppercase tracking-widest py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all">
+                        Post to Fan Zone
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Suggest Link Modal -->
     <div id="suggestLinkModalOverlay" class="modal-overlay" onclick="closeSuggestLinkModal(event)">
         <div class="modal-content">
@@ -500,11 +527,11 @@
                         <span id="sb-status" class="bg-pahs-gold text-[color:var(--team-text,#000)] transition-colors duration-500 text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest">PREGAME</span>
                         <span id="sb-clock" class="font-mono font-bold text-gray-700">12:00</span>
                         
-                        <button onclick="shareDirectToFanZone()" class="bg-blue-600 text-white hover:bg-blue-700 border border-blue-700 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
+                        <button onclick="window.openShareScoreModal()" class="bg-blue-600 text-white hover:bg-blue-700 border border-blue-700 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
                             <i class="fa-solid fa-comments"></i> FZ Post
                         </button>
 
-                        <button onclick="shareGameDayExternally()" class="bg-green-600 text-white hover:bg-green-700 border border-green-700 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
+                        <button onclick="window.shareGameDayExternally()" class="bg-green-600 text-white hover:bg-green-700 border border-green-700 transition-colors text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 uppercase tracking-wider">
                             <i class="fa-solid fa-share-nodes"></i> Share
                         </button>
                     </div>
@@ -734,8 +761,9 @@
             }
         };
 
-        // --- NEW SHARE LOGIC ---
-        window.shareDirectToFanZone = async function() {
+        // --- NEW EDITABLE SHARE LOGIC ---
+        window.openShareScoreModal = function(e) {
+            if (e) e.stopPropagation();
             if (!auth.currentUser) {
                 return window.requireAuth("You must be logged in to post to the Fan Zone.");
             }
@@ -748,22 +776,59 @@
             const clock = document.getElementById('sb-clock').innerText;
 
             let timeStr = (status !== "PREGAME" && status !== "HALFTIME" && status !== "FINAL") ? ` | Time: ${clock}` : "";
-            const content = `🏈 LIVE SCORE UPDATE 🏈\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\nStatus: ${status}${timeStr}`;
+            const shareText = `🏈 LIVE SCORE UPDATE 🏈\n\n${homeName}: ${homeScore}\n${awayName}: ${awayScore}\n\nStatus: ${status}${timeStr}\n\n`;
+            
+            document.getElementById('shareScoreContent').value = shareText;
+
+            const overlay = document.getElementById('shareScoreModalOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeShareScoreModal = function(e, force = false) {
+            if (force || (e && e.target.id === 'shareScoreModalOverlay')) {
+                const overlay = document.getElementById('shareScoreModalOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
+            }
+        };
+
+        window.submitSharedScore = async function() {
+            const btn = document.getElementById('submitShareScoreBtn');
+            const content = document.getElementById('shareScoreContent').value.trim();
+            const origText = btn.innerHTML;
+            
+            if (content === "") return window.showToast("Post cannot be empty.", "error");
+            if (content.length > 500) return window.showToast("Post is too long. Max 500 characters.", "error");
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            btn.disabled = true;
+
+            const cleanContent = filterProfanity(content);
+            const username = window.currentUserProfile ? window.currentUserProfile.username : "Fan";
+            const teamToTag = window.currentMatchupData ? window.currentMatchupData.yourTeam : "";
+            const opponentTeamToTag = window.currentMatchupData ? window.currentMatchupData.opponent : "";
 
             try {
                 const newPostRef = push(ref(dbRealtime, 'fanzone_posts'));
                 await set(newPostRef, {
                     authorId: auth.currentUser.uid,
-                    authorUsername: window.currentUserProfile?.username || "Fan",
-                    content: content,
-                    taggedTeam: window.currentMatchupData ? window.currentMatchupData.yourTeam : "",
-                    taggedTeam2: window.currentMatchupData ? window.currentMatchupData.opponent : "",
+                    authorUsername: username,
+                    content: cleanContent,
+                    taggedTeam: teamToTag,
+                    taggedTeam2: opponentTeamToTag,
                     timestamp: new Date().toISOString()
                 });
-                window.showToast("Score update posted directly to Fan Zone!", "success");
-            } catch (error) {
+                
+                window.closeShareScoreModal(null, true);
+                window.showToast("Score shared to the Fan Zone successfully!", "success");
+            } catch (error) { 
                 console.error(error);
-                window.showToast("Failed to post update to Fan Zone.", "error");
+                window.showToast("Failed to communicate with server.", "error"); 
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
             }
         };
 
@@ -1609,7 +1674,7 @@
                     let pointsAdded = 0;
 
                     if (livePrevH !== null && livePrevA !== null) {
-                        if (currH !== livePrevH || currA !== livePrevA) {
+                        if (currH !== prevH || currA !== livePrevA) {
                             justUpdated = true;
                             pointsAdded = Math.max(currH - livePrevH, currA - livePrevA);
                         }
