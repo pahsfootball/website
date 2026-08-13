@@ -46,7 +46,7 @@
             0% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
             15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
             50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
-            100% { transform: scale(1); border-color: var(--final-border, #e5e7eb); box-shadow: var(--final-shadow, none); }
+            100% { transform: scale(1); }
         }
         .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out; z-index: 40; }
         @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
@@ -58,6 +58,7 @@
         
         .btn-dynamic { background-color: var(--team-primary); color: var(--team-text); border: 1px solid var(--team-primary); }
 
+        /* --- CUSTOM TOAST NOTIFICATIONS --- */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast-message { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-radius: 12px; color: white; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
@@ -142,13 +143,13 @@
 
     <!-- Score Update Modal -->
     <div id="scoreUpdateModal" class="modal-overlay">
-        <div class="modal-content overflow-y-auto max-h-[90vh]">
-            <div class="bg-pahs-dark text-pahs-gold p-4 flex justify-between items-center sticky top-0 z-10">
+        <div class="modal-content">
+            <div class="bg-pahs-dark text-pahs-gold p-4 flex justify-between items-center">
                 <h3 class="font-head text-3xl uppercase tracking-wide m-0"><i class="fa-solid fa-pen-to-square mr-2"></i>Update Score</h3>
                 <button onclick="closeScoreModal()" class="text-gray-400 hover:text-red-500 transition text-2xl leading-none">×</button>
             </div>
             <div class="p-6 bg-gray-100">
-                <p class="text-[10px] text-gray-500 mb-4 italic text-center uppercase tracking-widest font-bold">Updates are publicly logged to your username.</p>
+                <p class="text-xs text-gray-500 mb-4 italic text-center">Updates are tracked and logged publicly to your username.</p>
                 <form id="scoreUpdateForm" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-white p-3 rounded-xl border border-gray-300 shadow-inner text-center">
@@ -190,44 +191,7 @@
                         </select>
                     </div>
 
-                    <!-- NEW PLAY BY PLAY OPTIONAL SECTION -->
-                    <div class="mt-6 pt-4 border-t border-gray-300">
-                        <p class="text-[11px] text-blue-600 font-bold uppercase tracking-widest mb-3"><i class="fa-solid fa-bars-staggered mr-1"></i> Optional Play-by-Play</p>
-                        <div class="grid grid-cols-3 gap-2 mb-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Down</label>
-                                <select id="inpDown" class="w-full border border-gray-300 rounded-lg p-2 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pahs-gold text-xs">
-                                    <option value="">--</option>
-                                    <option value="1st">1st</option>
-                                    <option value="2nd">2nd</option>
-                                    <option value="3rd">3rd</option>
-                                    <option value="4th">4th</option>
-                                    <option value="PAT">PAT</option>
-                                    <option value="KO">Kickoff</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">To Go</label>
-                                <input type="text" id="inpToGo" placeholder="e.g. 10" class="w-full border border-gray-300 rounded-lg p-2 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pahs-gold text-center text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Ball On</label>
-                                <div class="flex">
-                                    <select id="inpYardSide" class="w-1/2 border-y border-l border-gray-300 rounded-l-lg p-2 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pahs-gold text-[10px] px-1">
-                                        <option value="home">HOM</option>
-                                        <option value="away">AWY</option>
-                                    </select>
-                                    <input type="number" id="inpYardLine" placeholder="yd" min="1" max="50" class="w-1/2 border border-gray-300 rounded-r-lg p-2 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pahs-gold text-center text-xs px-1">
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Play Description / Ticker Text</label>
-                            <input type="text" id="inpPlayText" placeholder="e.g. 45-yard pass for a first down!" class="w-full border border-gray-300 rounded-lg p-2.5 font-medium text-gray-700 outline-none focus:ring-2 focus:ring-pahs-gold text-xs">
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btnPushScore" class="btn-dynamic w-full font-head font-bold text-2xl uppercase tracking-wider py-3 rounded-xl mt-4 shadow-lg hover:brightness-110 transition-all border">
+                    <button type="submit" id="btnPushScore" class="btn-dynamic w-full font-head font-bold text-2xl uppercase tracking-wider py-3 rounded-xl mt-2 shadow-lg hover:brightness-110 transition-all border">
                         Push Live Update
                     </button>
                 </form>
@@ -581,6 +545,7 @@
                         </div>
                         <span class="font-head text-2xl uppercase text-center leading-tight flex items-center justify-center gap-2">
                             <span id="sb-home-name">Home</span>
+                            <i id="home-poss" class="fa-solid fa-football text-amber-700 hidden animate-pulse" title="Has Possession"></i>
                         </span>
                         <span id="sb-home-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
                     </div>
@@ -593,39 +558,14 @@
                             <span id="sb-away-fall" class="font-bold text-xl hidden">AWY</span>
                         </div>
                         <span class="font-head text-2xl uppercase text-center leading-tight flex items-center justify-center gap-2">
+                            <i id="away-poss" class="fa-solid fa-football text-amber-700 hidden animate-pulse" title="Has Possession"></i>
                             <span id="sb-away-name">Away</span>
                         </span>
                         <span id="sb-away-score" class="text-6xl font-mono font-black mt-2 text-gray-900">0</span>
                     </div>
                 </div>
 
-                <!-- NEW LIVE DRIVE & PLAY TICKER -->
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <div class="bg-gray-100 rounded-lg p-2 mb-3 border border-gray-300 shadow-inner flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-microphone text-pahs-gold"></i> <span id="sb-down-dist">Waiting...</span></span>
-                        <span class="text-sm font-body text-gray-800 font-medium truncate w-full text-right ml-4" id="sb-play-text">Awaiting play updates...</span>
-                    </div>
-                    
-                    <div class="relative w-full h-8 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
-                        <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
-                        <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
-                        
-                        <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2.5 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
-                            <div class="relative">
-                                <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-lg drop-shadow-md"></i>
-                                <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-3 top-1/2 -translate-y-1/2 text-white text-xs hidden"></i>
-                                <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-3 top-1/2 -translate-y-1/2 text-white text-xs hidden"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-between px-1 mt-1 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                        <span id="lbl-field-home">HOME</span>
-                        <span>50</span>
-                        <span id="lbl-field-away">AWAY</span>
-                    </div>
-                </div>
-
-                <div class="text-center mt-4 pt-4 border-t border-gray-200">
+                <div class="text-center mt-6 pt-4 border-t border-gray-200">
                     <p class="text-[11px] uppercase tracking-widest text-gray-500"><i class="fa-solid fa-user-pen mr-1"></i> Scoreboard last updated by: <span id="sb-updated-by" class="font-bold text-gray-800">Awaiting First Update</span></p>
                 </div>
             </div>
@@ -821,6 +761,7 @@
             }
         };
 
+        // --- NEW EDITABLE SHARE LOGIC ---
         window.openShareScoreModal = function(e) {
             if (e) e.stopPropagation();
             if (!auth.currentUser) {
@@ -1142,32 +1083,14 @@
                             </div>
                         </div>
                         
-                        <!-- NEW LIVE DRIVE & PLAY TICKER FOR POPOUT -->
-                        <div class="mt-4 pt-4 border-t border-gray-200 relative z-10">
-                            <div class="bg-gray-100 rounded-lg p-2 mb-3 border border-gray-300 shadow-inner flex items-center justify-between">
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-microphone text-pahs-gold"></i> <span id="sb-down-dist">Waiting...</span></span>
-                                <span class="text-[11px] font-body text-gray-800 font-medium truncate w-full text-right ml-4" id="sb-play-text">Awaiting play updates...</span>
+                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
                             </div>
-                            
-                            <div class="relative w-full h-6 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
-                                <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
-                                <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
-                                
-                                <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
-                                    <div class="relative">
-                                        <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-sm drop-shadow-md"></i>
-                                        <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
-                                        <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between px-1 mt-1 text-[8px] font-bold text-gray-400 uppercase tracking-widest">
-                                <span id="lbl-field-home">HOM</span>
-                                <span>50</span>
-                                <span id="lbl-field-away">AWY</span>
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
                             </div>
                         </div>
-
                     </div>
 
                     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"><\/script>
@@ -1204,7 +1127,6 @@
                             const game = snap.val();
                             if (!game) return;
 
-                            const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
                             const card = document.getElementById('card-container');
                             const updateOverlay = document.getElementById('update-overlay');
                             const updateText = document.getElementById('update-text');
@@ -1212,6 +1134,7 @@
                             const aScore = document.getElementById('away-score');
                             const badgeText = document.getElementById('badge-text');
                             const clockText = document.getElementById('clock-text');
+                            const dotClass = document.getElementById('dot-class');
                             
                             let currH = game.homeScore || 0;
                             let currA = game.awayScore || 0;
@@ -1230,55 +1153,6 @@
                             hScore.innerText = currH;
                             aScore.innerText = currA;
 
-                            // PLAY BY PLAY LOGIC
-                            const down = game.down || "";
-                            const toGo = game.toGo || "";
-                            const yardLine = game.yardLine || "";
-                            const yardSide = game.yardLineSide || "";
-                            const playText = game.playText || "";
-                            const poss = game.possession || "none";
-
-                            let downDistStr = "";
-                            if (down && toGo) downDistStr = \`\${down} & \${toGo}\`;
-                            else if (down) downDistStr = down;
-                            
-                            document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
-                            document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
-
-                            const ballMarker = document.getElementById('sb-ball-marker');
-                            const dirRight = document.getElementById('sb-ball-dir-right');
-                            const dirLeft = document.getElementById('sb-ball-dir-left');
-
-                            if (poss === 'none' || !yardLine) {
-                                ballMarker.classList.add('hidden');
-                            } else {
-                                ballMarker.classList.remove('hidden');
-                                let position = 50;
-                                const parsedYardLine = parseInt(yardLine);
-                                if (!isNaN(parsedYardLine)) {
-                                    if (yardSide === 'home') {
-                                        position = parsedYardLine;
-                                    } else if (yardSide === 'away') {
-                                        position = 100 - parsedYardLine;
-                                    }
-                                }
-                                ballMarker.style.left = \`\${position}%\`;
-
-                                if (poss === 'home') { 
-                                    dirRight.classList.remove('hidden');
-                                    dirLeft.classList.add('hidden');
-                                } else if (poss === 'away') {
-                                    dirLeft.classList.remove('hidden');
-                                    dirRight.classList.add('hidden');
-                                } else {
-                                    dirRight.classList.add('hidden');
-                                    dirLeft.classList.add('hidden');
-                                }
-                            }
-
-                            document.getElementById('lbl-field-home').innerText = (isHomeSide ? game.home : game.away).substring(0,3).toUpperCase();
-                            document.getElementById('lbl-field-away').innerText = (!isHomeSide ? game.home : game.away).substring(0,3).toUpperCase();
-
                             let qtr = game.quarter;
                             if (!qtr || qtr === "undefined" || qtr === "") qtr = "PREGAME";
                             
@@ -1288,7 +1162,7 @@
                             const statusUpper = stat.toUpperCase();
                             const qtrUpper = qtr.toUpperCase();
 
-                            let bText = "", bClass = "", cBorder = "border-gray-300 shadow-md", cHtml = "";
+                            let bText = "", bClass = "", dClass = "hidden", cBorder = "border-gray-300 shadow-md", cHtml = "";
 
                             if (statusUpper === "PREGAME" || statusUpper === "UPCOMING" || qtrUpper === "PREGAME") {
                                 bText = game.date ? formatGameDate(game.date) : "PREGAME";
@@ -1301,6 +1175,7 @@
                             } else if (qtrUpper === "HALF") {
                                 bText = "HALFTIME";
                                 bClass = "bg-yellow-600 text-black";
+                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                                 cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                                 card.style.setProperty('--final-border', '#ef4444');
                                 card.style.setProperty('--final-shadow', '0 0 15px rgba(220,38,38,0.4)');
@@ -1314,6 +1189,7 @@
                             } else {
                                 bText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
                                 bClass = "bg-red-600 text-white animate-pulse";
+                                dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                                 cBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
                                 card.style.setProperty('--final-border', '#dc2626');
                                 card.style.setProperty('--final-shadow', '0 0 20px rgba(220,38,38,0.4)');
@@ -1325,6 +1201,7 @@
                             badgeText.className = bClass + " text-[10px] font-bold px-2 py-0.5 rounded shadow uppercase tracking-widest";
                             badgeText.innerText = bText;
                             clockText.outerHTML = \`<span id="clock-text" class="flex items-center">\${cHtml}</span>\`;
+                            dotClass.className = dClass;
                             
                             let baseCardClass = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
 
@@ -1349,6 +1226,8 @@
                                     card.classList.add('anim-score-update');
                                 }
                             }
+
+                            document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
                         });
                     <\/script>
                 </body>
@@ -1356,6 +1235,111 @@
             `);
             pop.document.close();
         };
+
+        function listenToEmbeddedPosts(homeTeam, awayTeam) {
+            const container = document.getElementById('embedFeedContainer');
+            const postsRef = ref(dbRealtime, 'fanzone_posts');
+            
+            onValue(postsRef, (snapshot) => {
+                const data = snapshot.val();
+                let filteredPosts = [];
+                
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const post = data[key];
+                        const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
+                        const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
+                        const hLower = homeTeam ? homeTeam.toLowerCase() : null;
+                        const aLower = awayTeam ? awayTeam.toLowerCase() : null;
+                        
+                        if ((hLower && (tag1 === hLower || tag2 === hLower)) || 
+                            (aLower && (tag1 === aLower || tag2 === aLower))) {
+                            filteredPosts.push(post);
+                        }
+                    });
+                }
+                
+                if (filteredPosts.length === 0) {
+                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
+                    return;
+                }
+                
+                filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const postsToRender = filteredPosts.slice(0, 3);
+                container.innerHTML = '';
+                
+                postsToRender.forEach(post => {
+                    let timeString = "Recently";
+                    if (post.timestamp) {
+                        const date = new Date(post.timestamp);
+                        timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    const safeContent = linkify(escapeHTML(post.content));
+                    
+                    const postCard = document.createElement('div');
+                    postCard.className = "embed-post-card rounded-xl p-4 shadow-sm mb-3";
+                    postCard.innerHTML = `
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                <i class="fa-solid fa-user text-gray-400 text-xs"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 leading-none text-xs font-body">@${post.authorUsername}</h4>
+                                <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
+                            </div>
+                        </div>
+                        <div class="text-gray-700 font-body text-sm leading-relaxed whitespace-pre-wrap break-words">${safeContent}</div>
+                    `;
+                    container.appendChild(postCard);
+                });
+            });
+        }
+
+        function updateUIState() {
+            const loginPanel = document.getElementById('authActionPanel');
+            const adminTopBar = document.getElementById('adminTopBar');
+            const publicCreatePanel = document.getElementById('publicCreatePanel');
+            const fanScorePanel = document.getElementById('fanScorePanel');
+            const sbCard = document.getElementById('basicScoreboardCard');
+            const btnUpdateScoreAdmin = document.getElementById('btn-update-score-admin');
+            const btnEditMatchup = document.getElementById('btnEditMatchup');
+
+            if(loginPanel) loginPanel.classList.add('hidden');
+            if(adminTopBar) adminTopBar.classList.add('hidden');
+            if(publicCreatePanel) publicCreatePanel.classList.add('hidden');
+            if(fanScorePanel) fanScorePanel.classList.add('hidden');
+            if(sbCard) sbCard.classList.add('hidden');
+            if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.add('hidden');
+            if(btnEditMatchup) btnEditMatchup.classList.add('hidden');
+
+            if (isActiveGame) {
+                if(sbCard) sbCard.classList.remove('hidden');
+            }
+
+            if (!isActiveGame) {
+                if(publicCreatePanel) publicCreatePanel.classList.remove('hidden');
+            }
+
+            if (!isUserLoggedIn) {
+                if(loginPanel) loginPanel.classList.remove('hidden');
+            } else {
+                if (isActiveGame) {
+                    if(btnEditMatchup) btnEditMatchup.classList.remove('hidden');
+                }
+
+                if (isUserAdmin) {
+                    if(adminTopBar) adminTopBar.classList.remove('hidden');
+                    if (isActiveGame) {
+                        if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.remove('hidden');
+                    }
+                } else {
+                    if (isActiveGame) {
+                        if(fanScorePanel) fanScorePanel.classList.remove('hidden');
+                    }
+                }
+            }
+        }
 
         function initGameDay() {
             const teamParam = new URLSearchParams(window.location.search).get('team');
@@ -1736,60 +1720,11 @@
                     hFall.innerText = (data.home || "HOM").substring(0,3).toUpperCase();
                     aFall.innerText = (data.away || "AWY").substring(0,3).toUpperCase();
 
-                    // PLAY BY PLAY LOGIC
-                    const down = data.down || "";
-                    const toGo = data.toGo || "";
-                    const yardLine = data.yardLine || "";
-                    const yardSide = data.yardLineSide || "";
-                    const playText = data.playText || "";
-                    const poss = data.possession || "none";
-
-                    let downDistStr = "";
-                    if (down && toGo) downDistStr = `${down} & ${toGo}`;
-                    else if (down) downDistStr = down;
-                    
-                    document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
-                    document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
-
-                    const ballMarker = document.getElementById('sb-ball-marker');
-                    const dirRight = document.getElementById('sb-ball-dir-right');
-                    const dirLeft = document.getElementById('sb-ball-dir-left');
-
-                    if (poss === 'none' || !yardLine) {
-                        ballMarker.classList.add('hidden');
-                    } else {
-                        ballMarker.classList.remove('hidden');
-                        let position = 50;
-                        const parsedYardLine = parseInt(yardLine);
-                        if (!isNaN(parsedYardLine)) {
-                            if (yardSide === 'home') {
-                                position = parsedYardLine;
-                            } else if (yardSide === 'away') {
-                                position = 100 - parsedYardLine;
-                            }
-                        }
-                        ballMarker.style.left = `${position}%`;
-
-                        if (poss === 'home') { 
-                            dirRight.classList.remove('hidden');
-                            dirLeft.classList.add('hidden');
-                        } else if (poss === 'away') {
-                            dirLeft.classList.remove('hidden');
-                            dirRight.classList.add('hidden');
-                        } else {
-                            dirRight.classList.add('hidden');
-                            dirLeft.classList.add('hidden');
-                        }
-                    }
-
-                    document.getElementById('lbl-field-home').innerText = (isHomeSide ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
-                    document.getElementById('lbl-field-away').innerText = (!isHomeSide ? game.yourTeam : game.opponent).substring(0,3).toUpperCase();
-
                     const homePossIcon = document.getElementById('home-poss');
                     const awayPossIcon = document.getElementById('away-poss');
                     
-                    if (poss === 'home') { homePossIcon.classList.remove('hidden'); awayPossIcon.classList.add('hidden'); } 
-                    else if (poss === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
+                    if (data.possession === 'home') { homePossIcon.classList.remove('hidden'); awayPossIcon.classList.add('hidden'); } 
+                    else if (data.possession === 'away') { homePossIcon.classList.add('hidden'); awayPossIcon.classList.remove('hidden'); } 
                     else { homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden'); }
 
                     if(finalHomeLogo && finalHomeLogo.trim() !== "") { 
@@ -1903,12 +1838,6 @@
                     document.getElementById('inpQuarter').value = data.quarter || '1';
                     document.getElementById('inpTime').value = data.clock || '12:00';
                     document.getElementById('inpPossession').value = data.possession || 'none';
-
-                    document.getElementById('inpDown').value = data.down || '';
-                    document.getElementById('inpToGo').value = data.toGo || '';
-                    document.getElementById('inpYardLine').value = data.yardLine || '';
-                    document.getElementById('inpYardSide').value = data.yardLineSide || 'home';
-                    document.getElementById('inpPlayText').value = data.playText || '';
                 }
             } catch(e) { console.error(e); }
             
@@ -1958,11 +1887,6 @@
                 quarter: qtr,
                 clock: document.getElementById('inpTime').value || "00:00",
                 possession: document.getElementById('inpPossession').value, 
-                down: document.getElementById('inpDown').value,
-                toGo: document.getElementById('inpToGo').value.trim(),
-                yardLine: document.getElementById('inpYardLine').value,
-                yardLineSide: document.getElementById('inpYardSide').value,
-                playText: document.getElementById('inpPlayText').value.trim(),
                 status: status,
                 updatedBy: usernameToSave,
                 lastUpdated: new Date().toISOString()
