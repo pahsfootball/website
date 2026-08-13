@@ -985,6 +985,8 @@
         };
 
         window.popoutScoreboard = function(homeEnc, awayEnc, gameKey, homeLogoEnc, awayLogoEnc, homeClassEnc, awayClassEnc) {
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--team-primary').trim() || '#fbbf24';
+
             const home = decodeURIComponent(homeEnc);
             const away = decodeURIComponent(awayEnc);
             const homeLogo = decodeURIComponent(homeLogoEnc);
@@ -1013,26 +1015,29 @@
                 <!DOCTYPE html>
                 <html>
                 <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>${home} vs ${away} - Live Tracker</title>
                     <script src="https://cdn.tailwindcss.com"><\/script>
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Teko:wght@700&display=swap" rel="stylesheet">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
                     <script>
                         tailwind.config = {
-                            theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '#fbbf24' } }, fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] } } }
+                            theme: { extend: { colors: { pahs: { dark: '#0f0f0f', gold: '${primaryColor}' } }, fontFamily: { 'head': ['Teko', 'sans-serif'], 'body': ['Inter', 'sans-serif'] } } }
                         }
                     <\/script>
                     <style>
+                        :root { --team-primary: ${primaryColor}; }
                         body { background-color: #adadad; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
                         .content-card { background-color: #f4f4f5; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; }
                         .pulse-live { animation: pulseLive 2s infinite; }
                         @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
                         
                         @keyframes scoreUpdateAnim {
-                            0% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
+                            0% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.03); }
                             15% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,1); transform: scale(1.04); }
-                            50% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
-                            100% { transform: scale(1); }
+                            50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
+                            100% { transform: scale(1); border-color: var(--final-border, #e5e7eb); box-shadow: var(--final-shadow, none); }
                         }
                         .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
                         
@@ -1094,7 +1099,8 @@
                         firebase.initializeApp(${JSON.stringify(firebaseConfig)});
                         const db = firebase.database();
                         
-                        let prevH = null, prevA = null;
+                        let popPrevH = null, popPrevA = null;
+                        let popUpdateTimeout = null;
                         
                         function formatGameTime(timeStr) {
                             if (!timeStr || !timeStr.includes(':')) return timeStr || "TBA";
@@ -1135,14 +1141,14 @@
                             let pointsAdded = 0;
                             let justUpdated = false;
 
-                            if (prevH !== null && prevA !== null) {
-                                if (currH !== prevH || currA !== prevA) {
+                            if (popPrevH !== null && popPrevA !== null) {
+                                if (currH > popPrevH || currA > popPrevA) {
                                     justUpdated = true;
-                                    pointsAdded = Math.max(currH - prevH, currA - prevA);
+                                    pointsAdded = Math.max(currH - popPrevH, currA - popPrevA);
                                 }
                             }
-                            prevH = currH;
-                            prevA = currA;
+                            popPrevH = currH;
+                            popPrevA = currA;
 
                             hScore.innerText = currH;
                             aScore.innerText = currA;
@@ -1162,23 +1168,31 @@
                                 bText = game.date ? formatGameDate(game.date) : "PREGAME";
                                 bClass = "bg-gray-200 text-gray-800 border border-gray-300 font-bold";
                                 cBorder = "border-gray-200 shadow-sm";
+                                card.style.setProperty('--final-border', '#e5e7eb');
+                                card.style.setProperty('--final-shadow', '0 1px 2px 0 rgba(0, 0, 0, 0.05)');
                                 let timeStr = game.time ? formatGameTime(game.time) : "TBA";
                                 cHtml = \`<span class="font-mono font-bold text-xs text-gray-600">\${timeStr}</span>\`;
                             } else if (qtrUpper === "HALF") {
                                 bText = "HALFTIME";
                                 bClass = "bg-yellow-600 text-black";
                                 dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
-                                cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.3)]";
+                                cBorder = "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
+                                card.style.setProperty('--final-border', '#ef4444');
+                                card.style.setProperty('--final-shadow', '0 0 15px rgba(220,38,38,0.4)');
                             } else if (statusUpper === "FINAL" || qtrUpper === "FINAL") {
                                 bText = "FINAL";
                                 bClass = "bg-gray-800 text-white";
                                 cBorder = "border-gray-400 shadow-sm opacity-80";
+                                card.style.setProperty('--final-border', '#9ca3af');
+                                card.style.setProperty('--final-shadow', '0 1px 2px 0 rgba(0, 0, 0, 0.05)');
                                 cHtml = "";
                             } else {
                                 bText = qtrUpper.includes("QTR") ? qtrUpper : "QTR " + qtrUpper;
                                 bClass = "bg-red-600 text-white animate-pulse";
                                 dClass = "w-2.5 h-2.5 rounded-full bg-red-600 pulse-live";
                                 cBorder = "border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]";
+                                card.style.setProperty('--final-border', '#dc2626');
+                                card.style.setProperty('--final-shadow', '0 0 20px rgba(220,38,38,0.4)');
                                 let cText = game.clock || "12:00";
                                 if(cText === "undefined" || cText.trim() === "") cText = "12:00";
                                 cHtml = \`<span class="font-mono font-bold text-sm text-red-600 animate-pulse">\${cText}</span>\`;
@@ -1188,9 +1202,11 @@
                             badgeText.innerText = bText;
                             clockText.outerHTML = \`<span id="clock-text" class="flex items-center">\${cHtml}</span>\`;
                             dotClass.className = dClass;
+                            
+                            let baseCardClass = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
 
                             if (justUpdated) {
-                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300 anim-score-update\`;
+                                card.className = baseCardClass + " anim-score-update";
                                 updateText.innerText = pointsAdded > 0 ? \`+\${pointsAdded} UPDATE!\` : "UPDATE!";
                                 updateOverlay.style.display = "flex";
                                 
@@ -1198,12 +1214,17 @@
                                 void updateOverlay.offsetWidth;
                                 updateOverlay.classList.add('animate-fade-out-delayed');
 
-                                setTimeout(() => {
+                                if (popUpdateTimeout) clearTimeout(popUpdateTimeout);
+                                popUpdateTimeout = setTimeout(() => {
                                     updateOverlay.style.display = "none";
                                     card.classList.remove('anim-score-update');
+                                    popUpdateTimeout = null;
                                 }, 3500);
                             } else {
-                                card.className = \`content-card rounded-2xl p-4 sm:p-5 border-2 \${cBorder} flex flex-col relative bg-white transition-all duration-300\`;
+                                card.className = baseCardClass;
+                                if (popUpdateTimeout) {
+                                    card.classList.add('anim-score-update');
+                                }
                             }
 
                             document.getElementById('updated-by').innerText = "@" + (game.updatedBy || "System");
@@ -1215,407 +1236,7 @@
             pop.document.close();
         };
 
-        function listenToEmbeddedPosts(homeTeam, awayTeam) {
-            const container = document.getElementById('embedFeedContainer');
-            const postsRef = ref(dbRealtime, 'fanzone_posts');
-            
-            onValue(postsRef, (snapshot) => {
-                const data = snapshot.val();
-                let filteredPosts = [];
-                
-                if (data) {
-                    Object.keys(data).forEach(key => {
-                        const post = data[key];
-                        const tag1 = post.taggedTeam ? post.taggedTeam.toLowerCase() : "";
-                        const tag2 = post.taggedTeam2 ? post.taggedTeam2.toLowerCase() : "";
-                        const hLower = homeTeam ? homeTeam.toLowerCase() : null;
-                        const aLower = awayTeam ? awayTeam.toLowerCase() : null;
-                        
-                        if ((hLower && (tag1 === hLower || tag2 === hLower)) || 
-                            (aLower && (tag1 === aLower || tag2 === aLower))) {
-                            filteredPosts.push(post);
-                        }
-                    });
-                }
-                
-                if (filteredPosts.length === 0) {
-                    container.innerHTML = `<div class="text-center py-6 text-gray-500 font-body text-sm italic">No posts about this matchup yet. Be the first!</div>`;
-                    return;
-                }
-                
-                filteredPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                const postsToRender = filteredPosts.slice(0, 3);
-                container.innerHTML = '';
-                
-                postsToRender.forEach(post => {
-                    let timeString = "Recently";
-                    if (post.timestamp) {
-                        const date = new Date(post.timestamp);
-                        timeString = date.toLocaleDateString([], {month:'short', day:'numeric'}) + " at " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    }
-
-                    const safeContent = linkify(escapeHTML(post.content));
-                    
-                    const postCard = document.createElement('div');
-                    postCard.className = "embed-post-card rounded-xl p-4 shadow-sm mb-3";
-                    postCard.innerHTML = `
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                                <i class="fa-solid fa-user text-gray-400 text-xs"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 leading-none text-xs font-body">@${post.authorUsername}</h4>
-                                <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">${timeString}</span>
-                            </div>
-                        </div>
-                        <div class="text-gray-700 font-body text-sm leading-relaxed whitespace-pre-wrap break-words">${safeContent}</div>
-                    `;
-                    container.appendChild(postCard);
-                });
-            });
-        }
-
-        function updateUIState() {
-            const loginPanel = document.getElementById('authActionPanel');
-            const adminTopBar = document.getElementById('adminTopBar');
-            const publicCreatePanel = document.getElementById('publicCreatePanel');
-            const fanScorePanel = document.getElementById('fanScorePanel');
-            const sbCard = document.getElementById('basicScoreboardCard');
-            const btnUpdateScoreAdmin = document.getElementById('btn-update-score-admin');
-            const btnEditMatchup = document.getElementById('btnEditMatchup');
-
-            if(loginPanel) loginPanel.classList.add('hidden');
-            if(adminTopBar) adminTopBar.classList.add('hidden');
-            if(publicCreatePanel) publicCreatePanel.classList.add('hidden');
-            if(fanScorePanel) fanScorePanel.classList.add('hidden');
-            if(sbCard) sbCard.classList.add('hidden');
-            if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.add('hidden');
-            if(btnEditMatchup) btnEditMatchup.classList.add('hidden');
-
-            if (isActiveGame) {
-                if(sbCard) sbCard.classList.remove('hidden');
-            }
-
-            if (!isActiveGame) {
-                if(publicCreatePanel) publicCreatePanel.classList.remove('hidden');
-            }
-
-            if (!isUserLoggedIn) {
-                if(loginPanel) loginPanel.classList.remove('hidden');
-            } else {
-                if (isActiveGame) {
-                    if(btnEditMatchup) btnEditMatchup.classList.remove('hidden');
-                }
-
-                if (isUserAdmin) {
-                    if(adminTopBar) adminTopBar.classList.remove('hidden');
-                    if (isActiveGame) {
-                        if(btnUpdateScoreAdmin) btnUpdateScoreAdmin.classList.remove('hidden');
-                    }
-                } else {
-                    if (isActiveGame) {
-                        if(fanScorePanel) fanScorePanel.classList.remove('hidden');
-                    }
-                }
-            }
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            const teamParam = new URLSearchParams(window.location.search).get('team');
-            
-            if (user) {
-                isUserLoggedIn = true;
-                
-                document.getElementById('gamedayGateModal').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-
-                try {
-                    const userDoc = await getDoc(doc(dbFirestore, "users", user.uid));
-                    if (userDoc.exists()) {
-                        window.currentUserProfile = userDoc.data();
-                        
-                        if (window.currentUserProfile.role === 'admin' && 
-                            window.currentUserProfile.managedTeam && 
-                            window.currentUserProfile.managedTeam.toLowerCase() === teamParam?.toLowerCase()) {
-                            isUserAdmin = true;
-                        } else {
-                            isUserAdmin = false;
-                        }
-                    } else {
-                        window.currentUserProfile = { username: "Anonymous Fan" };
-                        isUserAdmin = false;
-                    }
-                } catch(e) { 
-                    window.currentUserProfile = { username: "Fan" }; 
-                    isUserAdmin = false;
-                }
-            } else {
-                isUserLoggedIn = false;
-                isUserAdmin = false;
-                window.currentUserProfile = null;
-
-                document.getElementById('loading-overlay').style.display = 'none';
-                document.getElementById('main-app').classList.add('hidden');
-                document.getElementById('gamedayGateModal').classList.remove('hidden');
-            }
-            updateUIState();
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const teamParam = new URLSearchParams(window.location.search).get('team');
-            if (!teamParam) { 
-                document.getElementById('loading-overlay').style.display = 'none';
-                document.getElementById('claim-team-prompt').classList.remove('hidden');
-                return; 
-            }
-
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: async function(results) {
-                    const datalistEl = document.getElementById('teamsList');
-                    const teamNamesList = [];
-
-                    results.data.forEach(r => {
-                        const sName = cleanText(r['School']);
-                        if(sName) {
-                            teamNamesList.push(sName);
-                            window.globalTeamDict[sName.toLowerCase()] = {
-                                rawName: sName,
-                                logo: cleanText(r['Logo']),
-                                mascot: cleanText(r['Mascot']),
-                                stadium: cleanText(r['FieldName']),
-                                address: cleanText(r['FieldLocation']) || cleanText(r['City']),
-                                record: cleanText(r['Record']) || cleanText(r['2026Record']) || "0-0",
-                                classification: cleanText(r['Class']) || ""
-                            };
-                        }
-                    });
-
-                    if (datalistEl) {
-                        datalistEl.innerHTML = Array.from(new Set(teamNamesList))
-                            .sort()
-                            .map(name => `<option value="${escapeHTML(name)}">`)
-                            .join('');
-                    }
-
-                    const teamRow = results.data.find(r => {
-                        const school = r['School'] ? cleanText(r['School']) : '';
-                        return school.toLowerCase() === teamParam.toLowerCase();
-                    });
-
-                    if (!teamRow) {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        document.getElementById('claim-team-prompt').classList.remove('hidden');
-                        return;
-                    }
-
-                    applyTeamColors(teamRow['Colors'] || teamRow['Color']);
-
-                    try {
-                        const safeKey = cleanText(teamRow['School']).toUpperCase().replace(/[^A-Z0-9]/g, '');
-                        const snapshot = await get(ref(dbRealtime, 'gameday_config/' + safeKey));
-                        const game = snapshot.val() || {}; 
-
-                        document.getElementById('loading-overlay').style.display = 'none';
-
-                        if (game.lastUpdated) {
-                            const updateDate = new Date(game.lastUpdated);
-                            document.getElementById('ui-last-time').innerText = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            document.getElementById('ui-last-date').innerText = updateDate.toLocaleDateString();
-                        }
-                        document.getElementById('ui-last-user').innerText = game.updatedBy ? `@${game.updatedBy}` : "System";
-
-                        const ticketLink = game.ticketLink || teamRow['TicketLink'] || teamRow['Tickets'] || "";
-                        const broadcastInfo = game.broadcast || teamRow['Broadcast'] || teamRow['Radio'] || "None Listed";
-
-                        if(ticketLink && ticketLink.trim() !== "") {
-                            const finalTicketLink = ticketLink.includes('http') ? ticketLink : 'https://' + ticketLink;
-                            document.getElementById('ui-ticket').href = "javascript:void(0);";
-                            document.getElementById('ui-ticket').onclick = (e) => window.openExternalLink(e, finalTicketLink);
-                            document.getElementById('ui-ticket').style.display = 'block';
-                        } else {
-                            document.getElementById('ui-ticket').style.display = 'none';
-                            document.getElementById('ui-ticket').onclick = null;
-                        }
-                        
-                        document.getElementById('ui-broadcast').innerHTML = linkify(escapeHTML(broadcastInfo));
-
-                        const myTeamData = window.globalTeamDict[teamParam.toLowerCase()] || {};
-                        
-                        if (!game.yourTeam) {
-                            isActiveGame = false;
-                            
-                            document.getElementById('ui-week').innerText = "SCHEDULE TBD / OFFSEASON";
-                            
-                            document.getElementById('ui-your-name').innerText = cleanText(teamRow['School']);
-                            document.getElementById('ui-your-mascot').innerText = cleanText(teamRow['Mascot']) || cleanText(teamRow['Team']) || "";
-                            document.getElementById('ui-your-record').innerText = `(${myTeamData.record || '0-0'})`;
-                            
-                            const logoUrl = cleanText(teamRow['Logo']);
-                            const yourLogoEl = document.getElementById('ui-your-logo');
-                            const yourFallbackEl = document.getElementById('ui-your-fallback');
-                            
-                            if(logoUrl) { 
-                                yourLogoEl.src = logoUrl; 
-                                yourLogoEl.style.display = 'block'; 
-                                yourFallbackEl.style.display = 'none'; 
-                            } else { 
-                                yourLogoEl.style.display = 'none'; 
-                                yourFallbackEl.style.display = 'flex'; 
-                                yourFallbackEl.innerText = cleanText(teamRow['School']).substring(0,3).toUpperCase(); 
-                            }
-
-                            document.getElementById('ui-opp-name').innerText = "TBD";
-                            document.getElementById('ui-opp-mascot').innerText = "Awaiting Schedule";
-                            document.getElementById('ui-opp-record').innerText = "";
-                            document.getElementById('ui-opp-logo').style.display = 'none'; 
-                            document.getElementById('ui-opp-fallback').style.display = 'flex'; 
-                            document.getElementById('ui-opp-fallback').innerText = "TBD"; 
-
-                            document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(cleanText(teamRow['School']))}`;
-                            document.getElementById('link-opp-team').href = "javascript:void(0);";
-                            document.getElementById('link-opp-team').classList.remove('hover:scale-105');
-                            document.getElementById('link-opp-team').classList.add('cursor-default');
-
-                            document.getElementById('ui-homeaway').innerText = "TBD";
-                            document.getElementById('ui-homeaway').className = "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-                            
-                            document.getElementById('ui-theme').innerText = "TBD";
-                            
-                            const stadiumName = cleanText(teamRow['FieldName']);
-                            const stadiumLoc = cleanText(teamRow['FieldLocation']) || cleanText(teamRow['City']);
-                            
-                            document.getElementById('ui-stadium').innerText = stadiumName || "Stadium TBA";
-                            document.getElementById('ui-address').innerText = stadiumLoc || "Address TBA";
-                            document.getElementById('ui-datetime').innerText = "Check back for schedule updates";
-                            document.getElementById('ui-weather').innerText = "Too early for forecast";
-                            document.getElementById('countdown-section').style.display = 'none';
-                            
-                            if (stadiumLoc) {
-                                const encodedAddress = encodeURIComponent(stadiumLoc);
-                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=14&output=embed`;
-                                document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-                                document.getElementById('btn-directions').style.display = 'flex';
-                                document.getElementById('btn-copy-address').setAttribute('data-address', stadiumLoc);
-                                document.getElementById('btn-copy-address').style.display = 'flex';
-                            }
-                            
-                            listenToEmbeddedPosts(cleanText(teamRow['School']), null);
-
-                        } else {
-                            isActiveGame = true;
-                            window.currentMatchupData = game;
-                            
-                            document.getElementById('ui-week').innerText = game.week ? `WEEK ${game.week.replace(/week/i, '').trim()} MATCHUP` : "MATCHUP";
-                            
-                            const oppTeamData = window.globalTeamDict[(game.opponent || "").toLowerCase()] || {};
-                            
-                            document.getElementById('ui-your-name').innerText = game.yourTeam || "TBA";
-                            document.getElementById('ui-your-mascot').innerText = game.yourTeamMascot || myTeamData.mascot || "";
-                            document.getElementById('ui-your-record').innerText = game.yourTeamRecord ? `(${game.yourTeamRecord})` : `(${myTeamData.record || '0-0'})`;
-
-                            const activeYourLogo = (myTeamData.logo && myTeamData.logo.trim() !== "") ? myTeamData.logo : (game.yourTeamLogo || teamRow['Logo'] || "");
-                            const activeOppLogo = (oppTeamData.logo && oppTeamData.logo.trim() !== "") ? oppTeamData.logo : (game.oppLogo || "");
-                            
-                            const yourLogoEl = document.getElementById('ui-your-logo');
-                            const yourFallbackEl = document.getElementById('ui-your-fallback');
-                            if(activeYourLogo.trim() !== "") { 
-                                yourLogoEl.src = activeYourLogo; 
-                                yourLogoEl.style.display = 'block'; 
-                                yourFallbackEl.style.display = 'none'; 
-                            } else { 
-                                yourLogoEl.style.display = 'none'; 
-                                yourFallbackEl.style.display = 'flex'; 
-                                yourFallbackEl.innerText = game.yourTeam ? game.yourTeam.substring(0,3).toUpperCase() : "TEA"; 
-                            }
-
-                            document.getElementById('ui-opp-name').innerText = game.opponent || "TBA";
-                            document.getElementById('ui-opp-mascot').innerText = game.oppMascot || oppTeamData.mascot || "";
-                            document.getElementById('ui-opp-record').innerText = game.oppRecord ? `(${game.oppRecord})` : `(${oppTeamData.record || '0-0'})`;
-                            
-                            const oppLogoEl = document.getElementById('ui-opp-logo');
-                            const oppFallbackEl = document.getElementById('ui-opp-fallback');
-                            if(activeOppLogo.trim() !== "") { 
-                                oppLogoEl.src = activeOppLogo; 
-                                oppLogoEl.style.display = 'block'; 
-                                oppFallbackEl.style.display = 'none'; 
-                            } else { 
-                                oppLogoEl.style.display = 'none'; 
-                                oppFallbackEl.style.display = 'flex'; 
-                                oppFallbackEl.innerText = game.opponent ? game.opponent.substring(0,3).toUpperCase() : "OPP"; 
-                            }
-
-                            document.getElementById('link-your-team').href = `gameday.html?team=${encodeURIComponent(game.yourTeam)}`;
-                            document.getElementById('link-opp-team').href = `gameday.html?team=${encodeURIComponent(game.opponent)}`;
-                            document.getElementById('link-opp-team').classList.add('hover:scale-105');
-                            document.getElementById('link-opp-team').classList.remove('cursor-default');
-
-                            let isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
-                            document.getElementById('ui-homeaway').innerText = game.homeAway || "TBA";
-                            
-                            document.getElementById('ui-homeaway').className = (game.homeAway === "Home") ? "font-bold bg-pahs-gold text-[color:var(--team-text,#000)] px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-pahs-gold" : "font-bold bg-gray-200 text-black px-2 py-0.5 rounded uppercase text-sm inline-block mt-1 border border-gray-300";
-                            
-                            document.getElementById('ui-theme').innerText = game.theme || "No Theme";
-                            document.getElementById('ui-stadium').innerText = game.stadium || "Stadium TBA";
-                            document.getElementById('ui-address').innerText = game.address || "Address TBA";
-
-                            let gameDateObj = null;
-                            if (game.date && game.time) {
-                                try {
-                                    let dObj = new Date(`${game.date} ${game.time}`);
-                                    if(!isNaN(dObj)) {
-                                        gameDateObj = dObj;
-                                        document.getElementById('ui-datetime').innerText = `${dObj.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'})} • ${dObj.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}`;
-                                        startCountdown(dObj.getTime());
-                                    } else { throw new Error(); }
-                                } catch(e) { document.getElementById('ui-datetime').innerText = `${game.date} • ${game.time}`; }
-                            }
-
-                            if(game.address) {
-                                const encodedAddress = encodeURIComponent(game.address);
-                                document.getElementById('ui-map').src = `https://maps.google.com/maps?q=${encodedAddress}&t=m&z=14&output=embed`;
-                                document.getElementById('btn-directions').href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-                                document.getElementById('btn-directions').style.display = 'flex';
-                                document.getElementById('btn-copy-address').setAttribute('data-address', game.address);
-                                document.getElementById('btn-copy-address').style.display = 'flex';
-                                
-                                fetchWeather(game.address, gameDateObj);
-                            }
-
-                            listenToLiveScore(game);
-                            listenToEmbeddedPosts(game.yourTeam, game.opponent);
-                        }
-
-                        updateUIState();
-
-                    } catch (error) {
-                        console.error(error);
-                        document.getElementById('loading-overlay').innerHTML = "<h2 class='text-red-600 text-2xl font-bold font-head uppercase'>Connection Error</h2><p class='text-gray-600 mt-2'>Could not load data. Refresh the page.</p>";
-                    }
-                }
-            });
-        });
-
-        let timerInterval;
-        function startCountdown(kickoffTime) {
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(function() {
-                const distance = kickoffTime - new Date().getTime();
-                if (distance < 0) {
-                    clearInterval(timerInterval); document.getElementById("countdown-label").style.display = 'none';
-                    document.getElementById("countdown-container").innerHTML = `<div class='flex flex-col items-center justify-center py-2 w-full'><div class='text-4xl font-head font-bold text-red-600 uppercase drop-shadow-sm'>Game in Progress / Final</div></div>`;
-                    return;
-                }
-                document.getElementById("cd-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById("cd-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById("cd-secs").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            }, 1000);
-        }
-
-        let livePrevH = null, livePrevA = null;
+        let updateTimeout = null;
 
         function listenToLiveScore(game) {
             const isHomeSide = (game.homeAway || "").toLowerCase() !== 'away';
@@ -1674,7 +1295,7 @@
                     let pointsAdded = 0;
 
                     if (livePrevH !== null && livePrevA !== null) {
-                        if (currH !== prevH || currA !== livePrevA) {
+                        if (currH > livePrevH || currA > livePrevA) {
                             justUpdated = true;
                             pointsAdded = Math.max(currH - livePrevH, currA - livePrevA);
                         }
@@ -1716,32 +1337,34 @@
                     }
 
                     const qtr = data.quarter || "PREGAME";
+                    let baseSbClass = "content-card rounded-2xl p-6 mb-6 border-2 transition-colors duration-500 relative ";
+
                     if (qtr === "PREGAME" || data.status === "UPCOMING") {
                         statusBadge.innerText = "PREGAME"; 
                         statusBadge.className = "btn-dynamic text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest border";
                         liveDot.className = "w-3 h-3 rounded-full bg-pahs-gold"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-pahs-gold shadow-lg transition-colors duration-500 relative";
+                        sbCard.className = baseSbClass + "border-pahs-gold shadow-lg";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "HALF") {
                         statusBadge.innerText = "HALFTIME"; 
                         statusBadge.className = "bg-yellow-600 text-black text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500 relative";
+                        sbCard.className = baseSbClass + "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = '';
                     } else if (qtr === "FINAL" || data.status === "FINAL") {
                         statusBadge.innerText = "FINAL"; 
                         statusBadge.className = "bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest";
                         liveDot.className = "w-3 h-3 rounded-full bg-gray-500"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-colors duration-500 relative";
+                        sbCard.className = baseSbClass + "border-gray-300 shadow-[0_0_15px_rgba(0,0,0,0.1)]";
                         homePossIcon.classList.add('hidden'); awayPossIcon.classList.add('hidden');
                         sbClock.style.display = 'none'; 
                     } else {
                         statusBadge.innerText = "QTR " + qtr; 
                         statusBadge.className = "bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow uppercase tracking-widest animate-pulse";
                         liveDot.className = "w-3 h-3 rounded-full bg-red-600 pulse-live"; 
-                        sbCard.className = "content-card rounded-2xl p-6 mb-6 border-2 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-colors duration-500 relative";
+                        sbCard.className = baseSbClass + "border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]";
                         sbClock.style.display = '';
                     }
 
@@ -1756,10 +1379,14 @@
                         void overlay.offsetWidth;
                         overlay.classList.add('animate-fade-out-delayed');
 
-                        setTimeout(() => {
+                        if (updateTimeout) clearTimeout(updateTimeout);
+                        updateTimeout = setTimeout(() => {
                             overlay.style.display = "none";
                             sbCard.classList.remove('anim-score-update');
+                            updateTimeout = null;
                         }, 3500);
+                    } else if (updateTimeout) {
+                        sbCard.classList.add('anim-score-update');
                     }
 
                 } else {
