@@ -146,11 +146,17 @@
             </button>
         </div>
 
-        <div id="loggedOutPrompt" class="mb-8 bg-gray-200 border border-gray-300 rounded-2xl p-6 text-center shadow-inner hidden">
-            <i class="fa-solid fa-lock text-3xl text-gray-400 mb-2"></i>
-            <h3 class="font-head text-2xl text-gray-700 uppercase tracking-wide">Log in to join the conversation</h3>
-            <p class="text-sm text-gray-500 mb-4">You must be signed in to post and like content.</p>
-            <a href="login.html" class="inline-block bg-pahs-gold text-black font-head font-bold text-xl uppercase tracking-widest py-2 px-8 rounded-lg shadow-md hover:brightness-110 transition-all">Sign In</a>
+        <!-- NEW FULL GATE FOR LOGGED OUT USERS -->
+        <div id="loggedOutPrompt" class="hidden content-card rounded-2xl p-8 max-w-lg mx-auto text-center border-t-8 border-blue-600 shadow-2xl bg-white my-12">
+            <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl border border-blue-200">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="font-head text-4xl uppercase tracking-wide text-gray-900 mb-2">Fan Zone Locked</h2>
+            <p class="text-gray-600 font-body mb-6">The Fan Zone is an exclusive community space. You must be logged in to view posts, follow teams, and hype up the community!</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="login.html" class="bg-pahs-dark text-pahs-gold font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-md hover:brightness-110 transition border border-pahs-gold">Sign In / Register</a>
+                <a href="all-scores.html" class="bg-gray-200 text-gray-800 font-head font-bold text-2xl uppercase tracking-widest py-3 px-8 rounded-xl shadow-md hover:bg-gray-300 transition">View Scores</a>
+            </div>
         </div>
 
         <!-- ADMIN MODERATION PANEL (HIDDEN BY DEFAULT) -->
@@ -167,7 +173,7 @@
             </button>
         </div>
 
-        <div id="feedControls" class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3">
+        <div id="feedControls" class="flex flex-col sm:flex-row sm:items-end justify-between mb-4 border-b border-gray-400 pb-2 gap-3 hidden">
             <h3 class="font-head text-3xl uppercase tracking-wide text-gray-900 flex items-center gap-2">
                 Community Feed <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse mb-1" title="Live Updates Active"></span>
             </h3>
@@ -198,7 +204,7 @@
 
         <div id="sharedPostGuestContainer" class="hidden mb-10"></div>
 
-        <div id="feedContainer" class="space-y-5">
+        <div id="feedContainer" class="space-y-5 hidden">
             <div id="feedLoading" class="text-center py-12">
                 <i class="fa-solid fa-football fa-spin text-4xl text-gray-500 mb-3"></i>
                 <p class="font-head text-xl text-gray-600 uppercase tracking-widest">Loading Feed...</p>
@@ -537,14 +543,10 @@
         }
 
         function linkify(text) {
-            // Added 'i' flag for case-insensitivity (catches Https://) 
-            // Added support for links that start with just 'www.'
             const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
             
             return text.replace(urlRegex, function(url) {
                 const cleanUrl = url.replace(/[.,!?;:]$/, ''); 
-                
-                // If the user pasted a link starting with www., automatically prepend https:// for the href
                 const absoluteUrl = cleanUrl.toLowerCase().startsWith('www.') ? 'https://' + cleanUrl : cleanUrl;
                 
                 const ytMatch = absoluteUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
@@ -557,7 +559,6 @@
 
                 const displayUrl = cleanUrl.length > 35 ? cleanUrl.substring(0, 35) + '...' : cleanUrl;
 
-                // BYPASS WARNING FOR PAHSFOOTBALL DOMAINS
                 if (absoluteUrl.toLowerCase().includes('pahsfootball.com')) {
                     return `
                         <a href="${absoluteUrl}" onclick="event.stopPropagation()" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
@@ -565,7 +566,6 @@
                         </a>`;
                 }
 
-                // SHOW WARNING MODAL FOR ALL OTHER EXTERNAL LINKS
                 return `
                     <span onclick="window.openExternalLink(event, '${absoluteUrl}')" class="inline-flex items-center gap-1.5 text-blue-700 font-bold hover:text-blue-900 cursor-pointer bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200 text-xs transition-colors my-1 shadow-sm mt-2">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayUrl}
@@ -652,12 +652,10 @@
         // --- AUTHENTICATION LISTENER ---
         onAuthStateChanged(auth, async (user) => {
             const createBtn = document.getElementById('createPostAction');
-            const loginPrompt = document.getElementById('loggedOutPrompt');
             
             if (user) {
                 currentUser = user;
                 createBtn.classList.remove('hidden');
-                loginPrompt.classList.add('hidden');
                 try {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) {
@@ -671,7 +669,6 @@
                 currentUser = null;
                 window.currentUserProfile = null;
                 createBtn.classList.add('hidden');
-                loginPrompt.classList.remove('hidden');
             }
             window.renderFeed(); 
         });
@@ -759,7 +756,6 @@
                         }
                     });
 
-                    // PRE-FETCH UNKNOWN USERS FOR PROFILES AND ROLE BADGES
                     const uniqueUids = [...new Set(currentPosts.map(p => p.authorId))];
                     const fetchPromises = uniqueUids.map(async (uid) => {
                         if (!window.userCache[uid] && uid) {
@@ -777,7 +773,6 @@
                 
                 window.renderFeed();
                 
-                // Deep Link Check
                 if (!initialDeepLinkChecked) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const targetPost = urlParams.get('post');
@@ -1177,6 +1172,7 @@
             const sharedPostGuestHeader = document.getElementById('sharedPostGuestHeader');
             const feedControls = document.getElementById('feedControls');
             const loadMoreContainer = document.getElementById('loadMoreContainer');
+            const loginPrompt = document.getElementById('loggedOutPrompt');
 
             if (!feedContainer) return;
 
@@ -1199,9 +1195,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             const targetPostId = urlParams.get('post');
 
+            // GUEST VIEWING A SPECIFIC SHARED POST LINK
             if (targetPostId && !currentUser) {
                 const post = currentPosts.find(p => p.postId === targetPostId);
                 if (post) {
+                    loginPrompt.classList.add('hidden');
                     feedContainer.classList.add('hidden');
                     feedControls.classList.add('hidden');
                     if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
@@ -1216,6 +1214,21 @@
                 }
             }
 
+            // GUEST VIEWING THE MAIN FEED
+            if (!currentUser) {
+                loginPrompt.classList.remove('hidden');
+                feedContainer.classList.add('hidden');
+                feedControls.classList.add('hidden');
+                if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
+                
+                sharedPostGuestHeader.classList.add('hidden');
+                sharedPostGuestContainer.classList.add('hidden');
+                sharedPostGuestCTA.classList.add('hidden');
+                return; 
+            }
+
+            // AUTHENTICATED USER FEED
+            loginPrompt.classList.add('hidden');
             sharedPostGuestHeader.classList.add('hidden');
             sharedPostGuestContainer.classList.add('hidden');
             sharedPostGuestCTA.classList.add('hidden');
@@ -1277,7 +1290,6 @@
                 postsToRender.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             }
 
-            // --- PAGINATION / CUTOFF LOGIC ---
             const postsToDisplay = postsToRender.slice(0, visiblePostCount);
 
             if (loadMoreContainer) {
@@ -1337,18 +1349,15 @@
         };
         
         document.getElementById('submitPostBtn').onclick = async () => {
-            // --- SPAM PREVENTION COOLDOWN ---
             const now = Date.now();
-            const COOLDOWN_MS = 30000; // 30 seconds
+            const COOLDOWN_MS = 30000; 
             
-            // PAHSFOOTBALL Admin bypasses the cooldown
             const isAdmin = window.currentUserProfile && window.currentUserProfile.username && window.currentUserProfile.username.toUpperCase() === 'PAHSFOOTBALL';
             
             if (!isAdmin && (now - lastPostTime < COOLDOWN_MS)) {
                 const remaining = Math.ceil((COOLDOWN_MS - (now - lastPostTime)) / 1000);
                 return alert(`Please wait ${remaining} seconds before posting again to prevent spam.`);
             }
-            // --------------------------------
 
             const content = document.getElementById('postContent').value.trim();
             if(!content || content.length > 500 || containsProhibitedDomain(content)) {
@@ -1397,7 +1406,7 @@
                     timestamp: new Date().toISOString() 
                 });
 
-                lastPostTime = Date.now(); // RESET THE TIMER UPON SUCCESSFUL POST
+                lastPostTime = Date.now(); 
 
                 document.getElementById('postContent').value = ''; 
                 document.getElementById('teamTagInput').value = '';
@@ -1629,7 +1638,6 @@
             const id = window.currentReportedPostId;
 
             try {
-                // 1. Instantly flag in Firebase so it blurs on the site
                 await update(ref(dbRealtime, 'fanzone_posts/' + id), {
                     flagged: true,
                     flaggedByUid: currentUser.uid,
@@ -1638,7 +1646,6 @@
                     flaggedAt: new Date().toISOString()
                 });
 
-                // 2. Send backup alert to Google Form
                 const params = new URLSearchParams();
                 const reportBody = `REASON: ${reason}\n\nPOST: "${window.currentReportedPostContent}"\nAUTHOR: @${window.currentReportedPostAuthor}\nID: ${id}`;
                 params.append("entry.1967997366", reportBody);
