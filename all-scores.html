@@ -176,7 +176,7 @@
         let isFirstLoad = true;  
         let globalTeamDict = {}; 
         window.currentGameMap = {}; 
-        window.pendingShareData = null; 
+        window.pendingShareData = null;
 
         const badWords = ['fuck', 'shit', 'bitch', 'ass', 'asshole', 'damn', 'crap', 'dick', 'pussy', 'bastard', 'slut', 'whore', 'cunt', 'fag', 'faggot', 'nigger', 'cock'];
         function filterProfanity(text) {
@@ -216,6 +216,100 @@
             } catch(e) {}
             return dateStr;
         }
+
+        // --- FAST PARALLEL LOADING LOGIC ---
+        const fetchDirectory = () => new Promise((resolve) => {
+            const cachedDir = localStorage.getItem('pahs_team_directory');
+            const cacheTime = localStorage.getItem('pahs_team_directory_time');
+            
+            if (cachedDir && cacheTime && (Date.now() - parseInt(cacheTime) < 43200000)) {
+                resolve({ data: JSON.parse(cachedDir) });
+                return;
+            }
+
+            Papa.parse(MASTER_TEAMS_CSV, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    localStorage.setItem('pahs_team_directory', JSON.stringify(results.data));
+                    localStorage.setItem('pahs_team_directory_time', Date.now().toString());
+                    resolve(results);
+                },
+                error: function() { resolve({ data: [] }); }
+            });
+        });
+
+        const fetchSchedule = () => new Promise((resolve) => {
+            Papa.parse(SCHEDULE_CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: resolve,
+                error: function() { resolve({ data: [] }); }
+            });
+        });
+
+        const fetchConfig = () => get(ref(dbRealtime, 'gameday_config'))
+            .then(snap => snap.exists() ? snap.val() : {})
+            .catch(() => ({}));
+
+        async function initializeScoreboards() {
+            try {
+                const [dirResults, schedResults, gamedayConfigs] = await Promise.all([
+                    fetchDirectory(),
+                    fetchSchedule(),
+                    fetchConfig()
+                ]);
+
+                dirResults.data.forEach(row => {
+                    const teamName = row['School'] || row['Team Name'] || row['Team'];
+                    const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
+                    const teamClass = row['Class'] || "";
+                    const teamRec = row['Record'] || row['2026Record'] || "0-0";
+                    
+                    if (teamName) {
+                        globalTeamDict[teamName.trim().toLowerCase()] = {
+                            logo: logoUrl ? logoUrl.trim() : '',
+                            classification: teamClass.trim(),
+                            record: teamRec.trim()
+                        };
+                    }
+                });
+
+                schedResults.data.forEach(game => {
+                    if (!game.HomeTeam || !game.AwayTeam) return;
+
+                    const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
+                    const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
+                    const gameKey = [homeNameStr, awayNameStr].sort().join('_');
+
+                    baseScheduleGames[gameKey] = {
+                        id: gameKey,
+                        home: game.HomeTeam,
+                        away: game.AwayTeam,
+                        homeLogo: game.HomeLogo || "",
+                        awayLogo: game.AwayLogo || "",
+                        homeScore: 0,
+                        awayScore: 0,
+                        status: "PREGAME",
+                        quarter: "PREGAME",
+                        clock: game.Time || "12:00",
+                        date: game.Date || "", 
+                        time: game.Time || "", 
+                        updatedBy: "Schedule",
+                        lastUpdated: new Date(0).toISOString() 
+                    };
+                });
+
+                startFirebaseListener(gamedayConfigs);
+            } catch (error) {
+                console.error("Initialization error:", error);
+                startFirebaseListener({});
+            }
+        }
+        
+        initializeScoreboards();
 
         // --- NEW EDITABLE SHARE LOGIC ---
         window.openShareModal = (content) => {
@@ -296,8 +390,14 @@
             const { btnElement, originalHtml, game } = window.pendingShareData;
             const finalContent = document.getElementById('sharePostPreview').value.trim();
             
-            if (!finalContent) return alert("Post cannot be empty.");
-            if (finalContent.length > 500) return alert("Post is too long. Maximum 500 characters allowed.");
+            if (!finalContent) {
+                alert("Post cannot be empty.");
+                return;
+            }
+            if (finalContent.length > 500) {
+                alert("Post is too long. Maximum 500 characters allowed.");
+                return;
+            }
 
             const btn1 = document.getElementById('submitShareFanZoneBtn');
             const origText1 = btn1.innerHTML;
@@ -334,6 +434,7 @@
                         btnElement.disabled = false;
                     }, 3000);
                 }
+
             } catch (err) {
                 console.error("Share error:", err);
                 alert("Failed to post to Fan Zone.");
@@ -453,7 +554,6 @@
                                     ${homeLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${home}${homeClassHtml}</span>
-                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold"></span>
                                 <span id="home-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                             <div class="text-2xl sm:text-3xl font-black text-gray-300 w-2/12 text-center">-</div>
@@ -462,7 +562,6 @@
                                     ${awayLogoHtml}
                                 </div>
                                 <span class="font-head text-lg sm:text-xl uppercase text-center leading-tight line-clamp-2 text-pahs-gold">${away}${awayClassHtml}</span>
-                                <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono font-bold"></span>
                                 <span id="away-score" class="text-4xl sm:text-5xl font-mono font-black mt-1 text-gray-900">0</span>
                             </div>
                         </div>
@@ -604,77 +703,7 @@
             pop.document.close();
         };
 
-        // Parse Master Teams CSV
-        Papa.parse(MASTER_TEAMS_CSV, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(masterResults) {
-                masterResults.data.forEach(row => {
-                    const teamName = row['School'] || row['Team Name'] || row['Team'];
-                    const logoUrl = row['Logo'] || row['Logo URL'] || row['LogoUrl'];
-                    const teamClass = row['Class'] || "";
-                    const teamRec = row['Record'] || row['2026Record'] || "0-0";
-                    
-                    if (teamName) {
-                        globalTeamDict[teamName.trim().toLowerCase()] = {
-                            logo: logoUrl ? logoUrl.trim() : '',
-                            classification: teamClass.trim(),
-                            record: teamRec.trim()
-                        };
-                    }
-                });
-
-                // Load base schedule
-                Papa.parse(SCHEDULE_CSV_URL, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        const games = results.data;
-                        
-                        games.forEach(game => {
-                            if (!game.HomeTeam || !game.AwayTeam) return;
-
-                            const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
-                            const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
-                            const gameKey = [homeNameStr, awayNameStr].sort().join('_');
-
-                            baseScheduleGames[gameKey] = {
-                                id: gameKey,
-                                home: game.HomeTeam,
-                                away: game.AwayTeam,
-                                homeLogo: game.HomeLogo || "",
-                                awayLogo: game.AwayLogo || "",
-                                homeScore: 0,
-                                awayScore: 0,
-                                status: "PREGAME",
-                                quarter: "PREGAME",
-                                clock: game.Time || "12:00",
-                                date: game.Date || "", 
-                                time: game.Time || "", 
-                                updatedBy: "Schedule",
-                                lastUpdated: new Date(0).toISOString() 
-                            };
-                        });
-
-                        startFirebaseListener();
-                    },
-                    error: function(err) {
-                        console.error("Error loading schedule CSV", err);
-                        startFirebaseListener(); 
-                    }
-                });
-            }
-        });
-
-        async function startFirebaseListener() {
-            let gamedayConfigs = {};
-            try {
-                const configSnap = await get(ref(dbRealtime, 'gameday_config'));
-                if (configSnap.exists()) gamedayConfigs = configSnap.val();
-            } catch(e) { console.error(e); }
-
+        function startFirebaseListener(gamedayConfigs) {
             onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
                 const liveData = snapshot.val() || {};
                 const mergedGamesArray = [];
