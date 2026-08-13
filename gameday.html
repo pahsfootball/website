@@ -726,15 +726,13 @@
             return (yiq >= 128) ? 'black' : 'white';
         }
 
-        function getTeamColor(colorString) {
-            if (!colorString) return "var(--gold-base)";
+        function getBestAccent(colorString) {
+            if (!colorString) return "#fbbf24";
             const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
             let primary = normalizeColor(parts[0]);
             let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
-            if (primary === "#000000" || primary === "#ffffff" || primary === "white" || primary === "black") {
-                return secondary || "var(--gold-base)";
-            }
-            return primary || "var(--gold-base)";
+            if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
+            return primary;
         }
 
         function applyTeamColors(colorString) {
@@ -744,15 +742,6 @@
                 document.documentElement.style.setProperty('--team-primary', accent);
                 document.documentElement.style.setProperty('--team-text', contrast);
             }
-        }
-
-        function getBestAccent(colorString) {
-            if (!colorString) return "#fbbf24";
-            const parts = colorString.split(/[&/,]+/).map(s => s.trim().toLowerCase());
-            let primary = normalizeColor(parts[0]);
-            let secondary = parts[1] ? normalizeColor(parts[1]) : primary;
-            if (primary === "#000000" || primary.toLowerCase() === "black") return secondary;
-            return primary;
         }
 
         function cleanText(str) {
@@ -877,7 +866,7 @@
                             50% { border-color: var(--team-primary); box-shadow: 0 0 25px rgba(251,191,36,0.9); transform: scale(1.02); }
                             100% { transform: scale(1); border-color: var(--final-border, #e5e7eb); box-shadow: var(--final-shadow, none); }
                         }
-                        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out forwards; z-index: 40; }
+                        .anim-score-update { animation: scoreUpdateAnim 3.5s ease-out; z-index: 40; }
                         
                         @keyframes fadeOutDelayed { 0%, 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
                         .animate-fade-out-delayed { animation: fadeOutDelayed 3.5s forwards; }
@@ -929,18 +918,15 @@
                             </div>
                             
                             <div class="relative w-full h-6 bg-green-700 border-2 border-white rounded overflow-hidden shadow-inner flex">
-                                <div id="endzone-home" class="w-6 h-full flex items-center justify-center border-r-2 border-white shrink-0 z-10">
-                                    <span class="text-[8px] font-bold text-white -rotate-90">HOM</span>
-                                </div>
-                                <div class="flex-grow relative h-full bg-green-700">
-                                    <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
-                                    <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
-                                    <div id="sb-drive-fill" class="absolute top-0 bottom-0 transition-all duration-1000 ease-in-out hidden flex items-center">
-                                        <i id="sb-ball-icon" class="fa-solid fa-caret-right text-xl drop-shadow-md"></i>
+                                <div class="absolute inset-0 opacity-40 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), white calc(10% - 1px), white 10%);"></div>
+                                <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white -translate-x-1/2 opacity-70"></div>
+                                
+                                <div id="sb-ball-marker" class="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all duration-1000 ease-in-out hidden" style="left: 50%;">
+                                    <div class="relative">
+                                        <i id="sb-ball-icon" class="fa-solid fa-football text-amber-700 text-sm drop-shadow-md"></i>
+                                        <i id="sb-ball-dir-right" class="fa-solid fa-caret-right absolute -right-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
+                                        <i id="sb-ball-dir-left" class="fa-solid fa-caret-left absolute -left-2 top-1/2 -translate-y-1/2 text-white text-[10px] hidden"></i>
                                     </div>
-                                </div>
-                                <div id="endzone-away" class="w-6 h-full flex items-center justify-center border-l-2 border-white shrink-0 z-10">
-                                    <span class="text-[8px] font-bold text-white -rotate-90">AWY</span>
                                 </div>
                             </div>
                             <div class="flex justify-between px-1 mt-1 text-[8px] font-bold text-gray-400 uppercase tracking-widest">
@@ -949,7 +935,15 @@
                                 <span id="lbl-field-away">AWY</span>
                             </div>
                         </div>
-
+                        
+                        <div class="text-center mt-5 pt-3 border-t border-gray-100 flex justify-between items-center px-1 relative z-10">
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-500 text-left">
+                                <i class="fa-solid fa-user-pen text-pahs-gold mr-1"></i> <span class="font-bold text-gray-800" id="updated-by">@System</span>
+                            </div>
+                            <div class="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 text-right" id="updated-time">
+                                <i class="fa-solid fa-circle text-green-500 animate-pulse mr-1"></i> Live Connection
+                            </div>
+                        </div>
                     </div>
 
                     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"><\/script>
@@ -1027,19 +1021,14 @@
                             document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
                             document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
 
-                            const driveFill = document.getElementById('sb-drive-fill');
-                            const ballIcon = document.getElementById('sb-ball-icon');
-                            
-                            const homeColor = "${homeColor}";
-                            const awayColor = "${awayColor}";
-
-                            document.getElementById('endzone-home').style.backgroundColor = homeColor;
-                            document.getElementById('endzone-away').style.backgroundColor = awayColor;
+                            const ballMarker = document.getElementById('sb-ball-marker');
+                            const dirRight = document.getElementById('sb-ball-dir-right');
+                            const dirLeft = document.getElementById('sb-ball-dir-left');
 
                             if (poss === 'none' || !yardLine) {
-                                driveFill.classList.add('hidden');
+                                ballMarker.classList.add('hidden');
                             } else {
-                                driveFill.classList.remove('hidden');
+                                ballMarker.classList.remove('hidden');
                                 let position = 50;
                                 const parsedYardLine = parseInt(yardLine);
                                 if (!isNaN(parsedYardLine)) {
@@ -1049,31 +1038,17 @@
                                         position = 100 - parsedYardLine;
                                     }
                                 }
+                                ballMarker.style.left = \`\${position}%\`;
 
                                 if (poss === 'home') { 
-                                    driveFill.style.left = '0%';
-                                    driveFill.style.right = 'auto';
-                                    driveFill.style.width = \`\${position}%\`;
-                                    driveFill.style.background = \`linear-gradient(90deg, transparent, \${homeColor})\`;
-                                    
-                                    ballIcon.className = "fa-solid fa-caret-right text-xl drop-shadow-md";
-                                    ballIcon.style.color = homeColor;
-                                    ballIcon.style.position = 'absolute';
-                                    ballIcon.style.right = '-8px';
-                                    ballIcon.style.left = 'auto';
+                                    dirRight.classList.remove('hidden');
+                                    dirLeft.classList.add('hidden');
                                 } else if (poss === 'away') {
-                                    driveFill.style.right = '0%';
-                                    driveFill.style.left = 'auto';
-                                    driveFill.style.width = \`\${100 - position}%\`;
-                                    driveFill.style.background = \`linear-gradient(-90deg, transparent, \${awayColor})\`;
-                                    
-                                    ballIcon.className = "fa-solid fa-caret-left text-xl drop-shadow-md";
-                                    ballIcon.style.color = awayColor;
-                                    ballIcon.style.position = 'absolute';
-                                    ballIcon.style.left = '-8px';
-                                    ballIcon.style.right = 'auto';
+                                    dirLeft.classList.remove('hidden');
+                                    dirRight.classList.add('hidden');
                                 } else {
-                                    driveFill.classList.add('hidden');
+                                    dirRight.classList.add('hidden');
+                                    dirLeft.classList.add('hidden');
                                 }
                             }
 
@@ -1296,8 +1271,7 @@
                                 stadium: cleanText(r['FieldName']),
                                 address: cleanText(r['FieldLocation']) || cleanText(r['City']),
                                 record: cleanText(r['Record']) || cleanText(r['2026Record']) || "0-0",
-                                classification: cleanText(r['Class']) || "",
-                                colors: cleanText(r['Colors']) || cleanText(r['Color']) || ""
+                                classification: cleanText(r['Class']) || ""
                             };
                         }
                     });
@@ -1547,6 +1521,7 @@
             updateUIState();
         });
 
+        // Fire initialization directly instead of waiting for DOMContentLoaded to prevent race condition
         initGameDay();
 
         let timerInterval;
@@ -1594,9 +1569,6 @@
             const homeClass = isHomeSide ? myTeamData.classification : oppTeamData.classification;
             const awayClass = !isHomeSide ? myTeamData.classification : oppTeamData.classification;
 
-            const homeColor = getTeamColor(myTeamData.colors);
-            const awayColor = getTeamColor(oppTeamData.colors);
-
             btnPopout.onclick = () => {
                 window.popoutScoreboard(
                     encodeURIComponent(isHomeSide ? game.yourTeam : game.opponent),
@@ -1605,9 +1577,7 @@
                     encodeURIComponent(finalHomeLogo),
                     encodeURIComponent(finalAwayLogo),
                     encodeURIComponent(homeClass || ''),
-                    encodeURIComponent(awayClass || ''),
-                    encodeURIComponent(homeColor),
-                    encodeURIComponent(awayColor)
+                    encodeURIComponent(awayClass || '')
                 );
             };
 
@@ -1661,16 +1631,14 @@
                     document.getElementById('sb-down-dist').innerText = downDistStr || "Waiting...";
                     document.getElementById('sb-play-text').innerText = playText || "Awaiting play updates...";
 
-                    document.getElementById('endzone-home').style.backgroundColor = homeColor;
-                    document.getElementById('endzone-away').style.backgroundColor = awayColor;
-
-                    const driveFill = document.getElementById('sb-drive-fill');
-                    const ballIcon = document.getElementById('sb-ball-icon');
+                    const ballMarker = document.getElementById('sb-ball-marker');
+                    const dirRight = document.getElementById('sb-ball-dir-right');
+                    const dirLeft = document.getElementById('sb-ball-dir-left');
 
                     if (poss === 'none' || !yardLine) {
-                        driveFill.classList.add('hidden');
+                        ballMarker.classList.add('hidden');
                     } else {
-                        driveFill.classList.remove('hidden');
+                        ballMarker.classList.remove('hidden');
                         let position = 50;
                         const parsedYardLine = parseInt(yardLine);
                         if (!isNaN(parsedYardLine)) {
@@ -1680,31 +1648,17 @@
                                 position = 100 - parsedYardLine;
                             }
                         }
+                        ballMarker.style.left = `${position}%`;
 
                         if (poss === 'home') { 
-                            driveFill.style.left = '0%';
-                            driveFill.style.right = 'auto';
-                            driveFill.style.width = `${position}%`;
-                            driveFill.style.background = `linear-gradient(90deg, transparent, ${homeColor})`;
-                            
-                            ballIcon.className = "fa-solid fa-caret-right text-xl drop-shadow-md";
-                            ballIcon.style.color = homeColor;
-                            ballIcon.style.position = 'absolute';
-                            ballIcon.style.right = '-8px';
-                            ballIcon.style.left = 'auto';
+                            dirRight.classList.remove('hidden');
+                            dirLeft.classList.add('hidden');
                         } else if (poss === 'away') {
-                            driveFill.style.right = '0%';
-                            driveFill.style.left = 'auto';
-                            driveFill.style.width = `${100 - position}%`;
-                            driveFill.style.background = `linear-gradient(-90deg, transparent, ${awayColor})`;
-                            
-                            ballIcon.className = "fa-solid fa-caret-left text-xl drop-shadow-md";
-                            ballIcon.style.color = awayColor;
-                            ballIcon.style.position = 'absolute';
-                            ballIcon.style.left = '-8px';
-                            ballIcon.style.right = 'auto';
+                            dirLeft.classList.remove('hidden');
+                            dirRight.classList.add('hidden');
                         } else {
-                            driveFill.classList.add('hidden');
+                            dirRight.classList.add('hidden');
+                            dirLeft.classList.add('hidden');
                         }
                     }
 
