@@ -570,8 +570,8 @@
                                     </div>
                                 </div>
                                 {BarChart ? (
-                                    {/* Increased height to 700px to accommodate 15 teams comfortably */}
                                     <div className="h-[700px] w-full">
+                                        {/* Increased height to 700px to accommodate 15 teams comfortably */}
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={stats.topTeams} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#d4d4d8" />
