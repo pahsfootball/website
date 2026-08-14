@@ -194,6 +194,16 @@
             background: var(--gold-hover);
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
+
+        /* --- AUTH ATTENTION ANIMATION --- */
+        @keyframes breatheGlow {
+            0% { box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
+            50% { box-shadow: 0 0 15px rgba(251,191,36,0.8); border-color: var(--gold-base); }
+            100% { box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
+        }
+        .auth-attention {
+            animation: breatheGlow 3s infinite ease-in-out;
+        }
         
         .btn-messenger {
             display: flex;
@@ -246,16 +256,16 @@
 </head>
 <body>
 
+<!-- TOP RIGHT PROFILE/LOGIN BUTTON - MOVED OUTSIDE HEADER FOR FIXED POSITIONING -->
+<a href="login.html" id="headerAuthBtn" class="fixed top-4 right-4 z-[100] flex items-center gap-2 bg-black/60 hover:bg-[#fbbf24] text-white hover:text-black border border-white/20 hover:border-[#fbbf24] px-4 py-2 rounded-full transition-all backdrop-blur-sm text-sm font-bold font-body shadow-lg">
+    <i id="headerAuthIcon" class="fa-solid fa-circle-user text-lg"></i>
+    <span id="headerAuthText" class="hidden sm:inline">Sign In</span>
+</a>
+
 <header class="app-header">
     <div class="header-bg"></div>
     <div class="header-gradient"></div>
     
-    <!-- TOP RIGHT PROFILE/LOGIN BUTTON -->
-    <a href="login.html" id="headerAuthBtn" class="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/60 hover:bg-[#fbbf24] text-white hover:text-black border border-white/20 hover:border-[#fbbf24] px-4 py-2 rounded-full transition-all backdrop-blur-sm text-sm font-bold font-body shadow-lg">
-        <i id="headerAuthIcon" class="fa-solid fa-circle-user text-lg"></i>
-        <span id="headerAuthText" class="hidden sm:inline">Sign In</span>
-    </a>
-
     <div class="header-content">
         <img src="pahsfootballlogo.png" alt="PAHS Logo" class="header-logo">
         <h1 class="header-title">PAHS Football</h1>
@@ -688,6 +698,11 @@
         const commIcon = document.getElementById("commNavIcon");
 
         if (user) {
+            // Remove attention animation if logged in
+            if (headerAuthBtn) {
+                headerAuthBtn.classList.remove("auth-attention");
+            }
+            
             if(communityBtn) {
                 communityBtn.href = "community.html";
                 commTitle.innerHTML = "Fan Zone Community";
@@ -717,6 +732,11 @@
             }
 
         } else {
+            // Add subtle glowing attention animation if not logged in
+            if (headerAuthBtn) {
+                headerAuthBtn.classList.add("auth-attention");
+            }
+            
             if(communityBtn) {
                 communityBtn.href = "login.html";
                 commTitle.innerHTML = `Fan Zone Community <i class="fa-solid fa-lock text-sm ml-1 opacity-70"></i>`;
