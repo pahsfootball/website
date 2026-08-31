@@ -894,9 +894,24 @@
                     skipEmptyLines: true,
                     complete: function(results) {
                         const games = results.data;
+                        const today = new Date();
                         
+                        // Calculate the current week's Sunday (start) and Saturday (end)
+                        const dayOfWeek = today.getDay(); 
+                        const sunday = new Date(today);
+                        sunday.setDate(today.getDate() - dayOfWeek);
+                        sunday.setHours(0,0,0,0);
+                        
+                        const saturday = new Date(sunday);
+                        saturday.setDate(sunday.getDate() + 6);
+                        saturday.setHours(23,59,59,999);
+
                         games.forEach(game => {
-                            if (!game.HomeTeam || !game.AwayTeam) return;
+                            if (!game.HomeTeam || !game.AwayTeam || !game.Date) return;
+
+                            // Parse game date and skip if it falls outside this week
+                            const gameDate = new Date(game.Date);
+                            if (gameDate < sunday || gameDate > saturday) return;
 
                             const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
                             const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
@@ -910,13 +925,13 @@
                                 awayLogo: game.AwayLogo || "",
                                 homeScore: 0,
                                 awayScore: 0,
-                                status: "PREGAME",
+                                status: "UPCOMING",
                                 quarter: "PREGAME",
                                 clock: game.Time || "12:00",
                                 date: game.Date || "", 
                                 time: game.Time || "", 
                                 updatedBy: "Schedule",
-                                lastUpdated: new Date(0).toISOString() 
+                                lastUpdated: new Date().toISOString() 
                             };
                         });
 
