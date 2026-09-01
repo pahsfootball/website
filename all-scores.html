@@ -145,7 +145,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdWZKFhp8YwMBw1YKke3rI8aZCQbE1F8tXW4Xc6hO6AllvOfYR7tFkNXEFFns_fRAL1E6AxY2qZYTK/pub?gid=1967283885&single=true&output=csv";
         const MASTER_TEAMS_CSV = "https://docs.google.com/spreadsheets/d/1-FvaWHAtW6v690e0TLkMQPYMhUZ0dJ9kz6heqpCyfqo/gviz/tq?tqx=out:csv&sheet=TeamDirectory"; 
 
         const firebaseConfig = {
@@ -227,7 +226,6 @@
         const container = document.getElementById('scoreboards-container');
         const loadingState = document.getElementById('loading-state');
         
-        let baseScheduleGames = {}; 
         let previousScores = {}; 
         let isFirstLoad = true;  
         let globalTeamDict = {}; 
@@ -839,7 +837,7 @@
                                 card.classList.remove('score-update-glow');
 
                                 const overlay = document.getElementById('update-overlay');
-                                const text = document.getElementById('sb-update-text');
+                                const text = document.getElementById('update-text');
                                 text.innerText = pointsAdded > 0 ? \`+\${pointsAdded} UPDATE!\` : "UPDATE!";
                                 
                                 overlay.style.display = "flex";
@@ -887,61 +885,12 @@
                     }
                 });
 
-                // Load base schedule
-                Papa.parse(SCHEDULE_CSV_URL, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        const games = results.data;
-                        const today = new Date();
-                        
-                        // Calculate the current week's Sunday (start) and Saturday (end)
-                        const dayOfWeek = today.getDay(); 
-                        const sunday = new Date(today);
-                        sunday.setDate(today.getDate() - dayOfWeek);
-                        sunday.setHours(0,0,0,0);
-                        
-                        const saturday = new Date(sunday);
-                        saturday.setDate(sunday.getDate() + 6);
-                        saturday.setHours(23,59,59,999);
-
-                        games.forEach(game => {
-                            if (!game.HomeTeam || !game.AwayTeam || !game.Date) return;
-
-                            // Parse game date and skip if it falls outside this week
-                            const gameDate = new Date(game.Date);
-                            if (gameDate < sunday || gameDate > saturday) return;
-
-                            const homeNameStr = game.HomeTeam.replace(/[^a-zA-Z0-9]/g, '');
-                            const awayNameStr = game.AwayTeam.replace(/[^a-zA-Z0-9]/g, '');
-                            const gameKey = [homeNameStr, awayNameStr].sort().join('_');
-
-                            baseScheduleGames[gameKey] = {
-                                id: gameKey,
-                                home: game.HomeTeam,
-                                away: game.AwayTeam,
-                                homeLogo: game.HomeLogo || "",
-                                awayLogo: game.AwayLogo || "",
-                                homeScore: 0,
-                                awayScore: 0,
-                                status: "UPCOMING",
-                                quarter: "PREGAME",
-                                clock: game.Time || "12:00",
-                                date: game.Date || "", 
-                                time: game.Time || "", 
-                                updatedBy: "Schedule",
-                                lastUpdated: new Date().toISOString() 
-                            };
-                        });
-
-                        startFirebaseListener();
-                    },
-                    error: function(err) {
-                        console.error("Error loading schedule CSV", err);
-                        startFirebaseListener(); 
-                    }
-                });
+                // Trigger Firebase directly since we don't use a Google Sheet schedule anymore
+                startFirebaseListener();
+            },
+            error: function(err) {
+                console.error("Error loading master teams CSV", err);
+                startFirebaseListener(); 
             }
         });
 
@@ -955,21 +904,22 @@
             onValue(ref(dbRealtime, 'live_scores'), (snapshot) => {
                 const liveData = snapshot.val() || {};
                 const mergedGamesArray = [];
-                const tempGamesMap = { ...baseScheduleGames };
+
+                const today = new Date();
+                const dayOfWeek = today.getDay(); 
+                const sunday = new Date(today);
+                sunday.setDate(today.getDate() - dayOfWeek);
+                sunday.setHours(0,0,0,0);
+                
+                const saturday = new Date(sunday);
+                saturday.setDate(sunday.getDate() + 6);
+                saturday.setHours(23,59,59,999);
 
                 for (let teamKey in liveData) {
-                    const liveGame = liveData[teamKey];
-                    if (liveGame.home && liveGame.away) {
-                        tempGamesMap[teamKey] = { 
-                            ...tempGamesMap[teamKey], 
-                            ...liveGame, 
-                            id: teamKey 
-                        };
-                    }
-                }
+                    const game = liveData[teamKey];
+                    if (!game.home || !game.away) continue;
 
-                for (let key in tempGamesMap) {
-                    const game = tempGamesMap[key];
+                    game.id = teamKey;
                     game.justUpdated = false;
                     game.pointsAdded = 0;
 
@@ -982,9 +932,16 @@
                         }
                     }
 
-                    if (!isFirstLoad && previousScores[key]) {
-                        const prevH = previousScores[key].homeScore || 0;
-                        const prevA = previousScores[key].awayScore || 0;
+                    if (game.date) {
+                        const gameDateObj = new Date(game.date);
+                        if (!isNaN(gameDateObj) && (gameDateObj < sunday || gameDateObj > saturday)) {
+                            continue;
+                        }
+                    }
+
+                    if (!isFirstLoad && previousScores[teamKey]) {
+                        const prevH = previousScores[teamKey].homeScore || 0;
+                        const prevA = previousScores[teamKey].awayScore || 0;
                         const currH = game.homeScore || 0;
                         const currA = game.awayScore || 0;
 
@@ -995,9 +952,9 @@
                             game.awayScored = currA > prevA;
                         }
                     }
-                    previousScores[key] = { homeScore: game.homeScore || 0, awayScore: game.awayScore || 0 };
+                    previousScores[teamKey] = { homeScore: game.homeScore || 0, awayScore: game.awayScore || 0 };
                     
-                    window.currentGameMap[key] = game; // Store for sharing
+                    window.currentGameMap[teamKey] = game;
                     mergedGamesArray.push(game);
                 }
 
